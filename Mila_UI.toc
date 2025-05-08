@@ -1,0 +1,13 @@
+## Interface: 110100 
+## Title: MilaUI
+## Notes: A custom UI addon.
+## SavedVariables: MilaUIDB
+## Author: Mila and Alex
+## Version: 69
+## OptionalDeps: oUF
+## X-oUF: MilaUI
+## IconTexture: Interface\AddOns\Mila_UI\Media\logo.tga
+
+
+Init.xml
+Media\Media.xml
