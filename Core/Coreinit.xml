@@ -2,7 +2,8 @@
   <Script file="Main.lua"/>
   <Script file="Tags.lua"/>
   <Script file="Range.lua"/>
-  <Script file="Utility.lua"/>
+  <Script file="Modules/Unitframes/Utility.lua"/>
   <Script file="Share.lua"/>
-  <Script file="GUI.lua"/>
+  <Script file="GUI/GUI_Utility.lua"/>
+  <Script file="GUI/GUI.lua"/>
 </Ui>

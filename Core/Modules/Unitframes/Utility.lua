@@ -685,60 +685,6 @@ function MilaUI:CreateUnitFrame(Unit)
     ApplyScripts(self)
 end
 
-function MilaUI:UnlockFrame(frame)
-    print((MilaUI.Prefix or "MilaUTIL DEBUG: ") .. "UnlockFrame CALLED. Frame type: " .. type(frame) .. (frame and frame.GetName and (", Name: " .. frame:GetName()) or ""))
-    if not frame or type(frame.SetMovable) ~= "function" then
-        print((MilaUI.Prefix or "MilaUTIL DEBUG: ") .. "UnlockFrame received invalid frame or frame is not a proper frame object. Aborting UnlockFrame.")
-        return
-    end
-    frame:SetMovable(true)
-    frame:EnableMouse(true)
-    frame:RegisterForDrag("LeftButton")
-    frame:SetScript("OnDragStart", function(self)
-          self:StartMoving()
-    end)
-    frame:SetScript("OnDragStop", function(self)
-          self:StopMovingOrSizing()
-    end)
- end
- 
- function MilaUI:LockFrame(frame)
-    print((MilaUI.Prefix or "MilaUTIL DEBUG: ") .. "LockFrame CALLED. Frame type: " .. type(frame) .. (frame and frame.GetName and (", Name: " .. frame:GetName()) or ""))
-    if not frame or type(frame.SetMovable) ~= "function" then
-        print((MilaUI.Prefix or "MilaUTIL DEBUG: ") .. "LockFrame received invalid frame or frame is not a proper frame object. Aborting LockFrame.")
-        return
-    end
-    
-    -- Save frame position to database before locking
-    local frameName = frame:GetName()
-    if frameName then
-        -- Extract unit type from frame name (e.g., "MilaUI_Player" -> "Player")
-        local unitType = frameName:match("MilaUI_(%a+)")
-        
-        if unitType and MilaUI.DB and MilaUI.DB.profile and MilaUI.DB.profile[unitType] and MilaUI.DB.profile[unitType].Frame then
-            -- Get current position
-            local point, relativeTo, relativePoint, xOfs, yOfs = frame:GetPoint()
-            if point then
-                print((MilaUI.Prefix or "MilaUTIL DEBUG: ") .. "Saving position for " .. unitType .. ": " .. xOfs .. ", " .. yOfs)
-                
-                -- Update database with new position
-                MilaUI.DB.profile[unitType].Frame.XPosition = xOfs
-                MilaUI.DB.profile[unitType].Frame.YPosition = yOfs
-                MilaUI.DB.profile[unitType].Frame.AnchorFrom = point
-                MilaUI.DB.profile[unitType].Frame.AnchorTo = relativePoint
-                
-                if relativeTo and type(relativeTo.GetName) == "function" then
-                    MilaUI.DB.profile[unitType].Frame.AnchorParent = relativeTo:GetName()
-                end
-            end
-        end
-    end
-    
-    frame:SetMovable(false)
-    frame:SetScript("OnDragStart", nil)
-    frame:SetScript("OnDragStop", nil)
- end
- 
 local function UpdateFrame(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
     local Frame = MilaUI.DB.profile[Unit].Frame

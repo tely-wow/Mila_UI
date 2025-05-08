@@ -74,14 +74,7 @@ local GrowthY = {
     ["DOWN"] = "Down",
 }
 
-local CopyFrom = {
-    ["Player"] = "Player",
-    ["Target"] = "Target",
-    ["Focus"] = "Focus",
-    ["FocusTarget"] = "Focus Target",
-    ["Pet"] = "Pet",
-    ["TargetTarget"] = "Target Target",
-}
+
 
 
 
@@ -165,14 +158,10 @@ function MilaUI:CreateGUI()
         LockFramesToggle:SetLabel("Lock Frames")
         LockFramesToggle:SetValue(MilaUI.DB.global.FramesLocked) 
         LockFramesToggle:SetCallback("OnValueChanged", function(widget, event, value)
-            local DEBUG_PREFIX = MilaUI.Prefix or "MilaGUI DEBUG: "
-            print(DEBUG_PREFIX .. "LockFramesToggle OnValueChanged - New Value: " .. tostring(value))
             MilaUI.DB.global.FramesLocked = value
             if value then
-                print(DEBUG_PREFIX .. "Checkbox checked, calling MilaUI:LockFrames()")
                 MilaUI:LockFrames()
             else
-                print(DEBUG_PREFIX .. "Checkbox unchecked, calling MilaUI:UnlockFrames()")
                 MilaUI:UnlockFrames()
             end
         end)
@@ -514,7 +503,7 @@ function MilaUI:CreateGUI()
             if Unit == "Player" or Unit == "Target" or Unit == "Focus" or Unit == "FocusTarget" or Unit == "Pet" or Unit == "TargetTarget" then
                 local CopyFromDropdown = MilaUI_GUI:Create("Dropdown")
                 CopyFromDropdown:SetLabel("Copy From")
-                CopyFromDropdown:SetList(GenerateCopyFromList(Unit))
+                CopyFromDropdown:SetList(MilaUI:GenerateCopyFromList(Unit))
                 CopyFromDropdown:SetValue(nil)
                 CopyFromDropdown:SetCallback("OnValueChanged", function(widget, event, value)
                     if value == Unit then return end
@@ -2064,9 +2053,6 @@ function MilaUI:ReOpenGUI()
         MilaUI:CreateGUI()
     end
 end
-
-
-f
 
 function MilaUI_GUI.OpenMilaUI_GUI()
     if not GUIActive then
