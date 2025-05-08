@@ -309,8 +309,6 @@ function MilaUI:CreateGUI()
                 print(DEBUG_PREFIX .. "Checkbox unchecked, calling MilaUI:UnlockFrames()")
                 MilaUI:UnlockFrames()
             end
-            -- Decide if a reload prompt is needed here. Usually not for frame locking.
-            -- MilaUI:CreateReloadPrompt() 
         end)
         LockFramesToggle:SetRelativeWidth(0.5) 
         ScrollableContainer:AddChild(LockFramesToggle)
@@ -2206,7 +2204,6 @@ function MilaUI:LockFrames()
     print(DEBUG_PREFIX .. "Attempting to Lock All Frames")
     if not MilaUI.LockFrame then print(DEBUG_PREFIX .. "MilaUI.LockFrame function NOT FOUND! Check Utility.lua") return end
 
-    -- Attempting to use direct global frame names based on user feedback
     local globalFrameNames = {
         "MilaUI_Player", 
         "MilaUI_Target",
@@ -2219,36 +2216,25 @@ function MilaUI:LockFrames()
     print(DEBUG_PREFIX .. "Building framesToProcess from global names:")
     for i, name in ipairs(globalFrameNames) do
         local frame = _G[name]
-        table.insert(framesToProcess, frame) -- Insert even if nil, ipairs will skip nil later
+        table.insert(framesToProcess, frame)
         print(DEBUG_PREFIX .. "  Checking global frame '" .. name .. "': Type is " .. type(frame))
     end
 
     print(DEBUG_PREFIX .. "Iterating framesToProcess (built from globals) for LOCKING (using ipairs):")
     for i, actualFrame in ipairs(framesToProcess) do
-        -- actualFrame here will only be non-nil values from the framesToProcess table
-        local frameDisplayName = globalFrameNames[i] -- Use the correct original name for logging
+        local frameDisplayName = globalFrameNames[i]
         local frameNameForLog = "Frame (originally " .. frameDisplayName .. ") (Type: " .. type(actualFrame) .. ")"
         if actualFrame and type(actualFrame.GetName) == "function" then
             frameNameForLog = actualFrame:GetName() .. " (originally " .. frameDisplayName .. ")"
         end
 
-        if actualFrame and type(actualFrame.SetMovable) == "function" then -- Check if it looks like a frame
+        if actualFrame and type(actualFrame.SetMovable) == "function" then
             print(DEBUG_PREFIX .. "  Processing for Lock: " .. frameNameForLog)
-            MilaUI:LockFrame(actualFrame) -- USE COLON NOTATION
-            -- if frameDisplayName == "MilaUI_Player" then
-            --     MilaUI.LockFrame(actualFrame) -- Test with Player frame first
-            -- else
-            --     print(DEBUG_PREFIX .. "    WOULD CALL MilaUI.LockFrame for: " .. frameNameForLog) -- Keep others commented
-            -- end
+            MilaUI:LockFrame(actualFrame)
         else
-            -- This else block might not be reached if actualFrame is nil due to ipairs behavior,
-            -- but kept for robustness in case framesToProcess contains non-frame, non-nil items.
             print(DEBUG_PREFIX .. "  Skipping item for Lock (originally " .. globalFrameNames[i] .. "): Not a valid frame or is nil. Type: " .. type(actualFrame))
         end
     end
-    -- The explicit nil check for each global frame name has been done above during table construction.
-    -- ipairs will naturally skip any nil entries that resulted from _G[name] being nil.
-
     if MilaUI.BossFrames then
         print(DEBUG_PREFIX .. "Processing BossFrames for Lock")
         for i, bossFrameContainer in ipairs(MilaUI.BossFrames) do
@@ -2256,8 +2242,7 @@ function MilaUI:LockFrames()
                 local frameName = "Unknown/Nil BossFrame"
                 if type(bossFrameContainer.frame.GetName) == "function" then frameName = bossFrameContainer.frame:GetName() end
                 print(DEBUG_PREFIX .. "Locking BossFrame: " .. frameName)
-                MilaUI:LockFrame(bossFrameContainer.frame) -- USE COLON NOTATION
-                -- print(DEBUG_PREFIX .. "    WOULD CALL MilaUI.LockFrame for BossFrame: " .. frameName) -- Adjusted log for clarity
+                MilaUI:LockFrame(bossFrameContainer.frame)
             else
                 print(DEBUG_PREFIX .. "Skipping nil/invalid BossFrame container at index: " .. i)
             end
@@ -2270,8 +2255,7 @@ function MilaUI:LockFrames()
                 local frameName = "Unknown/Nil ArenaFrame"
                 if type(arenaFrameContainer.frame.GetName) == "function" then frameName = arenaFrameContainer.frame:GetName() end
                 print(DEBUG_PREFIX .. "Locking ArenaFrame: " .. frameName)
-                MilaUI:LockFrame(arenaFrameContainer.frame) -- USE COLON NOTATION
-                -- print(DEBUG_PREFIX .. "    WOULD CALL MilaUI.LockFrame for ArenaFrame: " .. frameName) -- Adjusted log for clarity
+                MilaUI:LockFrame(arenaFrameContainer.frame)
             else
                 print(DEBUG_PREFIX .. "Skipping nil/invalid ArenaFrame container at index: " .. i)
             end
@@ -2284,8 +2268,7 @@ function MilaUI:LockFrames()
                 local frameName = "Unknown/Nil PartyFrame"
                 if type(partyMemberFrame.frame.GetName) == "function" then frameName = partyMemberFrame.frame:GetName() end
                 print(DEBUG_PREFIX .. "Locking PartyFrame (Key: " .. tostring(i) .. "): " .. frameName)
-                MilaUI:LockFrame(partyMemberFrame.frame) -- USE COLON NOTATION
-                -- print(DEBUG_PREFIX .. "    WOULD CALL MilaUI.LockFrame for PartyFrame: " .. frameName) -- Adjusted log for clarity
+                MilaUI:LockFrame(partyMemberFrame.frame)
             else
                 print(DEBUG_PREFIX .. "Skipping nil/invalid PartyFrame (Key: " .. tostring(i) .. ")")
             end
@@ -2299,7 +2282,6 @@ function MilaUI:UnlockFrames()
     print(DEBUG_PREFIX .. "Attempting to Unlock All Frames")
     if not MilaUI.UnlockFrame then print(DEBUG_PREFIX .. "MilaUI.UnlockFrame function NOT FOUND! Check Utility.lua") return end
 
-    -- Attempting to use direct global frame names based on user feedback
     local globalFrameNames = {
         "MilaUI_Player", 
         "MilaUI_Target",
@@ -2312,35 +2294,25 @@ function MilaUI:UnlockFrames()
     print(DEBUG_PREFIX .. "Building framesToProcess from global names for UNLOCK:")
     for i, name in ipairs(globalFrameNames) do
         local frame = _G[name]
-        table.insert(framesToProcess, frame) -- Insert even if nil, ipairs will skip nil later
+        table.insert(framesToProcess, frame)
         print(DEBUG_PREFIX .. "  Checking global frame '" .. name .. "': Type is " .. type(frame))
     end
 
     print(DEBUG_PREFIX .. "Iterating framesToProcess (built from globals) for UNLOCKING (using ipairs):")
     for i, actualFrame in ipairs(framesToProcess) do
-        -- actualFrame here will only be non-nil values from the framesToProcess table
-        local frameDisplayName = globalFrameNames[i] -- Use the correct original name for logging
+        local frameDisplayName = globalFrameNames[i]
         local frameNameForLog = "Frame (originally " .. frameDisplayName .. ") (Type: " .. type(actualFrame) .. ")"
         if actualFrame and type(actualFrame.GetName) == "function" then
             frameNameForLog = actualFrame:GetName() .. " (originally " .. frameDisplayName .. ")"
         end
 
-        if actualFrame and type(actualFrame.SetMovable) == "function" then -- Check if it looks like a frame
+        if actualFrame and type(actualFrame.SetMovable) == "function" then
             print(DEBUG_PREFIX .. "  Processing for Unlock: " .. frameNameForLog)
-            MilaUI:UnlockFrame(actualFrame) -- USE COLON NOTATION
-            -- if frameDisplayName == "MilaUI_Player" then
-            --     MilaUI.UnlockFrame(actualFrame) -- Test with Player frame first
-            -- else
-            --     print(DEBUG_PREFIX .. "    WOULD CALL MilaUI.UnlockFrame for: " .. frameNameForLog) -- Keep others commented
-            -- end
+            MilaUI:UnlockFrame(actualFrame)
         else
-            -- This else block might not be reached if actualFrame is nil due to ipairs behavior,
-            -- but kept for robustness in case framesToProcess contains non-frame, non-nil items.
             print(DEBUG_PREFIX .. "  Skipping item for Unlock (originally " .. globalFrameNames[i] .. "): Not a valid frame or is nil. Type: " .. type(actualFrame))
         end
     end
-    -- The explicit nil check for each global frame name has been done above during table construction.
-    -- ipairs will naturally skip any nil entries that resulted from _G[name] being nil.
 
     if MilaUI.BossFrames then
         print(DEBUG_PREFIX .. "Processing BossFrames for Unlock")
@@ -2349,8 +2321,7 @@ function MilaUI:UnlockFrames()
                 local frameName = "Unknown/Nil BossFrame"
                 if type(bossFrameContainer.frame.GetName) == "function" then frameName = bossFrameContainer.frame:GetName() end
                 print(DEBUG_PREFIX .. "Unlocking BossFrame: " .. frameName)
-                MilaUI:UnlockFrame(bossFrameContainer.frame) -- USE COLON NOTATION
-                -- print(DEBUG_PREFIX .. "    WOULD CALL MilaUI.UnlockFrame for BossFrame: " .. frameName) -- Adjusted log for clarity
+                MilaUI:UnlockFrame(bossFrameContainer.frame)
             else
                 print(DEBUG_PREFIX .. "Skipping nil/invalid BossFrame container at index: " .. i)
             end
@@ -2363,8 +2334,7 @@ function MilaUI:UnlockFrames()
                 local frameName = "Unknown/Nil ArenaFrame"
                 if type(arenaFrameContainer.frame.GetName) == "function" then frameName = arenaFrameContainer.frame:GetName() end
                 print(DEBUG_PREFIX .. "Unlocking ArenaFrame: " .. frameName)
-                MilaUI:UnlockFrame(arenaFrameContainer.frame) -- USE COLON NOTATION
-                -- print(DEBUG_PREFIX .. "    WOULD CALL MilaUI.UnlockFrame for ArenaFrame: " .. frameName) -- Adjusted log for clarity
+                MilaUI:UnlockFrame(arenaFrameContainer.frame)
             else
                 print(DEBUG_PREFIX .. "Skipping nil/invalid ArenaFrame container at index: " .. i)
             end
@@ -2377,8 +2347,7 @@ function MilaUI:UnlockFrames()
                 local frameName = "Unknown/Nil PartyFrame"
                 if type(partyMemberFrame.frame.GetName) == "function" then frameName = partyMemberFrame.frame:GetName() end
                 print(DEBUG_PREFIX .. "Unlocking PartyFrame (Key: " .. tostring(i) .. "): " .. frameName)
-                MilaUI:UnlockFrame(partyMemberFrame.frame) -- USE COLON NOTATION
-                -- print(DEBUG_PREFIX .. "    WOULD CALL MilaUI.UnlockFrame for PartyFrame: " .. frameName) -- Adjusted log for clarity
+                MilaUI:UnlockFrame(partyMemberFrame.frame)
             else
                 print(DEBUG_PREFIX .. "Skipping nil/invalid PartyFrame (Key: " .. tostring(i) .. ")")
             end
