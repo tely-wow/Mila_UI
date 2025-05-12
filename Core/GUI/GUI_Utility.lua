@@ -1,5 +1,6 @@
 local _, MilaUI = ...
 local LSM = LibStub:GetLibrary("LibSharedMedia-3.0") or LibStub("LibSharedMedia-3.0")
+local MilaUI_GUI = LibStub("AceGUI-3.0")
 local LSMFonts = {}
 local LSMBorders = {}
 local LSMTextures = {}
@@ -57,6 +58,12 @@ function MilaUI:UpdateFrames()
         MilaUI:UpdateUnitFrame(self.TargetTargetFrame)
     end
     MilaUI:UpdateBossFrames()
+end
+
+function MilaUI:ReOpenGUI()
+    -- Use the public functions instead of trying to access mainFrame directly
+    MilaUI_CloseGUIMain()
+    MilaUI_OpenGUIMain()
 end
 
 function MilaUI:CreateReloadPrompt()
@@ -272,4 +279,95 @@ function MilaUI:UnlockFrames()
             end
         end
     end
+end
+
+-- Helper: Create a vertical spacer for AceGUI layouts
+function MilaUI:CreateVerticalSpacer(height)
+    local spacer = MilaUI_GUI:Create("Label")
+    spacer:SetText(" ")
+    spacer:SetFullWidth(true)
+    if height then
+        spacer:SetHeight(height)
+    end
+    return spacer
+end
+
+function MilaUI:CreateHorizontalSpacer(width)
+    local spacer = MilaUI_GUI:Create("Label")
+    spacer:SetText(" ")
+    spacer:SetRelativeWidth(width or 0.1) -- 0.1 = 10% of the parent width
+    return spacer
+end
+
+-- Helper function to create tab buttons for the main GUI
+function MilaUI:CreateTabButton(text, value, parentFrame, position)
+    local button = CreateFrame("Button", "MilaUI_Tab_"..value, parentFrame, "UIPanelButtonTemplate")
+    button:SetPoint(position, parentFrame, "BOTTOMLEFT", 0, -30)
+    button:SetFrameStrata("FULLSCREEN")
+    button:SetHeight(40)
+    button:SetWidth(120) -- Default width
+    button:SetText(text)
+    return button
+end
+
+-- Function to update button states in tab groups
+function MilaUI:UpdateTabButtonStates(activeButton, allButtons)
+    for _, btn in ipairs(allButtons) do
+        if btn == activeButton then
+            btn:SetEnabled(false) -- Disable the active button
+        else
+            btn:SetEnabled(true)
+        end
+    end
+end
+
+-- Helper function to map UI unit names to database unit names
+function MilaUI:GetUnitDatabaseKey(unitName)
+    -- Map UI display names to database keys
+    local unitMap = {
+        ["Target of Target"] = "TargetTarget",
+        ["Focus Target"] = "FocusTarget",
+        ["Boss Frames"] = "Boss",
+        ["Boss"] = "Boss",
+        ["FocusTarget"] = "FocusTarget"
+    }
+    
+    -- Return the mapped name or the original if no mapping exists
+    return unitMap[unitName] or unitName
+end
+
+-- Helper function to create a properly sized scrollframe with a container
+function MilaUI:CreateProperScrollFrame(parent, minHeight)
+    minHeight = minHeight or 500 -- Default minimum height
+    
+    -- Create a container to hold the scrollframe
+    local container = MilaUI_GUI:Create("SimpleGroup")
+    container:SetFullWidth(true)
+    container:SetFullHeight(true)
+    container:SetLayout("Fill")
+    if parent then parent:AddChild(container) end
+    
+    -- Set minimum height for the container
+    if container.frame and container.frame.SetMinResize then
+        container.frame:SetMinResize(200, minHeight)
+    end
+    
+    -- Create the scrollframe inside the container
+    local scrollFrame = MilaUI_GUI:Create("ScrollFrame")
+    scrollFrame:SetLayout("Flow")
+    scrollFrame:SetFullWidth(true)
+    scrollFrame:SetFullHeight(true)
+    container:AddChild(scrollFrame)
+    
+    -- Ensure the scrollframe has a minimum height
+    if scrollFrame.frame and scrollFrame.frame.SetMinResize then
+        scrollFrame.frame:SetMinResize(200, minHeight)
+    end
+    
+    -- Make sure content area is properly sized
+    if scrollFrame.content then
+        scrollFrame.content:SetHeight(minHeight)
+    end
+    
+    return scrollFrame
 end

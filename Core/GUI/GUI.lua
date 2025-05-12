@@ -16,7 +16,21 @@ local Supporters = {
 }
 
 local MilaUI_GUI_Container = nil;
-
+MilaUI.GUI = MilaUI_GUI
+MilaUI.L = {
+    Unitframes = "Unitframes",
+    Tags = "Tags",
+    Profiles = "Profiles",
+    General = "General",
+    Player = "Player",
+    Target = "Target",
+    Focus = "Focus",
+    Pet = "Pet",
+    TargetOfTarget = "Target of Target",
+    Boss = "Boss Frames",
+    -- Add other strings as needed
+}
+local L = MilaUI.L
 
 local PowerNames = {
     [0] = "Mana",
@@ -74,23 +88,75 @@ local GrowthY = {
     ["DOWN"] = "Down",
 }
 
-
-
-
-
 function MilaUI:CreateGUI()
     if GUIActive then return end
     GUIActive = true
     MilaUI:GenerateLSMFonts()
     MilaUI:GenerateLSMTextures()
     -- MilaUI:GenerateLSMBorders()
+
+    -- Add some leading spaces to the title to make room for the logo
+    local titleWithSpaceForLogo = "     " .. GUI_TITLE -- Adjust space as needed
+
     MilaUI_GUI_Container = MilaUI_GUI:Create("Frame")
-    MilaUI_GUI_Container:SetTitle(GUI_TITLE)
+    MilaUI_GUI_Container:SetTitle(titleWithSpaceForLogo) -- Use the adjusted title
     MilaUI_GUI_Container:SetLayout("Fill")
     MilaUI_GUI_Container:SetWidth(GUI_WIDTH)
     MilaUI_GUI_Container:SetHeight(GUI_HEIGHT)
     MilaUI_GUI_Container:EnableResize(true)
     MilaUI_GUI_Container:SetCallback("OnClose", function(widget) MilaUI_GUI:Release(widget) GUIActive = false  end)
+
+    if MilaUI_GUI_Container and MilaUI_GUI_Container.frame then
+        local logoTexture = MilaUI_GUI_Container.frame:CreateTexture(nil, "ARTWORK")
+        logoTexture:SetTexture("Interface\\Addons\\Mila_UI\\Media\\logo.tga")
+        logoTexture:SetSize(64, 64) 
+        local xOffset = 5
+        local yOffset = -3 
+        logoTexture:SetPoint("TOPLEFT", MilaUI_GUI_Container.frame, "TOPLEFT", xOffset, yOffset)
+    end
+
+    -- Ensure DrawGeneralContainer, DrawTagsContainer, ProfileContainer are defined as methods or placeholders
+    -- If these were global functions before, they need to be MilaUI methods now for consistency.
+    if not MilaUI.DrawGeneralContainer then
+        function MilaUI:DrawGeneralContainer(container)
+            container:ReleaseChildren()
+            local label = MilaUI.GUI:Create("Label")
+            label:SetText(L.General .. " content placeholder - (Original DrawGeneralContainer logic needs to be integrated here)")
+            container:AddChild(label)
+            -- TODO: Integrate original DrawGeneralContainer logic here, using 'container' as the parent widget.
+        end
+    end
+
+    if not MilaUI.DrawTagsContainer then -- Renamed from DrawTagsTabContent for clarity
+        function MilaUI:DrawTagsContainer(container)
+            container:ReleaseChildren()
+            local label = MilaUI.GUI:Create("Label")
+            label:SetText(L.Tags .. " content placeholder")
+            container:AddChild(label)
+            -- TODO: Integrate original DrawTagsContainer logic here.
+        end
+    end
+
+    if not MilaUI.ProfileContainer then -- Renamed from DrawProfilesTabContent for clarity
+        function MilaUI:ProfileContainer(container)
+            container:ReleaseChildren()
+            local label = MilaUI.GUI:Create("Label")
+            label:SetText(L.Profiles .. " content placeholder")
+            container:AddChild(label)
+            -- TODO: Integrate original ProfileContainer logic here.
+        end
+    end
+
+    -- The DrawUnitframesTabContent is now in GUI_Unitframes.lua and will be loaded by TOC.
+
+    local groupDrawHandlers = {
+        [L.General] = function(container) MilaUI:DrawGeneralContainer(container) end,
+        [L.Unitframes] = function(container) MilaUI:DrawUnitframesTabContent(container) end, -- This function is in GUI_Unitframes.lua
+        [L.Tags] = function(container) MilaUI:DrawTagsContainer(container) end,
+        [L.Profiles] = function(container) MilaUI:ProfileContainer(container) end,
+    }
+
+    local function SelectedGroup(tabGroupWidget, event, groupValue)
 
     local function DrawGeneralContainer(MilaUI_GUI_Container)
         local ScrollableContainer = MilaUI_GUI:Create("ScrollFrame")
@@ -2002,28 +2068,27 @@ function MilaUI:CreateGUI()
         ExportOptionsContainer:AddChild(ExportButton)
     end
 
+    local groupDrawHandlers = {
+        General = function(container, groupName) DrawGeneralContainer(container) end,
+        Player = function(container, groupName) DrawUnitContainer(container, groupName) end,
+        Target = function(container, groupName) DrawUnitContainer(container, groupName) end,
+        TargetTarget = function(container, groupName) DrawUnitContainer(container, groupName) end,
+        Focus = function(container, groupName) DrawUnitContainer(container, groupName) end,
+        FocusTarget = function(container, groupName) DrawUnitContainer(container, groupName) end,
+        Pet = function(container, groupName) DrawUnitContainer(container, groupName) end,
+        Boss = function(container, groupName) DrawUnitContainer(container, groupName) end,
+        Tags = function(container, groupName) DrawTagsContainer(container) end,
+        Profiles = function(container, groupName) ProfileContainer(container) end,
+    }
+
     local function SelectedGroup(MilaUI_GUI_Container, Event, Group)
         MilaUI_GUI_Container:ReleaseChildren()
-        if Group == "General" then
-            DrawGeneralContainer(MilaUI_GUI_Container)
-        elseif Group == "Player" then
-            DrawUnitContainer(MilaUI_GUI_Container, Group)
-        elseif Group == "Target" then
-            DrawUnitContainer(MilaUI_GUI_Container, Group)
-        elseif Group == "TargetTarget" then
-            DrawUnitContainer(MilaUI_GUI_Container, Group)
-        elseif Group == "Focus" then
-            DrawUnitContainer(MilaUI_GUI_Container, Group)
-        elseif Group == "FocusTarget" then
-            DrawUnitContainer(MilaUI_GUI_Container, Group)
-        elseif Group == "Pet" then
-            DrawUnitContainer(MilaUI_GUI_Container, Group)
-        elseif Group == "Boss" then
-            DrawUnitContainer(MilaUI_GUI_Container, Group)
-        elseif Group == "Tags" then
-            DrawTagsContainer(MilaUI_GUI_Container)
-        elseif Group == "Profiles" then
-            ProfileContainer(MilaUI_GUI_Container)
+        local handler = groupDrawHandlers[Group]
+        if handler then
+            handler(MilaUI_GUI_Container, Group)
+        else
+            -- Optional: Log or handle unknown groups, e.g.:
+            -- print("Mila_UI: Unknown GUI group selected - " .. tostring(Group))
         end
     end
 

@@ -1,11 +1,13 @@
 local _, MilaUI = ...
 local MilaUIAddon = LibStub("AceAddon-3.0"):NewAddon("MilaUI")
+local pink = "|cffFF77B5"
+local lavender = "|cFFCBA0E3"
 MilaUIAddon_GUI = MilaUIAddon_GUI or {}
 
 MilaUIAddon.Defaults = {
     global = {
         UIScaleEnabled = true,
-        UIScale = 0.5333333333333,
+        UIScale = 0.65,
         TagUpdateInterval = 0.5,
         FramesLocked = true,
     },
@@ -18,7 +20,7 @@ MilaUIAddon.Defaults = {
             FontShadowXOffset                 = 0,
             FontShadowYOffset                 = 0,
             ForegroundTexture                 = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
-            BackgroundTexture                 = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\solid.tga",
+            BackgroundTexture                 = "Solid",
             BorderTexture                     = "Interface\\Buttons\\WHITE8X8",
             BackgroundColour                  = {26 / 255, 26 / 255, 26 / 255, 1},
             ForegroundColour                  = {26 / 255, 26 / 255, 26 / 255, 1},
@@ -89,7 +91,7 @@ MilaUIAddon.Defaults = {
             },
             Health = {
                 Direction = "LR",
-                Texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
+                Texture = "Smooth",
                 Mask = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\Parallelogram.tga",
                 CustomBorder = {
                     Enabled = true,
@@ -110,7 +112,7 @@ MilaUIAddon.Defaults = {
             },
             PowerBar = {
                 Direction               = "LR",
-                Texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
+                Texture = "Smooth",
                 Mask = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\power_para.tga",
                 Enabled                 = false,
                 Height                  = 5,
@@ -238,7 +240,7 @@ MilaUIAddon.Defaults = {
             },
             Health = {
                 Direction = "LR",
-                Texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
+                Texture = "Smooth",
                 Mask = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\Parallelogram2.tga",
                 CustomBorder = {
                     Enabled = true,
@@ -1063,6 +1065,38 @@ function MilaUIAddon:OnInitialize()
     end
 end
 
+function MilaUI:SetupSlashCommands()
+    SLASH_MilaUI1 = "/MilaUI"
+    SLASH_MilaUI2 = "/MilaUI"
+    SLASH_MilaUI3 = "/mui"
+    SlashCmdList["MilaUI"] = function(msg)
+        if msg == "" then
+            MilaUI_OpenGUIMain()
+        elseif msg == "reset" then
+            MilaUI:ResetDefaultSettings()
+        elseif msg == "help" then
+            print(pink .. "♥MILA UI ♥:  " .. lavender .. " Slash Commands.")
+            print(pink .. "/MilaUI or /MUI:" .. lavender .. " Opens the GUI")
+            print(pink .. "/MilaUI reset or /MUI reset:" .. lavender .. " Resets To Default")
+        end
+    end
+    SLASH_MILAUIPRINT1 = "/muiprint"
+    local db = MilaUI.DB  -- Use MilaUI.DB, which is where your DB lives
+    SlashCmdList["MILAUIPRINT"] = function(msg)
+        local path = {strsplit(".", msg)}
+        local value = db
+        for _, key in ipairs(path) do
+            if value and type(value) == "table" then
+                value = value[key]
+            else
+                value = nil
+                break
+            end
+        end
+        print("Value:", value)
+    end
+end
+
 function MilaUIAddon:OnEnable()
     if MilaUI.DB.global.UIScaleEnabled then UIParent:SetScale(MilaUI.DB.global.UIScale) end
     if MilaUI.DB.profile.TestMode then MilaUI.DB.profile.TestMode = false end
@@ -1076,5 +1110,5 @@ function MilaUIAddon:OnEnable()
     MilaUI:SpawnPetFrame()
     MilaUI:SpawnBossFrames()
     MilaUI:SetupSlashCommands()
-    print(C_AddOns.GetAddOnMetadata("MilaUI", "Title") .. ": `|cFF8080FF/MilaUI|r` for in-game configuration.")
+    print(pink .. "♥MILA UI ♥:  " .. lavender .. "Type: " .. pink .. "/MUI" .. lavender .. " for in-game configuration.")
 end

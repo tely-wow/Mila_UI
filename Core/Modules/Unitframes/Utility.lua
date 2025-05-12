@@ -1,4 +1,5 @@
 local _, MilaUI = ...
+local LSM = LibStub:GetLibrary("LibSharedMedia-3.0") or LibStub("LibSharedMedia-3.0")
 local oUF = MilaUI.oUF
 MilaUI.TargetHighlightEvtFrames = {}
 MilaUI.Frames = {
@@ -56,16 +57,17 @@ local function PostCreateButton(_, button, Unit, AuraType)
 
     -- Count Options
     local auraCount = button.Count
+    local fontPath = LSM:Fetch("font", General.Font)
     if AuraType == "HELPFUL" then
         auraCount:ClearAllPoints()
         auraCount:SetPoint(BuffCount.AnchorFrom, button, BuffCount.AnchorTo, BuffCount.XOffset, BuffCount.YOffset)
-        auraCount:SetFont(General.Font, BuffCount.FontSize, "OUTLINE")
+        auraCount:SetFont(fontPath, BuffCount.FontSize, "OUTLINE")
         auraCount:SetJustifyH("CENTER")
         auraCount:SetTextColor(BuffCount.Colour[1], BuffCount.Colour[2], BuffCount.Colour[3], BuffCount.Colour[4])
     elseif AuraType == "HARMFUL" then
         auraCount:ClearAllPoints()
         auraCount:SetPoint(DebuffCount.AnchorFrom, button, DebuffCount.AnchorTo, DebuffCount.XOffset, DebuffCount.YOffset)
-        auraCount:SetFont(General.Font, DebuffCount.FontSize, "OUTLINE")
+        auraCount:SetFont(fontPath, DebuffCount.FontSize, "OUTLINE")
         auraCount:SetJustifyH("CENTER")
         auraCount:SetTextColor(DebuffCount.Colour[1], DebuffCount.Colour[2], DebuffCount.Colour[3], DebuffCount.Colour[4])
     end
@@ -226,7 +228,8 @@ local function CreateHealthBar(self, Unit)
         self.unitHealthBar = CreateFrame("StatusBar", nil, self)
         self.unitHealthBar:SetSize(Frame.Width - 2, Frame.Height - 2)
         self.unitHealthBar:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -1)
-        self.unitHealthBar:SetStatusBarTexture(Health.Texture)
+        local healthTexturePath = LSM:Fetch("statusbar", Health.Texture)
+        self.unitHealthBar:SetStatusBarTexture(healthTexturePath)
         local tex = self.unitHealthBar:GetStatusBarTexture()
         tex:SetTexCoord(0,1,0,1)
         tex:SetMask(Health.Mask)
@@ -261,7 +264,8 @@ local function CreateHealthBar(self, Unit)
         self.unitHealthBarBackground = self:CreateTexture(nil, "BACKGROUND")
         self.unitHealthBarBackground:SetSize(Frame.Width - 2, Frame.Height - 2)
         self.unitHealthBarBackground:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -1)
-        self.unitHealthBarBackground:SetTexture(General.BackgroundTexture)
+        local healthBgTexturePath = LSM:Fetch("statusbar", Health.BackgroundTexture)
+        self.unitHealthBarBackground:SetTexture(healthBgTexturePath)
         self.unitHealthBarBackground:SetTexCoord(0, 1, 0, 1)
         self.unitHealthBarBackground:SetMask(Health.Mask)
         self.unitHealthBarBackground:SetAlpha(General.BackgroundColour[4])
@@ -276,7 +280,8 @@ local function CreateAbsorbBar(self, Unit)
 
     if Absorbs.Enabled and not self.unitAbsorbs then
         self.unitAbsorbs = CreateFrame("StatusBar", nil, self.unitHealthBar)
-        self.unitAbsorbs:SetStatusBarTexture(General.ForegroundTexture)
+        local absorbsTexturePath = LSM:Fetch("statusbar", General.ForegroundTexture)
+        self.unitAbsorbs:SetStatusBarTexture(absorbsTexturePath)
         local HealthBarTexture = self.unitHealthBar:GetStatusBarTexture()
         if HealthBarTexture then
             self.unitAbsorbs:ClearAllPoints()
@@ -308,7 +313,8 @@ local function CreateHealAbsorbBar(self, Unit)
     
     if HealAbsorbs.Enabled and not self.unitHealAbsorbs then
         self.unitHealAbsorbs = CreateFrame("StatusBar", nil, self.unitHealthBar)
-        self.unitHealAbsorbs:SetStatusBarTexture(General.ForegroundTexture)
+        local healAbsorbsTexturePath = LSM:Fetch("statusbar", General.ForegroundTexture)
+        self.unitHealAbsorbs:SetStatusBarTexture(healAbsorbsTexturePath)
         local HealthBarTexture = self.unitHealthBar:GetStatusBarTexture()
         if HealthBarTexture then
             self.unitHealAbsorbs:ClearAllPoints()
@@ -345,7 +351,8 @@ local function CreatePowerBar(self, Unit)
         self.unitPowerBar = CreateFrame("StatusBar", nil, self)
         self.unitPowerBar:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 0, 0)
         self.unitPowerBar:SetSize(Frame.Width, PowerBar.Height)
-        self.unitPowerBar:SetStatusBarTexture(General.ForegroundTexture)
+        local powerTexturePath = LSM:Fetch("statusbar", General.ForegroundTexture)
+        self.unitPowerBar:SetStatusBarTexture(powerTexturePath)
         self.unitPowerBar:SetStatusBarColor(unpack(PowerBar.Colour))
         self.unitPowerBar:SetMinMaxValues(0, 100)
         self.unitPowerBar:SetAlpha(PowerBar.Colour[4])
@@ -363,7 +370,8 @@ local function CreatePowerBar(self, Unit)
         -- Frame Power Bar Background
         self.unitPowerBarBackground = self.unitPowerBar:CreateTexture(nil, "BACKGROUND")
         self.unitPowerBarBackground:SetAllPoints()
-        self.unitPowerBarBackground:SetTexture(General.BackgroundTexture)
+        local powerBgTexturePath = LSM:Fetch("statusbar", General.BackgroundTexture)
+        self.unitPowerBarBackground:SetTexture(powerBgTexturePath)
         self.unitPowerBarBackground:SetAlpha(PowerBar.BackgroundColour[4])
         if PowerBar.ColourBackgroundByType then 
             self.unitPowerBarBackground.multiplier = PowerBar.BackgroundMultiplier
@@ -499,9 +507,13 @@ local function CreateTextFields(self, Unit)
         self.unitHighLevelFrame:SetPoint("CENTER", 0, 0)
         self.unitHighLevelFrame:SetFrameLevel(self.unitHealthBar:GetFrameLevel() + 20)
 
+        -- Fetch font path and flag once
+        local fontPath = LSM:Fetch("font", General.Font)
+        local fontFlag = General.FontFlag
+
         if not self.unitFirstText then
             self.unitFirstText = self.unitHighLevelFrame:CreateFontString(nil, "OVERLAY")
-            self.unitFirstText:SetFont(General.Font, FirstText.FontSize, General.FontFlag)
+            self.unitFirstText:SetFont(fontPath, FirstText.FontSize, fontFlag)
             self.unitFirstText:SetShadowColor(General.FontShadowColour[1], General.FontShadowColour[2], General.FontShadowColour[3], General.FontShadowColour[4])
             self.unitFirstText:SetShadowOffset(General.FontShadowXOffset, General.FontShadowYOffset)
             self.unitFirstText:SetPoint(FirstText.AnchorFrom, self.unitHighLevelFrame, FirstText.AnchorTo, FirstText.XOffset, FirstText.YOffset)
@@ -512,7 +524,7 @@ local function CreateTextFields(self, Unit)
 
         if not self.unitSecondText then
             self.unitSecondText = self.unitHighLevelFrame:CreateFontString(nil, "OVERLAY")
-            self.unitSecondText:SetFont(General.Font, SecondText.FontSize, General.FontFlag)
+            self.unitSecondText:SetFont(fontPath, SecondText.FontSize, fontFlag)
             self.unitSecondText:SetShadowColor(General.FontShadowColour[1], General.FontShadowColour[2], General.FontShadowColour[3], General.FontShadowColour[4])
             self.unitSecondText:SetShadowOffset(General.FontShadowXOffset, General.FontShadowYOffset)
             self.unitSecondText:SetPoint(SecondText.AnchorFrom, self.unitHighLevelFrame, SecondText.AnchorTo, SecondText.XOffset, SecondText.YOffset)
@@ -523,7 +535,7 @@ local function CreateTextFields(self, Unit)
 
         if not self.unitThirdText then
             self.unitThirdText = self.unitHighLevelFrame:CreateFontString(nil, "OVERLAY")
-            self.unitThirdText:SetFont(General.Font, ThirdText.FontSize, General.FontFlag)
+            self.unitThirdText:SetFont(fontPath, ThirdText.FontSize, fontFlag)
             self.unitThirdText:SetShadowColor(General.FontShadowColour[1], General.FontShadowColour[2], General.FontShadowColour[3], General.FontShadowColour[4])
             self.unitThirdText:SetShadowOffset(General.FontShadowXOffset, General.FontShadowYOffset)
             self.unitThirdText:SetPoint(ThirdText.AnchorFrom, self.unitHighLevelFrame, ThirdText.AnchorTo, ThirdText.XOffset, ThirdText.YOffset)
@@ -711,7 +723,8 @@ local function UpdateHealthBar(FrameName)
         FrameName.unitHealthBar:SetSize(Frame.Width - 2, Frame.Height - 2)
         FrameName.unitHealthBar:ClearAllPoints()
         FrameName.unitHealthBar:SetPoint("TOPLEFT", FrameName, "TOPLEFT", 1, -1)
-        FrameName.unitHealthBar:SetStatusBarTexture(Health.Texture)
+        local healthTexturePath = LSM:Fetch("statusbar", Health.Texture)
+        FrameName.unitHealthBar:SetStatusBarTexture(healthTexturePath)
         FrameName.unitHealthBar.colorClass = General.ColourByClass
         FrameName.unitHealthBar.colorReaction = General.ColourByClass
         FrameName.unitHealthBar.colorDisconnected = General.ColourIfDisconnected
@@ -742,7 +755,8 @@ local function UpdateHealthBar(FrameName)
         -- Frame Health Bar Background
         FrameName.unitHealthBarBackground:SetSize(Frame.Width - 2, Frame.Height - 2)
         FrameName.unitHealthBarBackground:SetPoint("TOPLEFT", FrameName, "TOPLEFT", 1, -1)
-        FrameName.unitHealthBarBackground:SetTexture(General.BackgroundTexture)
+        local healthBgTexturePath = LSM:Fetch("statusbar", Health.BackgroundTexture)
+        FrameName.unitHealthBarBackground:SetTexture(healthBgTexturePath)
 
         FrameName.unitHealthBarBackground:SetMask(Health.Mask)
         FrameName.unitHealthBarBackground:SetAlpha(General.BackgroundColour[4])
@@ -757,7 +771,8 @@ local function UpdateAbsorbBar(FrameName)
     local HealthPrediction = MilaUI.DB.profile[Unit].Health.HealthPrediction
     local Absorbs = HealthPrediction.Absorbs
     if FrameName.unitAbsorbs and Absorbs.Enabled then
-        FrameName.unitAbsorbs:SetStatusBarTexture(General.ForegroundTexture)
+        local absorbsTexturePath = LSM:Fetch("statusbar", General.ForegroundTexture)
+        FrameName.unitAbsorbs:SetStatusBarTexture(absorbsTexturePath)
         local HealthBarTexture = FrameName.unitHealthBar:GetStatusBarTexture()
         if HealthBarTexture then
             FrameName.unitAbsorbs:SetReverseFill(Health.Direction == "RL")
@@ -784,7 +799,8 @@ local function UpdateHealAbsorbBar(FrameName)
     local HealthPrediction = MilaUI.DB.profile[Unit].Health.HealthPrediction
     local HealAbsorbs = HealthPrediction.HealAbsorbs
     if FrameName.unitHealAbsorbs and HealAbsorbs.Enabled then
-        FrameName.unitHealAbsorbs:SetStatusBarTexture(General.ForegroundTexture)
+        local healAbsorbsTexturePath = LSM:Fetch("statusbar", General.ForegroundTexture)
+        FrameName.unitHealAbsorbs:SetStatusBarTexture(healAbsorbsTexturePath)
         local HealthBarTexture = FrameName.unitHealthBar:GetStatusBarTexture()
         if HealthBarTexture then
             FrameName.unitHealAbsorbs:ClearAllPoints()
@@ -820,7 +836,8 @@ local function UpdatePowerBar(FrameName)
         -- Power Bar
         FrameName.unitPowerBar:SetPoint("BOTTOMLEFT", FrameName, "BOTTOMLEFT", 0, 0)
         FrameName.unitPowerBar:SetSize(Frame.Width, PowerBar.Height)
-        FrameName.unitPowerBar:SetStatusBarTexture(General.ForegroundTexture)
+        local powerTexturePath = LSM:Fetch("statusbar", General.ForegroundTexture)
+        FrameName.unitPowerBar:SetStatusBarTexture(powerTexturePath)
         FrameName.unitPowerBar:SetStatusBarColor(unpack(PowerBar.Colour))
         FrameName.unitPowerBar:SetMinMaxValues(0, 100)
         FrameName.unitPowerBar.colorPower = PowerBar.ColourByType
@@ -836,7 +853,8 @@ local function UpdatePowerBar(FrameName)
         -- Power Bar Background
         FrameName.unitPowerBarBackground:ClearAllPoints()
         FrameName.unitPowerBarBackground:SetAllPoints()
-        FrameName.unitPowerBarBackground:SetTexture(General.BackgroundTexture)
+        local powerBgTexturePath = LSM:Fetch("statusbar", General.BackgroundTexture)
+        FrameName.unitPowerBarBackground:SetTexture(powerBgTexturePath)
         FrameName.unitPowerBarBackground:SetAlpha(PowerBar.BackgroundColour[4])
         if PowerBar.ColourBackgroundByType then 
             FrameName.unitPowerBarBackground.multiplier = PowerBar.BackgroundMultiplier
@@ -982,9 +1000,13 @@ local function UpdateTextFields(FrameName)
         FrameName.unitHighLevelFrame:SetPoint("CENTER", 0, 0)
         FrameName.unitHighLevelFrame:SetFrameLevel(FrameName.unitHealthBar:GetFrameLevel() + 20)
 
+        -- Fetch font path and flag once
+        local fontPath = LSM:Fetch("font", General.Font)
+        local fontFlag = General.FontFlag
+
         if FrameName.unitFirstText then
             FrameName.unitFirstText:ClearAllPoints()
-            FrameName.unitFirstText:SetFont(General.Font, FirstText.FontSize, General.FontFlag)
+            FrameName.unitFirstText:SetFont(fontPath, FirstText.FontSize, fontFlag)
             FrameName.unitFirstText:SetShadowColor(General.FontShadowColour[1], General.FontShadowColour[2], General.FontShadowColour[3], General.FontShadowColour[4])
             FrameName.unitFirstText:SetShadowOffset(General.FontShadowXOffset, General.FontShadowYOffset)
             FrameName.unitFirstText:SetPoint(FirstText.AnchorFrom, FrameName.unitHighLevelFrame, FirstText.AnchorTo, FirstText.XOffset, FirstText.YOffset)
@@ -995,7 +1017,7 @@ local function UpdateTextFields(FrameName)
 
         if FrameName.unitSecondText then
             FrameName.unitSecondText:ClearAllPoints()
-            FrameName.unitSecondText:SetFont(General.Font, SecondText.FontSize, General.FontFlag)
+            FrameName.unitSecondText:SetFont(fontPath, SecondText.FontSize, fontFlag)
             FrameName.unitSecondText:SetShadowColor(General.FontShadowColour[1], General.FontShadowColour[2], General.FontShadowColour[3], General.FontShadowColour[4])
             FrameName.unitSecondText:SetShadowOffset(General.FontShadowXOffset, General.FontShadowYOffset)
             FrameName.unitSecondText:SetPoint(SecondText.AnchorFrom, FrameName.unitHighLevelFrame, SecondText.AnchorTo, SecondText.XOffset, SecondText.YOffset)
@@ -1006,7 +1028,7 @@ local function UpdateTextFields(FrameName)
 
         if FrameName.unitThirdText then
             FrameName.unitThirdText:ClearAllPoints()
-            FrameName.unitThirdText:SetFont(General.Font, ThirdText.FontSize, General.FontFlag)
+            FrameName.unitThirdText:SetFont(fontPath, ThirdText.FontSize, fontFlag)
             FrameName.unitThirdText:SetShadowColor(General.FontShadowColour[1], General.FontShadowColour[2], General.FontShadowColour[3], General.FontShadowColour[4])
             FrameName.unitThirdText:SetShadowOffset(General.FontShadowXOffset, General.FontShadowYOffset)
             FrameName.unitThirdText:SetPoint(ThirdText.AnchorFrom, FrameName.unitHighLevelFrame, ThirdText.AnchorTo, ThirdText.XOffset, ThirdText.YOffset)
@@ -1180,23 +1202,6 @@ function MilaUI:UpdateBossFrames()
             local relativeAnchor = growDown and "BOTTOMLEFT" or "TOPLEFT"
             local offsetY = growDown and -BossSpacing or BossSpacing
             BossFrame:SetPoint( anchor, _G["MilaUI_Boss" .. (i - 1)], relativeAnchor, 0, offsetY )
-        end
-    end
-end
-
-function MilaUI:SetupSlashCommands()
-    SLASH_MilaUI1 = "/MilaUI"
-    SLASH_MilaUI2 = "/MilaUI"
-    SLASH_MilaUI3 = "/mui"
-    SlashCmdList["MilaUI"] = function(msg)
-        if msg == "" then
-            MilaUI:CreateGUI()
-        elseif msg == "reset" then
-            MilaUI:ResetDefaultSettings()
-        elseif msg == "help" then
-            print(C_AddOns.GetAddOnMetadata("MilaUI", "Title") .. " Slash Commands.")
-            print("|cFF8080FF/MilaUI|r: Opens the GUI")
-            print("|cFF8080FF/MilaUI reset|r: Resets To Default")
         end
     end
 end
