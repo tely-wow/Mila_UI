@@ -12,6 +12,9 @@ local CopyFrom = {
     ["Pet"] = "Pet",
     ["TargetTarget"] = "Target Target",
 }
+local GUI = MilaUI_GUI
+local pink = "|cffFF77B5"
+local lavender = "|cFFCBA0E3"
 
 function MilaUI:GenerateLSMFonts()
     local Fonts = LSM:HashTable("font")
@@ -36,6 +39,63 @@ function MilaUI:GenerateLSMTextures()
     end
     return LSMTextures
 end
+
+function MilaUI:CreateSlider(label, min, max, step, value, callback, width, parent)
+    local slider = GUI:Create("Slider")
+    slider:SetLabel(label)
+    slider:SetSliderValues(min, max, step)
+    slider:SetValue(value)
+    slider:SetCallback("OnMouseUp", callback)
+    slider:SetRelativeWidth(width or 0.25)
+    if parent then parent:AddChild(slider) end
+    return slider
+
+end
+
+function MilaUI:CreateInlineGroup(title, parent)
+    local group = GUI:Create("InlineGroup")
+    group:SetTitle(pink .. title)
+    group.titletext:SetFontObject(GameFontNormalLarge)
+    group:SetLayout("Flow")
+    group:SetFullWidth(true)
+    if parent then parent:AddChild(group) end
+    return group
+end
+
+function MilaUI:CreateColorPicker(label, colorTable, callback, width, hasAlpha, parent)
+    local picker = GUI:Create("ColorPicker")
+    picker:SetLabel(label)
+    local r, g, b, a = unpack(colorTable or {1, 1, 1, 1})
+    picker:SetColor(r, g, b, a)
+    picker:SetCallback("OnValueChanged", callback)
+    picker:SetHasAlpha(hasAlpha or false)
+    picker:SetRelativeWidth(width or 0.25)
+    if parent then parent:AddChild(picker) end
+    return picker
+end
+
+function MilaUI:CreateCheckBox(label, value, callback, width, parent)
+    local checkbox = GUI:Create("CheckBox")
+    checkbox:SetLabel(label)
+    checkbox:SetValue(value)
+    checkbox:SetCallback("OnValueChanged", callback)
+    checkbox:SetRelativeWidth(width or 0.25)
+    if parent then parent:AddChild(checkbox) end
+    return checkbox
+end
+
+function MilaUI:CreateDropdown(label, list, value, callback, width, parent)
+    local dropdown = GUI:Create("Dropdown")
+    dropdown:SetLabel(label)
+    dropdown:SetList(list)
+    dropdown:SetValue(value)
+    dropdown:SetCallback("OnValueChanged", callback)
+    dropdown:SetRelativeWidth(width or 0.25)
+    if parent then parent:AddChild(dropdown) end
+    return dropdown
+end
+
+
 
 function MilaUI:UpdateFrames()
     MilaUI:LoadCustomColours()

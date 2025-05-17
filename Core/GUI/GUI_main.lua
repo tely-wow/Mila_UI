@@ -29,64 +29,6 @@ for k,v in pairs(L_strings) do
   MilaUI.L[k] = MilaUI.L[k] or v
 end
 local L = MilaUI.L
-
--- Draw placeholder methods
-local function DrawPlaceholder(parent, text)
-  local lbl = GUI:Create("Label")
-  lbl:SetText(text .. " placeholder.")
-  parent:AddChild(lbl)
-end
-
--- Submenu handler
-local submenuContainer
-local function DrawSubmenuTabs(parent)
-  -- Sub-tab buttons bar
-  local subTabs = GUI:Create("TabGroup")
-  subTabs:SetTabs({
-    { text = "Colours", value = "Colours"},
-    { text = "Player", value = "Player" },
-    { text = "Target", value = "Target" },
-    { text = "Focus", value = "Focus" },
-    { text = "Pet", value = "Pet" },
-    { text = "Target of Target", value = "Target of Target" },
-    { text = "Focus Target", value = "Focus Target" },
-    { text = "Boss", value = "Boss" },
-  })
-  subTabs:SetHeight(30)
-  subTabs:SetFullWidth(true)
-  subTabs:SetLayout("Flow")
-  subTabs.frame:SetPoint("TOPLEFT", parent.frame, "TOPLEFT", 0, 0)
-  subTabs.frame:SetPoint("TOPRIGHT", parent.frame, "TOPRIGHT", 0, 0)
-  parent:AddChild(subTabs)
-
-  -- Sub-content wrapper below sub-tabs
-  local innerPanel = GUI:Create("SimpleGroup")
-  innerPanel:SetLayout("Manual")
-  innerPanel.frame:SetPoint("TOPLEFT", subTabs.frame, "BOTTOMLEFT", 0, -5)
-  innerPanel.frame:SetPoint("BOTTOMRIGHT", parent.frame, "BOTTOMRIGHT", 0, 0)
-  parent:AddChild(innerPanel)
-
-  -- Settings content container
-  submenuContainer = GUI:Create("SimpleGroup")
-  submenuContainer:SetLayout("Fill")
-  submenuContainer.frame:SetPoint("TOPLEFT", innerPanel.frame, "TOPLEFT", 5, 0)
-  submenuContainer.frame:SetPoint("BOTTOMRIGHT", innerPanel.frame, "BOTTOMRIGHT", -5, 5)
-  innerPanel:AddChild(submenuContainer)
-
-  -- Callbacks
-  subTabs:SetCallback("OnGroupSelected", function(_, _, unit)
-    submenuContainer:ReleaseChildren()
-    MilaUI:DrawUnitContainer(submenuContainer, unit)
-  end)
-
-  subTabs:SetCallback("OnGroupSelected", function(_, _, tabKey)
-    submenuContainer:ReleaseChildren()
-    MilaUI:DrawUnitContainer(submenuContainer, tabKey)
-  end)
-
-  subTabs:SelectTab("Player")
-end
-
 -- Main GUI creation
 -- Make these variables global to the file so they can be accessed by ReOpenGUI
 mainFrame = nil
@@ -215,63 +157,59 @@ function MilaUI:CreateGUIMain()
     currentTab = L.Tags
     MilaUI:UpdateTabButtonStates(tagsButton, allButtons)
     contentPanel:ReleaseChildren()
-    DrawPlaceholder(contentPanel, L.Tags)
   end)
   
   profilesButton:SetScript("OnClick", function()
     currentTab = L.Profiles
     MilaUI:UpdateTabButtonStates(profilesButton, allButtons)
     contentPanel:ReleaseChildren()
-    DrawPlaceholder(contentPanel, L.Profiles)
   end)
   
-  -- Helper functions for tab content
   function HandleUnitframesTab(parent)
-    -- Add a nested TabGroup for 'General' and 'Individual Frames'
+    -- Add a nested TabGroup for 'General', 'Individual Frames', and 'Colours'
     local unitframesTabs = GUI:Create("TabGroup")
     unitframesTabs:SetTabs({
-      { text = "General", value = "General" },
-      { text = "Individual Frames", value = "IndividualFrames" },
-      { text = "Colours", value = "Colours" },
+        { text = "General", value = "General" },
+        { text = "Individual Frames", value = "IndividualFrames" },
+        { text = "Colours", value = "Colours" },
     })
-    
-    unitframesTabs:SetLayout("Fill")
+    unitframesTabs:SetLayout("Flow")
     unitframesTabs:SetFullWidth(true)
     unitframesTabs:SetFullHeight(true)
     parent:AddChild(unitframesTabs)
-    
-    -- Set the callback for tab selection
+
+    -- Handle tab switching
     unitframesTabs:SetCallback("OnGroupSelected", function(container, _, subTab)
-      -- The container parameter is the content area of the selected tab
-      container:ReleaseChildren()
-      
-      -- Create a scroll frame inside the tab content area
-      local contentFrame = GUI:Create("ScrollFrame")
-      contentFrame:SetLayout("Flow")
-      contentFrame:SetFullWidth(true)
-      contentFrame:SetFullHeight(true)
-      container:AddChild(contentFrame)
-      
-      -- Schedule a frame update to ensure scrollbar appears correctly
-      C_Timer.After(0.1, function()
-        if contentFrame and contentFrame.frame and contentFrame.scrollframe then
-          -- Force scrollbar calculation
-          contentFrame.scrollframe:UpdateScrollChildRect()
-          contentFrame:DoLayout()
+        container:ReleaseChildren()
+
+        -- ScrollFrame for General and Colours tabs
+        if subTab == "General" or subTab == "Colours" then
+            local contentFrame = GUI:Create("ScrollFrame")
+            contentFrame:SetLayout("Flow")
+            contentFrame:SetFullWidth(true)
+            contentFrame:SetFullHeight(true)
+            container:AddChild(contentFrame)
+
+            C_Timer.After(0.1, function()
+                if contentFrame and contentFrame.frame and contentFrame.scrollframe then
+                    contentFrame.scrollframe:UpdateScrollChildRect()
+                    contentFrame:DoLayout()
+                end
+            end)
+
+            if subTab == "General" then
+                MilaUI:DrawUnitframesGeneralTab(contentFrame)
+            else
+                MilaUI:DrawUnitframesColoursTab(contentFrame)
+            end
+
+        elseif subTab == "IndividualFrames" then
+            -- No scroll frame here — use container directly
+            MilaUI:DrawUnitframesTabContent(container)
         end
-      end)
-      
-      if subTab == "General" then
-        MilaUI:DrawUnitframesGeneralTab(contentFrame)
-      elseif subTab == "IndividualFrames" then
-        -- Draw the unit frame tabs directly in the container (NO scrollframe)
-        MilaUI:DrawUnitframesTabContent(container)
-      elseif subTab == "Colours" then
-        MilaUI:DrawUnitframesColoursTab(contentFrame)
-      end
     end)
-    
-    -- Select the General tab by default
+
+    -- Show the default tab
     unitframesTabs:SelectTab("General")
   end
   

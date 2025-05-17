@@ -12,63 +12,8 @@ local lavender = "|cFFCBA0E3"
 -- Placeholder for where unit frame settings will be drawn for the selected unit
 local unitSettingsContainer = nil
 
--- Helper functions for creating common widget types
-local function CreateInlineGroup(title, parent)
-    local group = GUI:Create("InlineGroup")
-    group:SetTitle(pink .. title)
-    group.titletext:SetFontObject(GameFontNormalLarge)
-    group:SetLayout("Flow")
-    group:SetFullWidth(true)
-    if parent then parent:AddChild(group) end
-    return group
-end
-
-local function CreateColorPicker(label, colorTable, callback, width, hasAlpha, parent)
-    local picker = GUI:Create("ColorPicker")
-    picker:SetLabel(label)
-    local r, g, b, a = unpack(colorTable or {1, 1, 1, 1})
-    picker:SetColor(r, g, b, a)
-    picker:SetCallback("OnValueChanged", callback)
-    picker:SetHasAlpha(hasAlpha or false)
-    picker:SetRelativeWidth(width or 0.25)
-    if parent then parent:AddChild(picker) end
-    return picker
-end
-
-local function CreateCheckBox(label, value, callback, width, parent)
-    local checkbox = GUI:Create("CheckBox")
-    checkbox:SetLabel(label)
-    checkbox:SetValue(value)
-    checkbox:SetCallback("OnValueChanged", callback)
-    checkbox:SetRelativeWidth(width or 0.25)
-    if parent then parent:AddChild(checkbox) end
-    return checkbox
-end
-
-local function CreateSlider(label, min, max, step, value, callback, width, parent)
-    local slider = GUI:Create("Slider")
-    slider:SetLabel(label)
-    slider:SetSliderValues(min, max, step)
-    slider:SetValue(value)
-    slider:SetCallback("OnMouseUp", callback)
-    slider:SetRelativeWidth(width or 0.25)
-    if parent then parent:AddChild(slider) end
-    return slider
-end
-
-local function CreateDropdown(label, list, value, callback, width, parent)
-    local dropdown = GUI:Create("Dropdown")
-    dropdown:SetLabel(label)
-    dropdown:SetList(list)
-    dropdown:SetValue(value)
-    dropdown:SetCallback("OnValueChanged", callback)
-    dropdown:SetRelativeWidth(width or 0.25)
-    if parent then parent:AddChild(dropdown) end
-    return dropdown
-end
-
 -- This function draws the specific settings for a given unit (Player, Target, etc.)
-function MilaUI:DrawUnitContainer(container, unitName)
+function MilaUI:DrawUnitContainer(container, unitName, tabKey)
     container:ReleaseChildren() -- Clear previous unit's settings
     
     -- Convert UI unit name to database key
@@ -82,7 +27,7 @@ function MilaUI:DrawUnitContainer(container, unitName)
 
     -- Create a tab group using AceGUI's built-in tab system
     local tabGroup = GUI:Create("TabGroup")
-    tabGroup:SetLayout("Fill")
+    tabGroup:SetLayout("Flow")
     tabGroup:SetFullWidth(true)
     tabGroup:SetFullHeight(true)
     
@@ -101,7 +46,7 @@ function MilaUI:DrawUnitContainer(container, unitName)
     -- Set up the callback for tab selection
     tabGroup:SetCallback("OnGroupSelected", function(widget, event, tabKey)
         widget:ReleaseChildren() -- Clear previous tab's content
-        widget:SetFullHeight(true)
+        --widget:SetFullHeight(true)
         -- Create a scroll frame for the content
         local scrollFrame = GUI:Create("ScrollFrame")
         scrollFrame:SetLayout("Flow")
@@ -606,30 +551,13 @@ function MilaUI:DrawUnitframesGeneralTab(parent)
     mainContainer:SetFullWidth(true)
     mainContainer:SetFullHeight(true)
     parent:AddChild(mainContainer)
-    
-    -- Texture Options
-    local TextureOptionsContainer = CreateInlineGroup("Texture Options", mainContainer)
-    
-    -- Background Texture dropdown
-    CreateDropdown("Background Texture", 
-        LSMTextures,
-        General.BackgroundTexture,
-        function(widget, event, value) 
-            General.BackgroundTexture = value 
-            MilaUI:UpdateFrames() 
-        end,
-        0.5, TextureOptionsContainer)
-    
-    -- General options remain in this tab
-        
-    -- No need to add to parent since we're using mainContainer
 
     -- Mouseover Highlight Options
     local MouseoverHighlight = MilaUI.DB.profile.General.MouseoverHighlight or {Enabled=false, Colour={1,1,1,1}, Style="BORDER"}
-    local MouseoverHighlightOptions = CreateInlineGroup("Mouseover Highlight Options", mainContainer)
+    local MouseoverHighlightOptions = MilaUI:CreateInlineGroup("Mouseover Highlight Options", mainContainer)
     
     -- Enable checkbox
-    CreateCheckBox("Enable Mouseover Highlight", 
+    MilaUI:CreateCheckBox("Enable Mouseover Highlight", 
         MouseoverHighlight and MouseoverHighlight.Enabled,
         function(widget, event, value) 
             MouseoverHighlight.Enabled = value 
@@ -638,7 +566,7 @@ function MilaUI:DrawUnitframesGeneralTab(parent)
         0.33, MouseoverHighlightOptions)
     
     -- Color picker
-    CreateColorPicker("Color", 
+    MilaUI:CreateColorPicker("Color", 
         (MouseoverHighlight and MouseoverHighlight.Colour) or {1,1,1,1},
         function(widget, event, r, g, b, a) 
             MouseoverHighlight.Colour = {r, g, b, a} 
@@ -647,7 +575,7 @@ function MilaUI:DrawUnitframesGeneralTab(parent)
         0.33, true, MouseoverHighlightOptions)
     
     -- Style dropdown
-    CreateDropdown("Style", 
+    MilaUI:CreateDropdown("Style", 
         {
             ["BORDER"] = "Border",
             ["HIGHLIGHT"] = "Highlight",
@@ -658,10 +586,6 @@ function MilaUI:DrawUnitframesGeneralTab(parent)
             MilaUI:UpdateFrames() 
         end,
         0.33, MouseoverHighlightOptions)
-
-    -- No need to add to parent since we're using mainContainer
-    
-    -- Mouseover Highlight Options only remain in the General tab
 
 end
 
@@ -678,13 +602,13 @@ function MilaUI:DrawUnitframesColoursTab(parent)
     parent:AddChild(mainContainer)
     
     -- Create the main container
-    local ColouringOptionsContainer = CreateInlineGroup("Colour Options", mainContainer)
+    local ColouringOptionsContainer = MilaUI:CreateInlineGroup("Colour Options", mainContainer)
     
     -- Health Colour Options section
-    local HealthColourOptions = CreateInlineGroup("Health Colour Options", ColouringOptionsContainer)
+    local HealthColourOptions = MilaUI:CreateInlineGroup("Health Colour Options", ColouringOptionsContainer)
     
     -- Foreground Colour picker
-    CreateColorPicker("Foreground Colour", 
+    MilaUI:CreateColorPicker("Foreground Colour", 
         General.ForegroundColour or {1,1,1,1},
         function(widget, _, r, g, b, a) 
             General.ForegroundColour = {r, g, b, a} 
@@ -693,7 +617,7 @@ function MilaUI:DrawUnitframesColoursTab(parent)
         0.25, true, HealthColourOptions)
     
     -- Health colour checkboxes
-    CreateCheckBox("Use Class / Reaction Colour", 
+    MilaUI:CreateCheckBox("Use Class / Reaction Colour", 
         General.ColourByClass,
         function(widget, event, value) 
             General.ColourByClass = value 
@@ -701,7 +625,7 @@ function MilaUI:DrawUnitframesColoursTab(parent)
         end,
         0.25, HealthColourOptions)
     
-    CreateCheckBox("Use Disconnected Colour", 
+    MilaUI:CreateCheckBox("Use Disconnected Colour", 
         General.ColourIfDisconnected,
         function(widget, event, value) 
             General.ColourIfDisconnected = value 
@@ -709,7 +633,7 @@ function MilaUI:DrawUnitframesColoursTab(parent)
         end,
         0.25, HealthColourOptions)
     
-    CreateCheckBox("Use Tapped Colour", 
+    MilaUI:CreateCheckBox("Use Tapped Colour", 
         General.ColourIfTapped,
         function(widget, event, value) 
             General.ColourIfTapped = value 
@@ -718,10 +642,10 @@ function MilaUI:DrawUnitframesColoursTab(parent)
         0.25, HealthColourOptions)
     
     -- Background Colour Options section
-    local BackgroundColourOptions = CreateInlineGroup("Background Colour Options", ColouringOptionsContainer)
+    local BackgroundColourOptions = MilaUI:CreateInlineGroup("Background Colour Options", ColouringOptionsContainer)
     
     -- Background Colour picker
-    CreateColorPicker("Background Colour", 
+    MilaUI:CreateColorPicker("Background Colour", 
         General.BackgroundColour or {0,0,0,1},
         function(widget, _, r, g, b, a) 
             General.BackgroundColour = {r, g, b, a} 
@@ -730,7 +654,7 @@ function MilaUI:DrawUnitframesColoursTab(parent)
         1, true, BackgroundColourOptions)
     
     -- Background multiplier slider
-    local BackgroundColourMultiplier = CreateSlider("Multiplier", 
+    local BackgroundColourMultiplier = MilaUI:CreateSlider("Multiplier", 
         0, 1, 0.01,
         General.BackgroundMultiplier or 1,
         function(widget, event, value) 
@@ -740,7 +664,7 @@ function MilaUI:DrawUnitframesColoursTab(parent)
         0.25, BackgroundColourOptions)
     
     -- Background colour options
-    local BackgroundColourByForeground = CreateCheckBox("Colour By Foreground", 
+    local BackgroundColourByForeground = MilaUI:CreateCheckBox("Colour By Foreground", 
         General.ColourBackgroundByForeground,
         function(widget, event, value) 
             General.ColourBackgroundByForeground = value 
@@ -760,7 +684,7 @@ function MilaUI:DrawUnitframesColoursTab(parent)
         BackgroundColourMultiplier:SetDisabled(true)
     end
     
-    CreateCheckBox("Colour If Dead", 
+    MilaUI:CreateCheckBox("Colour If Dead", 
         General.ColourBackgroundIfDead,
         function(widget, event, value) 
             General.ColourBackgroundIfDead = value 
@@ -768,7 +692,7 @@ function MilaUI:DrawUnitframesColoursTab(parent)
         end,
         0.25, BackgroundColourOptions)
     
-    CreateCheckBox("Colour By Class / Reaction", 
+    MilaUI:CreateCheckBox("Colour By Class / Reaction", 
         General.ColourBackgroundByClass,
         function(widget, event, value) 
             General.ColourBackgroundByClass = value 
@@ -777,10 +701,10 @@ function MilaUI:DrawUnitframesColoursTab(parent)
         0.25, BackgroundColourOptions)
     
     -- Border Colour Options section
-    local BorderColourOptions = CreateInlineGroup("Border Colour Options", ColouringOptionsContainer)
+    local BorderColourOptions = MilaUI:CreateInlineGroup("Border Colour Options", ColouringOptionsContainer)
     
     -- Border Colour picker
-    CreateColorPicker("Border Colour", 
+    MilaUI:CreateColorPicker("Border Colour", 
         General.BorderColour or {1,1,1,1},
         function(widget, _, r, g, b, a) 
             General.BorderColour = {r, g, b, a} 
@@ -789,7 +713,7 @@ function MilaUI:DrawUnitframesColoursTab(parent)
         0.33, true, BorderColourOptions)
     
     -- Custom Colours
-    local CustomColours = CreateInlineGroup("Custom Colours", mainContainer)
+    local CustomColours = MilaUI:CreateInlineGroup("Custom Colours", mainContainer)
     
     local ResetCustomColoursButton = GUI:Create("Button")
     ResetCustomColoursButton:SetText("Reset Custom Colours")
@@ -803,7 +727,7 @@ function MilaUI:DrawUnitframesColoursTab(parent)
     CustomColours:AddChild(ResetCustomColoursButton)
     
     -- Power Colours
-    local PowerColours = CreateInlineGroup("Power Colours", CustomColours)
+    local PowerColours = MilaUI:CreateInlineGroup("Power Colours", CustomColours)
 
     local PowerNames = {
         [0] = "Mana", [1] = "Rage", [2] = "Focus", [3] = "Energy", [6] = "Rune", [8] = "Runic Power", [11] = "Maelstrom", [13] = "Insanity", [17] = "Fury", [18] = "Pain"
@@ -827,7 +751,7 @@ function MilaUI:DrawUnitframesColoursTab(parent)
     end
 
     -- Reaction Colours
-    local ReactionColours = CreateInlineGroup("Reaction Colours", CustomColours)
+    local ReactionColours = MilaUI:CreateInlineGroup("Reaction Colours", CustomColours)
 
     local ReactionNames = {
         [1] = "Hated", [2] = "Hostile", [3] = "Unfriendly", [4] = "Neutral", [5] = "Friendly", [6] = "Honored", [7] = "Revered", [8] = "Exalted"
@@ -849,7 +773,7 @@ function MilaUI:DrawUnitframesColoursTab(parent)
     end
 
     -- Status Colours
-    local StatusColours = CreateInlineGroup("Status Colours", CustomColours)
+    local StatusColours = MilaUI:CreateInlineGroup("Status Colours", CustomColours)
 
     local StatusNames = {
         [1] = "Dead",
@@ -872,81 +796,42 @@ function MilaUI:DrawUnitframesColoursTab(parent)
         StatusColours:AddChild(StatusColour)
     end
 end
-function MilaUI:DrawUnitframesTabContent(actualContentParent)
-    actualContentParent:SetLayout("Flow") -- Use Flow layout for better spacing
-    actualContentParent:ReleaseChildren() -- Clear any existing content
+-- Fixed version of MilaUI:DrawUnitframesTabContent to avoid layout issues
+function MilaUI:DrawUnitframesTabContent(container)
+    container:SetLayout("Flow")
+    container:ReleaseChildren()
 
-    -- Create a tighter layout with minimal padding
-    local treeWidth = 150 -- Width for the TreeGroup
-    local padding = 0    -- No padding between elements
-
-    -- Create the TreeGroup (on the left)
     local treeData = {}
     local unitFrameItems = {L.Player, L.Target, L.Focus, L.Pet, L.TargetTarget, L.FocusTarget, L.Boss}
     for _, unitKey in ipairs(unitFrameItems) do
         table.insert(treeData, { text = unitKey, value = unitKey })
     end
 
-    -- Create a container for both the tree and content
-    local mainContainer = GUI:Create("SimpleGroup")
-    mainContainer:SetFullWidth(true)
-    mainContainer:SetFullHeight(true)
-    mainContainer:SetLayout("Flow")
-    actualContentParent:AddChild(mainContainer)
+    -- Create TreeGroup for unit list
+    local treeGroup = GUI:Create("TreeGroup")
+    treeGroup:SetLayout("Fill")
+    treeGroup:SetFullWidth(true)
+    treeGroup:SetFullHeight(true)
+    treeGroup:SetTree(treeData)
+    container:AddChild(treeGroup)
 
-    -- Create the tree
-    local tree = GUI:Create("TreeGroup")
-    tree:SetTree(treeData)
-    tree:SetLayout("Fill")
-    tree:SetRelativeWidth(0.25) -- 25% of the width
-    tree:SetFullHeight(true)
-    
-    -- Remove borders and extra padding
-    if tree.frame.SetBackdrop then
-        local backdrop = tree.frame:GetBackdrop()
-        if backdrop then
-            backdrop.insets.left = 0
-            backdrop.insets.right = 0
-            backdrop.insets.top = 0
-            backdrop.insets.bottom = 0
-            tree.frame:SetBackdrop(backdrop)
-        end
-    end
-    
-    mainContainer:AddChild(tree)
+    -- Tree selection callback
+    treeGroup:SetCallback("OnGroupSelected", function(widget, event, group)
+        widget:ReleaseChildren()
 
-    -- Create the content area for unit settings (on the right)
-    unitSettingsContainer = GUI:Create("SimpleGroup")
-    unitSettingsContainer:SetLayout("Fill")
-    unitSettingsContainer:SetRelativeWidth(0.75) -- 75% of the width
-    unitSettingsContainer:SetFullHeight(true)
-    
-    -- Remove borders and extra padding
-    if unitSettingsContainer.frame.SetBackdrop then
-        local backdrop = unitSettingsContainer.frame:GetBackdrop()
-        if backdrop then
-            backdrop.insets.left = 0
-            backdrop.insets.right = 0
-            backdrop.insets.top = 0
-            backdrop.insets.bottom = 0
-            unitSettingsContainer.frame:SetBackdrop(backdrop)
-        end
-    end
-    
-    mainContainer:AddChild(unitSettingsContainer)
-    
-    -- Set up the callback for tree selection
-    tree:SetCallback("OnGroupSelected", function(widget, event, group)
-        if unitSettingsContainer then
-            self:DrawUnitContainer(unitSettingsContainer, group)
-        end
+        local scrollHolder = GUI:Create("SimpleGroup")
+        scrollHolder:SetLayout("Fill")
+        scrollHolder:SetFullWidth(true)
+        scrollHolder:SetFullHeight(true)
+        widget:AddChild(scrollHolder)
+
+        MilaUI:DrawUnitContainer(scrollHolder, group, "Healthbar")
     end)
 
-    -- Select the first item in the tree by default
+    -- Auto-select the first unit
     if #treeData > 0 then
-        tree:SelectByPath(treeData[1].value)
-        if unitSettingsContainer then
-            self:DrawUnitContainer(unitSettingsContainer, treeData[1].value)
-        end
+        treeGroup:SelectByPath(treeData[1].value)
     end
 end
+
+
