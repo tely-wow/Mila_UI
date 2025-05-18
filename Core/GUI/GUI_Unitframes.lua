@@ -115,8 +115,8 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             scrollFrame:AddChild(PositionandSize)
             -- Frame Width
             local FrameWidth = GUI:Create("Slider")
-            FrameWidth:SetLabel("Frame Width")
-            FrameWidth:SetSliderValues(1, 999, 0.1)
+            FrameWidth:SetLabel("Width")
+            FrameWidth:SetSliderValues(1, 500, 1)
             FrameWidth:SetValue(Health.Width)
             FrameWidth:SetCallback("OnMouseUp", function(widget, event, value) Health.Width = value MilaUI:UpdateFrames() end)
             FrameWidth:SetRelativeWidth(0.5)
@@ -124,8 +124,8 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
 
             -- Frame Height
             local FrameHeight = GUI:Create("Slider")
-            FrameHeight:SetLabel("Frame Height")
-            FrameHeight:SetSliderValues(1, 999, 0.1)
+            FrameHeight:SetLabel("Height")
+            FrameHeight:SetSliderValues(1, 500, 1)
             FrameHeight:SetValue(Health.Height)
             FrameHeight:SetCallback("OnMouseUp", function(widget, event, value) Health.Height = value MilaUI:UpdateFrames() end)
             FrameHeight:SetRelativeWidth(0.5)
@@ -1102,38 +1102,54 @@ end
 
 function MilaUI:DrawUnitframesTabContent(container)
     container:ReleaseChildren()
-    container:SetLayout("Flow")
+    container:SetLayout("Fill")
     container:SetFullWidth(true)
     container:SetFullHeight(true)
-
-    -- Left pane: unit list tree
+    
+    -- Create tree data
     local treeData = {}
     local unitFrameItems = {L.Player, L.Target, L.Focus, L.Pet, L.TargetTarget, L.FocusTarget, L.Boss}
     for _, key in ipairs(unitFrameItems) do
         table.insert(treeData, { text = key, value = key })
     end
+    
+    -- Create the TreeGroup - it has built-in tree and content areas
     local treeGroup = GUI:Create("TreeGroup")
     treeGroup:SetLayout("Fill")
+    treeGroup:SetFullWidth(true)
     treeGroup:SetFullHeight(true)
-    treeGroup:SetRelativeWidth(0.24)
     treeGroup:SetTree(treeData)
     container:AddChild(treeGroup)
-
-    -- Right pane: content area for unit settings
-    local contentPane = GUI:Create("SimpleGroup")
-    contentPane:SetLayout("Fill")
-    contentPane:SetFullHeight(true)
-    contentPane:SetRelativeWidth(0.74)
-    container:AddChild(contentPane)
-
-    -- On selection, draw settings into contentPane
-    treeGroup:SetCallback("OnGroupSelected", function(_, _, unit)
-        contentPane:ReleaseChildren()
-        MilaUI:DrawUnitContainer(contentPane, unit)
+    
+    -- On selection, draw settings directly into the TreeGroup's content area
+    treeGroup:SetCallback("OnGroupSelected", function(widget, _, unit)
+        widget:ReleaseChildren() -- Clear the TreeGroup's content area
+        MilaUI:DrawUnitContainer(widget, unit) -- Draw directly into the TreeGroup
+        
+        -- Force layout update after a short delay to fix positioning
+        C_Timer.After(0.05, function()
+            if widget and widget.frame then
+                widget:DoLayout()
+            end
+        end)
     end)
 
     -- Initialize selection
     if #treeData > 0 then
         treeGroup:SelectByPath(treeData[1].value)
     end
+    
+    -- Force layout update for the container itself
+    C_Timer.After(0.05, function()
+        if container and container.frame then
+            container:DoLayout()
+        end
+    end)
+    
+    -- Force layout update for the tree group
+    C_Timer.After(0.05, function()
+        if treeGroup and treeGroup.frame then
+            treeGroup:DoLayout()
+        end
+    end)
 end

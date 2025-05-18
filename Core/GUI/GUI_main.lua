@@ -192,6 +192,13 @@ function MilaUI:CreateGUIMain()
         elseif subTab == "IndividualFrames" then
             -- No scroll frame here — use container directly
             MilaUI:DrawUnitframesTabContent(container)
+            
+            -- Force layout update after a short delay
+            C_Timer.After(0.1, function()
+                if container and container.frame then
+                    container:DoLayout()
+                end
+            end)
         end
     end)
 
