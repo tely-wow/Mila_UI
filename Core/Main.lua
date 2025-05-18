@@ -14,7 +14,7 @@ MilaUIAddon.Defaults = {
     profile = {
         TestMode = false,
         General = {
-            Font                              = "Fonts\\FRIZQT__.TTF",
+            Font                              = "Expressway",
             FontFlag                          = "OUTLINE",
             FontShadowColour                  = {0, 0, 0, 1},
             FontShadowXOffset                 = 0,
@@ -90,9 +90,15 @@ MilaUIAddon.Defaults = {
                 AnchorTo        = "LEFT",
             },
             Health = {
-                Direction = "LR",
-                Texture = "Smooth",
-                Mask = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\Parallelogram.tga",
+                Width               = 272,
+                Height              = 42,
+                Direction           = "LR",
+                Texture             = "Smooth",
+                BackgroundTexture   = "Smooth",
+                CustomMask = {
+                    Enabled = true,
+                    MaskTexture = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\Parallelogram.tga",
+                },
                 CustomBorder = {
                     Enabled = true,
                     BorderTexture = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\border_thick.tga",
@@ -111,11 +117,20 @@ MilaUIAddon.Defaults = {
                 }
             },
             PowerBar = {
+                Width                   = 272,
+                Height                  = 21,
                 Direction               = "LR",
-                Texture = "Smooth",
-                Mask = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\power_para.tga",
+                Texture                 = "Smooth",
+                BackgroundTexture       = "Smooth",
+                CustomMask = {
+                    Enabled = true,
+                    MaskTexture = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\power_para.tga",
+                },
+                CustomBorder = {
+                    Enabled = true,
+                    BorderTexture = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\power_border.tga",
+                },
                 Enabled                 = false,
-                Height                  = 5,
                 ColourByType            = true,
                 ColourBackgroundByType  = true,
                 BackgroundMultiplier    = 0.25,
@@ -239,9 +254,15 @@ MilaUIAddon.Defaults = {
                 AnchorTo        = "RIGHT",
             },
             Health = {
-                Direction = "LR",
-                Texture = "Smooth",
-                Mask = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\Parallelogram2.tga",
+                Width               = 272,
+                Height              = 42,
+                Direction           = "LR",
+                Texture             = "Smooth",
+                BackgroundTexture   = "Smooth",
+                CustomMask = {
+                    Enabled = true,
+                    MaskTexture = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\Parallelogram2.tga",
+                },
                 CustomBorder = {
                     Enabled = true,
                     BorderTexture = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\border_thick_mirrored.tga",
@@ -260,11 +281,20 @@ MilaUIAddon.Defaults = {
                 }
             },
             PowerBar = {
+                Width                   = 272,
+                Height                  = 21,
                 Direction               = "LR",
-                Texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
-                Mask = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\power_para2.tga",
+                Texture                 = "Smooth",
+                BackgroundTexture       = "Smooth",
+                CustomMask = {
+                    Enabled         = true,
+                    MaskTexture     = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\power_para2.tga",
+                },
+                CustomBorder = {
+                    Enabled         = true,
+                    BorderTexture   = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\power_border2.tga",
+                },
                 Enabled                 = true,
-                Height                  = 5,
                 ColourByType            = true,
                 ColourBackgroundByType  = true,
                 BackgroundMultiplier    = 0.25,
@@ -377,12 +407,18 @@ MilaUIAddon.Defaults = {
                 AnchorTo        = "RIGHT",
             },
             Health = {
-                Direction = "LR",
-                Texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
-                Mask = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\Parallelogram2.tga",
+                Width               = 120,
+                Height              = 42,
+                Direction           = "LR",
+                Texture             = "Smooth",
+                BackgroundTexture   = "Smooth",
+                CustomMask = {
+                    Enabled         = true,
+                    MaskTexture     = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\Parallelogram2.tga",
+                },
                 CustomBorder = {
-                    Enabled = true,
-                    BorderTexture = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\border_thick_mirrored.tga",
+                    Enabled         = true,
+                    BorderTexture   = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\border_thick_mirrored.tga",
                 },
                 HealthPrediction = {
                     IncomingHeals = {},
@@ -398,11 +434,20 @@ MilaUIAddon.Defaults = {
                 }
             },
             PowerBar = {
+                Width                  = 272,
+                Height                 = 21,
                 Direction              = "LR",
-                Texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
-                Mask = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\power_para2.tga",
+                Texture                = "Smooth",
+                BackgroundTexture      = "Smooth",
+                CustomMask = {
+                    Enabled = true,
+                    MaskTexture = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\power_para2.tga",
+                },
+                CustomBorder = {
+                    Enabled = true,
+                    BorderTexture = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\power_border2.tga",
+                },
                 Enabled                 = false,
-                Height                  = 5,
                 ColourByType            = true,
                 ColourBackgroundByType  = true,
                 BackgroundMultiplier    = 0.25,
@@ -515,12 +560,18 @@ MilaUIAddon.Defaults = {
                 AnchorTo        = "RIGHT",
             },
             Health = {
-                Direction = "LR",
-                Texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
-                Mask = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\Parallelogram2.tga",
+                Width               = 272,
+                Height              = 36,
+                Direction           = "LR",
+                Texture             = "Smooth",
+                BackgroundTexture   = "Smooth",
+                CustomMask = {
+                    Enabled         = true,
+                    MaskTexture     = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\Parallelogram2.tga",
+                },
                 CustomBorder = {
-                    Enabled = true,
-                    BorderTexture = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\border_thick_mirrored.tga",
+                    Enabled         = true,
+                    BorderTexture   = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\border_thick_mirrored.tga",
                 },
                 HealthPrediction = {
                     IncomingHeals = {},
@@ -536,11 +587,20 @@ MilaUIAddon.Defaults = {
                 }
             },
             PowerBar = {
+                Width                  = 272,
+                Height                 = 21,
                 Direction              = "LR",
-                Texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
-                Mask = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\power_para2.tga",
+                Texture                = "Smooth",
+                BackgroundTexture      = "Smooth",
+                CustomMask = {
+                    Enabled         = true,
+                    MaskTexture     = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\power_para2.tga",
+                },
+                CustomBorder = {
+                    Enabled         = true,
+                    BorderTexture   = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\border_thick_mirrored.tga",
+                },
                 Enabled                 = false,
-                Height                  = 5,
                 ColourByType            = true,
                 ColourBackgroundByType  = true,
                 BackgroundMultiplier    = 0.25,
@@ -653,12 +713,18 @@ MilaUIAddon.Defaults = {
                 AnchorTo        = "RIGHT",
             },
             Health = {
-                Direction = "LR",
-                Texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
-                Mask = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\Parallelogram2.tga",
+                Width               = 120,
+                Height              = 28,
+                Direction           = "LR",
+                Texture             = "Smooth",
+                BackgroundTexture   = "Smooth",
+                CustomMask = {
+                    Enabled         = true,
+                    MaskTexture     = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\Parallelogram2.tga",
+                },
                 CustomBorder = {
-                    Enabled = true,
-                    BorderTexture = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\border_thick_mirrored.tga",
+                    Enabled         = true,
+                    BorderTexture   = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\border_thick_mirrored.tga",
                 },
                 HealthPrediction = {
                     IncomingHeals = {},
@@ -674,11 +740,20 @@ MilaUIAddon.Defaults = {
                 }
             },
             PowerBar = {
-                Direction              = "LR",
-                Texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
-                Mask = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\power_para2.tga",
+                Width               = 120,
+                Height              = 28,
+                Direction           = "LR",
+                Texture             = "Smooth",
+                BackgroundTexture   = "Smooth",
+                CustomMask = {
+                    Enabled         = true,
+                    MaskTexture     = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\power_para2.tga",
+                },
+                CustomBorder = {
+                    Enabled         = true,
+                    BorderTexture   = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\power_border2.tga",
+                },
                 Enabled                 = false,
-                Height                  = 5,
                 ColourByType            = true,
                 ColourBackgroundByType  = true,
                 BackgroundMultiplier    = 0.25,
@@ -791,12 +866,18 @@ MilaUIAddon.Defaults = {
                 AnchorTo        = "LEFT",
             },
             Health = {
-                Direction = "LR",
-                Texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
-                Mask = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\Parallelogram.tga",
+                Width               = 272,
+                Height              = 10,
+                Direction           = "LR",
+                Texture             = "Smooth",
+                BackgroundTexture   = "Smooth",
+                CustomMask = {
+                    Enabled         = true,
+                    MaskTexture     = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\Parallelogram.tga",
+                },
                 CustomBorder = {
-                    Enabled = true,
-                    BorderTexture = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\border_thick.tga",
+                    Enabled         = true,
+                    BorderTexture   = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\border_thick.tga",
                 },
                 ColourByPlayerClass = false,
                 HealthPrediction = {
@@ -813,9 +894,19 @@ MilaUIAddon.Defaults = {
                 }
             },
             PowerBar = {
-                Direction              = "LR",
-                Texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
-                Mask = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\power_para.tga",
+                Width               = 272,
+                Height              = 10,
+                Direction           = "LR",
+                Texture             = "Smooth",
+                BackgroundTexture   = "Smooth",
+                CustomMask = {
+                    Enabled         = true,
+                    MaskTexture     = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\power_para.tga",
+                },
+                CustomBorder = {
+                    Enabled         = true,
+                    BorderTexture   = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\power_border.tga",
+                },
                 Enabled                 = false,
                 Height                  = 5,
                 ColourByType            = true,
@@ -932,12 +1023,18 @@ MilaUIAddon.Defaults = {
                 AnchorTo        = "LEFT",
             },
             Health = {
-                Direction = "LR",
-                Texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
-                Mask = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\Parallelogram2.tga",
+                Width               = 250,
+                Height              = 42,
+                Direction           = "LR",
+                Texture             = "Smooth",
+                BackgroundTexture   = "Smooth",
+                CustomMask = {
+                    Enabled         = true,
+                    MaskTexture     = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\Parallelogram2.tga",
+                },
                 CustomBorder = {
-                    Enabled = true,
-                    BorderTexture = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\border_thick_mirrored.tga",
+                    Enabled         = true,
+                    BorderTexture   = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\border_thick_mirrored.tga",
                 },
                 HealthPrediction = {
                     IncomingHeals = {},
@@ -953,11 +1050,20 @@ MilaUIAddon.Defaults = {
                 }
             },
             PowerBar = {
-                Direction              = "LR",
-                Texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
-                Mask = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\power_para2.tga",
+                Width               = 250,
+                Height              = 42,
+                Direction           = "LR",
+                Texture             = "Smooth",
+                BackgroundTexture   = "Smooth",
+                CustomMask = {
+                    Enabled         = true,
+                    MaskTexture     = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\power_para2.tga",
+                },
+                CustomBorder = {
+                    Enabled         = true,
+                    BorderTexture   = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\power_border2.tga",
+                },
                 Enabled                 = true,
-                Height                  = 5,
                 ColourByType            = true,
                 ColourBackgroundByType  = true,
                 BackgroundMultiplier    = 0.25,

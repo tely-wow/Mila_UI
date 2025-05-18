@@ -209,7 +209,7 @@ local function CreateHealthBar(self, Unit)
     local Frame = MilaUI.DB.profile[Unit].Frame
     local Health = MilaUI.DB.profile[Unit].Health
     local BackdropTemplate = {
-        bgFile = General.BackgroundTexture,
+        bgFile = Health.BackgroundTexture,
         edgeFile = General.BorderTexture,
         edgeSize = General.BorderSize,
         insets = { left = General.BorderInset, right = General.BorderInset, top = General.BorderInset, bottom = General.BorderInset },
@@ -226,13 +226,13 @@ local function CreateHealthBar(self, Unit)
 
     if not self.unitHealthBar then
         self.unitHealthBar = CreateFrame("StatusBar", nil, self)
-        self.unitHealthBar:SetSize(Frame.Width - 2, Frame.Height - 2)
+        self.unitHealthBar:SetSize(Health.Width - 2, Health.Height - 2)
         self.unitHealthBar:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -1)
         local healthTexturePath = LSM:Fetch("statusbar", Health.Texture)
         self.unitHealthBar:SetStatusBarTexture(healthTexturePath)
         local tex = self.unitHealthBar:GetStatusBarTexture()
         tex:SetTexCoord(0,1,0,1)
-        tex:SetMask(Health.Mask)
+        if Health.CustomMask.Enabled then tex:SetMask(Health.CustomMask.MaskTexture) end
         self.unitHealthBar.colorClass = General.ColourByClass
         self.unitHealthBar.colorReaction = General.ColourByClass
         self.unitHealthBar.colorDisconnected = General.ColourIfDisconnected
@@ -262,12 +262,12 @@ local function CreateHealthBar(self, Unit)
         self.unitHealthBar:SetFrameLevel(2)
         self.Health = self.unitHealthBar
         self.unitHealthBarBackground = self:CreateTexture(nil, "BACKGROUND")
-        self.unitHealthBarBackground:SetSize(Frame.Width - 2, Frame.Height - 2)
+        self.unitHealthBarBackground:SetSize(Health.Width - 2, Health.Height - 2)
         self.unitHealthBarBackground:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -1)
-        local healthBgTexturePath = LSM:Fetch("statusbar", Health.Texture)
+        local healthBgTexturePath = LSM:Fetch("statusbar", Health.BackgroundTexture)
         self.unitHealthBarBackground:SetTexture(healthBgTexturePath)
         self.unitHealthBarBackground:SetTexCoord(0, 1, 0, 1)
-        self.unitHealthBarBackground:SetMask(Health.Mask)
+        if Health.CustomMask.Enabled then self.unitHealthBarBackground:SetMask(Health.CustomMask.MaskTexture) end
         self.unitHealthBarBackground:SetAlpha(General.BackgroundColour[4])
     end
 end
@@ -299,8 +299,6 @@ local function CreateAbsorbBar(self, Unit)
         local UAR, UAG, UAB, UAA = unpack(Absorbs.Colour)
         self.unitAbsorbs:SetStatusBarColor(UAR, UAG, UAB, UAA)
         self.unitAbsorbs:SetFrameLevel(self.unitHealthBar:GetFrameLevel() + 1)
-        local tex = self.unitAbsorbs:GetStatusBarTexture()
-        tex:SetMask(Health.Mask)
         self.unitAbsorbs:Hide()
     end
 end
@@ -338,8 +336,8 @@ end
 
 local function CreatePowerBar(self, Unit)
     local General = MilaUI.DB.profile.General
-    local Frame = MilaUI.DB.profile[Unit].Frame
     local PowerBar = MilaUI.DB.profile[Unit].PowerBar
+    local r, g, b, a = unpack(MilaUI.DB.profile.General.BackgroundColour)
     local BackdropTemplate = {
         bgFile = General.BackgroundTexture,
         edgeFile = General.BorderTexture,
@@ -350,9 +348,11 @@ local function CreatePowerBar(self, Unit)
     if PowerBar.Enabled and not self.unitPowerBar and not self.unitPowerBarBackground then
         self.unitPowerBar = CreateFrame("StatusBar", nil, self)
         self.unitPowerBar:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 0, 0)
-        self.unitPowerBar:SetSize(Frame.Width, PowerBar.Height)
-        local powerTexturePath = LSM:Fetch("statusbar", General.ForegroundTexture)
+        self.unitPowerBar:SetSize(PowerBar.Width, PowerBar.Height)
+        local powerTexturePath = LSM:Fetch("statusbar", PowerBar.Texture)
         self.unitPowerBar:SetStatusBarTexture(powerTexturePath)
+        local tex = self.unitPowerBar:GetStatusBarTexture()
+        if PowerBar.CustomMask.Enabled and PowerBar.CustomMask.MaskTexture and not tex.mask then tex:SetMask(PowerBar.CustomMask.MaskTexture) end
         self.unitPowerBar:SetStatusBarColor(unpack(PowerBar.Colour))
         self.unitPowerBar:SetMinMaxValues(0, 100)
         self.unitPowerBar:SetAlpha(PowerBar.Colour[4])
@@ -370,24 +370,27 @@ local function CreatePowerBar(self, Unit)
         -- Frame Power Bar Background
         self.unitPowerBarBackground = self.unitPowerBar:CreateTexture(nil, "BACKGROUND")
         self.unitPowerBarBackground:SetAllPoints()
-        local powerBgTexturePath = LSM:Fetch("statusbar", General.BackgroundTexture)
+        local powerBgTexturePath = LSM:Fetch("statusbar", PowerBar.BackgroundTexture)
         self.unitPowerBarBackground:SetTexture(powerBgTexturePath)
+        if PowerBar.CustomMask.Enabled then self.unitPowerBarBackground:SetMask(PowerBar.CustomMask.MaskTexture) end
         self.unitPowerBarBackground:SetAlpha(PowerBar.BackgroundColour[4])
         if PowerBar.ColourBackgroundByType then 
             self.unitPowerBarBackground.multiplier = PowerBar.BackgroundMultiplier
             self.unitPowerBar.bg = self.unitPowerBarBackground
         else
-            self.unitPowerBarBackground:SetVertexColor(unpack(PowerBar.BackgroundColour))
+            self.unitPowerBarBackground:SetVertexColor(r, g, b, a)
             self.unitPowerBar.bg = nil
         end
         -- Power Bar Border
-        self.unitPowerBarBorder = CreateFrame("Frame", nil, self.unitPowerBar, "BackdropTemplate")
-        self.unitPowerBarBorder:SetSize(Frame.Width, PowerBar.Height)
-        self.unitPowerBarBorder:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 0, 0)
-        self.unitPowerBarBorder:SetBackdrop(BackdropTemplate)
-        self.unitPowerBarBorder:SetBackdropColor(0,0,0,0)
-        self.unitPowerBarBorder:SetBackdropBorderColor(unpack(General.BorderColour))
-        self.unitPowerBarBorder:SetFrameLevel(4)
+        if PowerBar.Border and PowerBar.Border.Enabled and not PowerBar.CustomBorder.Enabled then
+            self.unitPowerBarBorder = CreateFrame("Frame", nil, self.unitPowerBar, "BackdropTemplate")
+            self.unitPowerBarBorder:SetSize(PowerBar.Width, PowerBar.Height)
+            self.unitPowerBarBorder:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 0, 0)
+            self.unitPowerBarBorder:SetBackdrop(BackdropTemplate)
+            self.unitPowerBarBorder:SetBackdropColor(0,0,0,0)
+            self.unitPowerBarBorder:SetBackdropBorderColor(r, g, b, a)
+            self.unitPowerBarBorder:SetFrameLevel(4)
+        end
     end
 end
 
@@ -616,10 +619,12 @@ local function CreateMouseoverHighlight(self) -- 'self' here is equivalent to 'F
 end
 
 local function CreateCustomBorder(self, unit)
-    local General    = MilaUI.DB.profile.General
-    local Border    = MilaUI.DB.profile[unit].Health.CustomBorder
-    local Parent = self.unitHealthBar or self
-    local r, g, b, a = unpack(General.BorderColour)
+    local HealthBorder    = MilaUI.DB.profile[unit].Health.CustomBorder
+    local PowerBorder    = MilaUI.DB.profile[unit].PowerBar.CustomBorder
+    local PowerBar = MilaUI.DB.profile[unit].PowerBar
+    local HealthParent = self.unitHealthBar
+    local PowerParent = self.unitPowerBar
+    local r, g, b, a = unpack(MilaUI.DB.profile.General.BorderColour)
 
 
     -- if we already made one, kill it
@@ -629,16 +634,29 @@ local function CreateCustomBorder(self, unit)
         self.unitBorderFrame = nil
     end
 
-    local BorderFrame = CreateFrame("Frame", nil, Parent)
-    BorderFrame:SetAllPoints(Parent)
-    BorderFrame:SetFrameLevel(Parent:GetFrameLevel() + 1)
-    local BorderTexture = BorderFrame:CreateTexture(nil, "OVERLAY")
-    BorderTexture:SetAllPoints(BorderFrame)
-    BorderTexture:SetTexture(Border.BorderTexture)
-    BorderTexture:SetTexCoord(0, 1, 0, 1)
-    BorderTexture:SetVertexColor(unpack(General.BorderColour))
-    BorderTexture:SetAlpha(a)
+    if HealthBorder.Enabled then
+        local BorderFrame = CreateFrame("Frame", nil, HealthParent)
+        BorderFrame:SetAllPoints(HealthParent)
+        BorderFrame:SetFrameLevel(HealthParent:GetFrameLevel() + 1)
+        local BorderTexture = BorderFrame:CreateTexture(nil, "OVERLAY")
+        BorderTexture:SetAllPoints(BorderFrame)
+        BorderTexture:SetTexture(HealthBorder.BorderTexture)
+        BorderTexture:SetTexCoord(0, 1, 0, 1)
+        BorderTexture:SetVertexColor(r, g, b, a)
+        BorderTexture:SetAlpha(a)
+    end
 
+    if PowerBorder.Enabled and PowerBar.Enabled then
+        local BorderFrame = CreateFrame("Frame", nil, PowerParent)
+        BorderFrame:SetAllPoints(PowerParent)
+        BorderFrame:SetFrameLevel(PowerParent:GetFrameLevel() + 1)
+        local BorderTexture = BorderFrame:CreateTexture(nil, "OVERLAY")
+        BorderTexture:SetAllPoints(BorderFrame)
+        BorderTexture:SetTexture(PowerBorder.BorderTexture)
+        BorderTexture:SetTexCoord(0, 1, 0, 1)
+        BorderTexture:SetVertexColor(r, g, b, a)
+        BorderTexture:SetAlpha(a)
+    end
 end
 
 
@@ -654,13 +672,13 @@ local function ApplyScripts(self)
 end
 
 function MilaUI:CreateUnitFrame(Unit)
-    local Frame = MilaUI.DB.profile[Unit].Frame
     local Health = MilaUI.DB.profile[Unit].Health
+    local PowerBar = MilaUI.DB.profile[Unit].PowerBar
     local HealthPrediction = Health.HealthPrediction
     local Absorbs = HealthPrediction.Absorbs
     local HealAbsorbs = HealthPrediction.HealAbsorbs
 
-    self:SetSize(Frame.Width, Frame.Height)
+    self:SetSize(Health.Width, Health.Height + PowerBar.Height + 1)
     CreateHealthBar(self, Unit)
     CreateMouseoverHighlight(self)
     CreateAbsorbBar(self, Unit)
@@ -700,9 +718,11 @@ end
 local function UpdateFrame(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
     local Frame = MilaUI.DB.profile[Unit].Frame
+    local Health = MilaUI.DB.profile[Unit].Health
+    local PowerBar = MilaUI.DB.profile[Unit].PowerBar
     if FrameName then
         FrameName:ClearAllPoints()
-        FrameName:SetSize(Frame.Width, Frame.Height)
+        FrameName:SetSize(Health.Width, Health.Height + PowerBar.Height + 1)
         local AnchorParent = (_G[Frame.AnchorParent] and _G[Frame.AnchorParent]:IsObjectType("Frame")) and _G[Frame.AnchorParent] or UIParent
         FrameName:SetPoint(Frame.AnchorFrom, AnchorParent, Frame.AnchorTo, Frame.XPosition, Frame.YPosition)
     end
@@ -711,7 +731,6 @@ end
 
 local function UpdateHealthBar(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
-    local Frame = MilaUI.DB.profile[Unit].Frame
     local General = MilaUI.DB.profile.General
     local Health = MilaUI.DB.profile[Unit].Health
 
@@ -720,11 +739,13 @@ local function UpdateHealthBar(FrameName)
         FrameName.unitBorder:SetFrameLevel(1)
     end
     if FrameName.unitHealthBar then
-        FrameName.unitHealthBar:SetSize(Frame.Width - 2, Frame.Height - 2)
+        FrameName.unitHealthBar:SetSize(Health.Width - 2, Health.Height - 2)
         FrameName.unitHealthBar:ClearAllPoints()
         FrameName.unitHealthBar:SetPoint("TOPLEFT", FrameName, "TOPLEFT", 1, -1)
         local healthTexturePath = LSM:Fetch("statusbar", Health.Texture)
         FrameName.unitHealthBar:SetStatusBarTexture(healthTexturePath)
+        local tex = FrameName.unitHealthBar:GetStatusBarTexture()
+        if Health.CustomMask.Enabled and Health.CustomMask.MaskTexture and not tex.mask then tex:SetMask(Health.CustomMask.MaskTexture) end
         FrameName.unitHealthBar.colorClass = General.ColourByClass
         FrameName.unitHealthBar.colorReaction = General.ColourByClass
         FrameName.unitHealthBar.colorDisconnected = General.ColourIfDisconnected
@@ -753,12 +774,11 @@ local function UpdateHealthBar(FrameName)
         end
         FrameName.unitHealthBar:SetFrameLevel(2)
         -- Frame Health Bar Background
-        FrameName.unitHealthBarBackground:SetSize(Frame.Width - 2, Frame.Height - 2)
+        FrameName.unitHealthBarBackground:SetSize(Health.Width - 2, Health.Height - 2)
         FrameName.unitHealthBarBackground:SetPoint("TOPLEFT", FrameName, "TOPLEFT", 1, -1)
         local healthBgTexturePath = LSM:Fetch("statusbar", Health.Texture)
         FrameName.unitHealthBarBackground:SetTexture(healthBgTexturePath)
-        
-        FrameName.unitHealthBarBackground:SetMask(Health.Mask)
+        if Health.CustomMask.Enabled then FrameName.unitHealthBarBackground:SetMask(Health.CustomMask.MaskTexture) end
         FrameName.unitHealthBarBackground:SetAlpha(General.BackgroundColour[4])
         FrameName.unitHealthBar:ForceUpdate()
     end
@@ -823,9 +843,9 @@ end
 
 local function UpdatePowerBar(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
-    local Frame = MilaUI.DB.profile[Unit].Frame
     local General = MilaUI.DB.profile.General
     local PowerBar = MilaUI.DB.profile[Unit].PowerBar
+    local r, g, b, a = unpack(MilaUI.DB.profile.General.BackgroundColour)
     local BackdropTemplate = {
         bgFile = General.BackgroundTexture,
         edgeFile = General.BorderTexture,
@@ -835,9 +855,11 @@ local function UpdatePowerBar(FrameName)
     if FrameName.unitPowerBar and PowerBar.Enabled then
         -- Power Bar
         FrameName.unitPowerBar:SetPoint("BOTTOMLEFT", FrameName, "BOTTOMLEFT", 0, 0)
-        FrameName.unitPowerBar:SetSize(Frame.Width, PowerBar.Height)
-        local powerTexturePath = LSM:Fetch("statusbar", General.ForegroundTexture)
+        FrameName.unitPowerBar:SetSize(PowerBar.Width, PowerBar.Height)
+        local powerTexturePath = LSM:Fetch("statusbar", PowerBar.Texture)
         FrameName.unitPowerBar:SetStatusBarTexture(powerTexturePath)
+        local tex = FrameName.unitPowerBar:GetStatusBarTexture()
+        if PowerBar.CustomMask.Enabled and PowerBar.CustomMask.MaskTexture and not tex.mask then tex:SetMask(PowerBar.CustomMask.MaskTexture) end
         FrameName.unitPowerBar:SetStatusBarColor(unpack(PowerBar.Colour))
         FrameName.unitPowerBar:SetMinMaxValues(0, 100)
         FrameName.unitPowerBar.colorPower = PowerBar.ColourByType
@@ -853,8 +875,9 @@ local function UpdatePowerBar(FrameName)
         -- Power Bar Background
         FrameName.unitPowerBarBackground:ClearAllPoints()
         FrameName.unitPowerBarBackground:SetAllPoints()
-        local powerBgTexturePath = LSM:Fetch("statusbar", General.BackgroundTexture)
+        local powerBgTexturePath = LSM:Fetch("statusbar", PowerBar.BackgroundTexture)
         FrameName.unitPowerBarBackground:SetTexture(powerBgTexturePath)
+        if PowerBar.CustomMask.Enabled and PowerBar.CustomMask.MaskTexture and not FrameName.unitPowerBarBackground.mask then FrameName.unitPowerBarBackground:SetMask(PowerBar.CustomMask.MaskTexture) end
         FrameName.unitPowerBarBackground:SetAlpha(PowerBar.BackgroundColour[4])
         if PowerBar.ColourBackgroundByType then 
             FrameName.unitPowerBarBackground.multiplier = PowerBar.BackgroundMultiplier
@@ -864,12 +887,14 @@ local function UpdatePowerBar(FrameName)
             FrameName.unitPowerBar.bg = nil
         end
         -- Power Bar Border
-        FrameName.unitPowerBarBorder:SetSize(Frame.Width, PowerBar.Height)
-        FrameName.unitPowerBarBorder:SetPoint("BOTTOMLEFT", FrameName, "BOTTOMLEFT", 0, 0)
-        FrameName.unitPowerBarBorder:SetBackdrop(BackdropTemplate)
-        FrameName.unitPowerBarBorder:SetBackdropColor(0,0,0,0)
-        FrameName.unitPowerBarBorder:SetBackdropBorderColor(unpack(General.BorderColour))
-        FrameName.unitPowerBarBorder:SetFrameLevel(4)
+        if PowerBar.Border and PowerBar.Border.Enabled and not PowerBar.CustomBorder.Enabled then
+            FrameName.unitPowerBarBorder:SetSize(PowerBar.Width, PowerBar.Height)
+            FrameName.unitPowerBarBorder:SetPoint("BOTTOMLEFT", FrameName, "BOTTOMLEFT", 0, 0)
+            FrameName.unitPowerBarBorder:SetBackdrop(BackdropTemplate)
+            FrameName.unitPowerBarBorder:SetBackdropColor(r, g, b, a)
+            FrameName.unitPowerBarBorder:SetBackdropBorderColor(unpack(General.BorderColour))
+            FrameName.unitPowerBarBorder:SetFrameLevel(4)
+        end
         FrameName.unitPowerBar:ForceUpdate()
     end
 end
@@ -1105,9 +1130,10 @@ end
 local function UpdateCustomBorder(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
     local GeneralSettings = MilaUI.DB.profile.General
-    local CustomBorderSettings = MilaUI.DB.profile[Unit].Health.CustomBorder
+    local CustomBorderHealth = MilaUI.DB.profile[Unit].Health.CustomBorder
+    local CustomBorderPower = MilaUI.DB.profile[Unit].PowerBar.CustomBorder
 
-    if CustomBorderSettings.Enabled then
+    if CustomBorderHealth.Enabled then
         if not FrameName.MilaUICustomBorderFrame then
             -- Create the border frame and its texture only if they don't already exist
             FrameName.MilaUICustomBorderFrame = CreateFrame("Frame", nil, FrameName)
@@ -1118,10 +1144,26 @@ local function UpdateCustomBorder(FrameName)
         end
 
         -- Update the texture and color of the existing/newly created border
-        FrameName.MilaUICustomBorderFrame.texture:SetTexture(CustomBorderSettings.BorderTexture) -- Corrected from CustomBorder.Texture
+        FrameName.MilaUICustomBorderFrame.texture:SetTexture(CustomBorderHealth.BorderTexture) -- Corrected from CustomBorder.Texture
         FrameName.MilaUICustomBorderFrame.texture:SetTexCoord(0, 1, 0, 1)
         FrameName.MilaUICustomBorderFrame.texture:SetVertexColor(unpack(GeneralSettings.BorderColour))
         FrameName.MilaUICustomBorderFrame:SetAllPoints(FrameName.unitHealthBar or FrameName) -- Ensure it covers the health bar or frame
+        FrameName.MilaUICustomBorderFrame:Show()
+    elseif CustomBorderPower.Enabled then
+        if not FrameName.MilaUICustomBorderFrame then
+            -- Create the border frame and its texture only if they don't already exist
+            FrameName.MilaUICustomBorderFrame = CreateFrame("Frame", nil, FrameName)
+            FrameName.MilaUICustomBorderFrame:SetFrameLevel(FrameName:GetFrameLevel() + 2) -- Ensure it's above the health bar, +1 might be the health bar itself
+            local texture = FrameName.MilaUICustomBorderFrame:CreateTexture(nil, "OVERLAY")
+            texture:SetAllPoints(FrameName.MilaUICustomBorderFrame)
+            FrameName.MilaUICustomBorderFrame.texture = texture -- Store the texture object on the frame for easy access
+        end
+
+        -- Update the texture and color of the existing/newly created border
+        FrameName.MilaUICustomBorderFrame.texture:SetTexture(CustomBorderPower.BorderTexture) -- Corrected from CustomBorder.Texture
+        FrameName.MilaUICustomBorderFrame.texture:SetTexCoord(0, 1, 0, 1)
+        FrameName.MilaUICustomBorderFrame.texture:SetVertexColor(unpack(GeneralSettings.BorderColour))
+        FrameName.MilaUICustomBorderFrame:SetAllPoints(FrameName.unitPowerBar or FrameName) -- Ensure it covers the health bar or frame
         FrameName.MilaUICustomBorderFrame:Show()
     else
         -- If custom border is not enabled, hide the frame if it exists

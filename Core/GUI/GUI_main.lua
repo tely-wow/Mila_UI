@@ -223,7 +223,7 @@ function MilaUI:CreateGUIMain()
     UIScale:SetHeight(20)
     -- Enable UI Scale checkbox
     local UIScaleToggle = GUI:Create("CheckBox")
-    UIScaleToggle:SetLabel("Enable UI Scale")
+    UIScaleToggle:SetLabel("Enable custom UI Scale")
     UIScaleToggle:SetValue(MilaUI.DB.global.UIScaleEnabled)
     UIScaleToggle:SetRelativeWidth(0.3)
     UIScale:AddChild(MilaUI:CreateHorizontalSpacer(0.02))
@@ -234,6 +234,7 @@ function MilaUI:CreateGUIMain()
     UIScaleSlider:SetValue(MilaUI.DB.global.UIScale)
     UIScaleSlider:SetWidth(200)
     UIScaleSlider:SetHeight(20)
+    UIScaleSlider:SetLabel("UI Scale")
     UIScaleSlider:SetCallback("OnMouseUp", function(widget, event, value)
       if value > 2 then value = 1 print(pink .. "♥MILA UI ♥: " .. lavender .. "UI Scale reset to 1. Maximum of 2 for UIScale.") end
       MilaUI.DB.global.UIScale = value

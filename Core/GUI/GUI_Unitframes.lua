@@ -75,6 +75,11 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             local Frame = MilaUI.DB.profile[dbUnitName].Frame
 
             -- Health Texture Picker
+            local TextureandBorder = GUI:Create("InlineGroup")
+            TextureandBorder:SetLayout("Flow")
+            TextureandBorder:SetFullWidth(true)
+            TextureandBorder:SetTitle(pink .. "Texture and Border")
+            scrollFrame:AddChild(TextureandBorder)
             local HealthTexturePicker = GUI:Create("LSM30_Statusbar")
             HealthTexturePicker:SetLabel("Health Texture")
             HealthTexturePicker:SetList(LSM:HashTable("statusbar"))
@@ -85,13 +90,13 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
                 HealthTexturePicker:SetValue(value) -- Immediately update the dropdown value
                 MilaUI:UpdateFrames()
             end)
-            scrollFrame:AddChild(HealthTexturePicker)
+            TextureandBorder:AddChild(HealthTexturePicker)
 
             -- Add a little vertical space after the picker for clarity
             local spacer = GUI:Create("Label")
             spacer:SetText("")
             spacer:SetFullWidth(true)
-            scrollFrame:AddChild(spacer)
+            TextureandBorder:AddChild(spacer)
 
             -- Custom Border
             local CustomBorder = GUI:Create("CheckBox")
@@ -99,25 +104,32 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             CustomBorder:SetValue(Health.CustomBorder and Health.CustomBorder.Enabled)
             CustomBorder:SetCallback("OnValueChanged", function(widget, event, value) Health.CustomBorder.Enabled = value MilaUI:UpdateFrames() end)
             CustomBorder:SetRelativeWidth(0.5)
-            scrollFrame:AddChild(CustomBorder)
+            TextureandBorder:AddChild(CustomBorder)
 
+            local PositionandSize = GUI:Create("InlineGroup")
+            PositionandSize:SetLayout("Flow")
+            PositionandSize:SetTitle(pink .. "Position and Size")
+            PositionandSize.titletext:SetFontObject(GameFontNormalLarge)
+            PositionandSize:SetFullWidth(true)
+            PositionandSize:SetFullHeight(true)
+            scrollFrame:AddChild(PositionandSize)
             -- Frame Width
             local FrameWidth = GUI:Create("Slider")
             FrameWidth:SetLabel("Frame Width")
             FrameWidth:SetSliderValues(1, 999, 0.1)
-            FrameWidth:SetValue(Frame.Width)
-            FrameWidth:SetCallback("OnMouseUp", function(widget, event, value) Frame.Width = value MilaUI:UpdateFrames() end)
+            FrameWidth:SetValue(Health.Width)
+            FrameWidth:SetCallback("OnMouseUp", function(widget, event, value) Health.Width = value MilaUI:UpdateFrames() end)
             FrameWidth:SetRelativeWidth(0.5)
-            scrollFrame:AddChild(FrameWidth)
+            PositionandSize:AddChild(FrameWidth)
 
             -- Frame Height
             local FrameHeight = GUI:Create("Slider")
             FrameHeight:SetLabel("Frame Height")
             FrameHeight:SetSliderValues(1, 999, 0.1)
-            FrameHeight:SetValue(Frame.Height)
-            FrameHeight:SetCallback("OnMouseUp", function(widget, event, value) Frame.Height = value MilaUI:UpdateFrames() end)
+            FrameHeight:SetValue(Health.Height)
+            FrameHeight:SetCallback("OnMouseUp", function(widget, event, value) Health.Height = value MilaUI:UpdateFrames() end)
             FrameHeight:SetRelativeWidth(0.5)
-            scrollFrame:AddChild(FrameHeight)
+            PositionandSize:AddChild(FrameHeight)
 
             -- Frame Anchor From
             local FrameAnchorFrom = GUI:Create("Dropdown")
@@ -126,7 +138,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             FrameAnchorFrom:SetValue(Frame.AnchorFrom)
             FrameAnchorFrom:SetCallback("OnValueChanged", function(widget, event, value) Frame.AnchorFrom = value MilaUI:UpdateFrames() end)
             FrameAnchorFrom:SetRelativeWidth(0.33)
-            scrollFrame:AddChild(FrameAnchorFrom)
+            PositionandSize:AddChild(FrameAnchorFrom)
 
             -- Frame Anchor To
             local FrameAnchorTo = GUI:Create("Dropdown")
@@ -135,7 +147,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             FrameAnchorTo:SetValue(Frame.AnchorTo)
             FrameAnchorTo:SetCallback("OnValueChanged", function(widget, event, value) Frame.AnchorTo = value MilaUI:UpdateFrames() end)
             FrameAnchorTo:SetRelativeWidth(0.33)
-            scrollFrame:AddChild(FrameAnchorTo)
+            PositionandSize:AddChild(FrameAnchorTo)
 
             -- Frame Anchor Parent
             local FrameAnchorParent = GUI:Create("EditBox")
@@ -167,7 +179,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             FrameXPosition:SetValue(Frame.XPosition)
             FrameXPosition:SetCallback("OnMouseUp", function(widget, event, value) Frame.XPosition = value MilaUI:UpdateFrames() end)
             FrameXPosition:SetRelativeWidth(0.5)
-            scrollFrame:AddChild(FrameXPosition)
+            PositionandSize:AddChild(FrameXPosition)
 
             -- Frame Y Position
             local FrameYPosition = GUI:Create("Slider")
@@ -176,13 +188,29 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             FrameYPosition:SetValue(Frame.YPosition)
             FrameYPosition:SetCallback("OnMouseUp", function(widget, event, value) Frame.YPosition = value MilaUI:UpdateFrames() end)
             FrameYPosition:SetRelativeWidth(0.5)
-            scrollFrame:AddChild(FrameYPosition)
+            PositionandSize:AddChild(FrameYPosition)
         elseif tabKey == "PowerBar" then
             local General = MilaUI.DB.profile.UnitframesGeneral or MilaUI.DB.profile.General
             local LSM = LibStub:GetLibrary("LibSharedMedia-3.0")
             local LSMTextures = LSM and LSM:HashTable(LSM.MediaType.STATUSBAR) or {}
             local LSMFonts = LSM and LSM:HashTable(LSM.MediaType.FONT) or {}
             local PowerBar = MilaUI.DB.profile[dbUnitName].PowerBar
+
+            -- PowerBar Enabled
+            local PowerBarEnabled = GUI:Create("CheckBox")
+            PowerBarEnabled:SetLabel("PowerBar Enabled")
+            PowerBarEnabled:SetValue(PowerBar.Enabled)
+            PowerBarEnabled:SetCallback("OnValueChanged", function(widget, event, value) PowerBar.Enabled = value MilaUI:UpdateFrames() end)
+            PowerBarEnabled:SetRelativeWidth(0.5)
+            scrollFrame:AddChild(PowerBarEnabled)
+
+            --PowerBar Custom Mask
+            local PowerBarCustomMask = GUI:Create("CheckBox")
+            PowerBarCustomMask:SetLabel("PowerBar Custom Mask")
+            PowerBarCustomMask:SetValue(PowerBar.CustomMask.Enabled)
+            PowerBarCustomMask:SetCallback("OnValueChanged", function(widget, event, value) PowerBar.CustomMask.Enabled = value MilaUI:CreateReloadPrompt() end)
+            PowerBarCustomMask:SetRelativeWidth(0.5)
+            scrollFrame:AddChild(PowerBarCustomMask)
 
             -- PowerBar Texture Picker
             local PowerBarTexturePicker = GUI:Create("LSM30_Statusbar")
@@ -193,6 +221,26 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             PowerBarTexturePicker:SetRelativeWidth(0.5)
             scrollFrame:AddChild(PowerBarTexturePicker)
 
+            -- PowerBar Growth Direction
+            local PowerBarGrowthDirection = GUI:Create("Dropdown")
+            PowerBarGrowthDirection:SetLabel("Power Bar Growth Direction")
+            PowerBarGrowthDirection:SetList({
+                ["LR"] = "Left To Right",
+                ["RL"] = "Right To Left",
+            })
+            PowerBarGrowthDirection:SetValue(PowerBar.Direction)
+            PowerBarGrowthDirection:SetCallback("OnValueChanged", function(widget, event, value) PowerBar.Direction = value MilaUI:UpdateFrames() end)
+            PowerBarGrowthDirection:SetRelativeWidth(0.33)
+            scrollFrame:AddChild(PowerBarGrowthDirection)
+
+            -- PowerBar Width
+            local PowerBarWidth = GUI:Create("Slider")
+            PowerBarWidth:SetLabel("Width")
+            PowerBarWidth:SetSliderValues(1, 64, 1)
+            PowerBarWidth:SetValue(PowerBar.Width)
+            PowerBarWidth:SetCallback("OnMouseUp", function(widget, event, value) PowerBar.Width = value MilaUI:UpdateFrames() end)
+            PowerBarWidth:SetRelativeWidth(0.5)
+            scrollFrame:AddChild(PowerBarWidth)
             -- PowerBar Height
             local PowerBarHeight = GUI:Create("Slider")
             PowerBarHeight:SetLabel("Height")
@@ -221,18 +269,6 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             PowerBarBackdropColour:SetHasAlpha(true)
             PowerBarBackdropColour:SetRelativeWidth(0.25)
             scrollFrame:AddChild(PowerBarBackdropColour)
-
-            -- PowerBar Growth Direction
-            local PowerBarGrowthDirection = GUI:Create("Dropdown")
-            PowerBarGrowthDirection:SetLabel("Power Bar Growth Direction")
-            PowerBarGrowthDirection:SetList({
-                ["LR"] = "Left To Right",
-                ["RL"] = "Right To Left",
-            })
-            PowerBarGrowthDirection:SetValue(PowerBar.Direction)
-            PowerBarGrowthDirection:SetCallback("OnValueChanged", function(widget, event, value) PowerBar.Direction = value MilaUI:UpdateFrames() end)
-            PowerBarGrowthDirection:SetRelativeWidth(0.33)
-            scrollFrame:AddChild(PowerBarGrowthDirection)
 
             -- Colour By Type
             local PowerBarColourByType = GUI:Create("CheckBox")
@@ -796,42 +832,41 @@ function MilaUI:DrawUnitframesColoursTab(parent)
         StatusColours:AddChild(StatusColour)
     end
 end
--- Fixed version of MilaUI:DrawUnitframesTabContent to avoid layout issues
-function MilaUI:DrawUnitframesTabContent(container)
-    container:SetLayout("Flow")
-    container:ReleaseChildren()
 
+function MilaUI:DrawUnitframesTabContent(container)
+    container:ReleaseChildren()
+    container:SetLayout("Flow")
+    container:SetFullWidth(true)
+    container:SetFullHeight(true)
+
+    -- Left pane: unit list tree
     local treeData = {}
     local unitFrameItems = {L.Player, L.Target, L.Focus, L.Pet, L.TargetTarget, L.FocusTarget, L.Boss}
-    for _, unitKey in ipairs(unitFrameItems) do
-        table.insert(treeData, { text = unitKey, value = unitKey })
+    for _, key in ipairs(unitFrameItems) do
+        table.insert(treeData, { text = key, value = key })
     end
-
-    -- Create TreeGroup for unit list
     local treeGroup = GUI:Create("TreeGroup")
     treeGroup:SetLayout("Fill")
-    treeGroup:SetFullWidth(true)
     treeGroup:SetFullHeight(true)
+    treeGroup:SetRelativeWidth(0.24)
     treeGroup:SetTree(treeData)
     container:AddChild(treeGroup)
 
-    -- Tree selection callback
-    treeGroup:SetCallback("OnGroupSelected", function(widget, event, group)
-        widget:ReleaseChildren()
+    -- Right pane: content area for unit settings
+    local contentPane = GUI:Create("SimpleGroup")
+    contentPane:SetLayout("Fill")
+    contentPane:SetFullHeight(true)
+    contentPane:SetRelativeWidth(0.74)
+    container:AddChild(contentPane)
 
-        local scrollHolder = GUI:Create("SimpleGroup")
-        scrollHolder:SetLayout("Fill")
-        scrollHolder:SetFullWidth(true)
-        scrollHolder:SetFullHeight(true)
-        widget:AddChild(scrollHolder)
-
-        MilaUI:DrawUnitContainer(scrollHolder, group, "Healthbar")
+    -- On selection, draw settings into contentPane
+    treeGroup:SetCallback("OnGroupSelected", function(_, _, unit)
+        contentPane:ReleaseChildren()
+        MilaUI:DrawUnitContainer(contentPane, unit)
     end)
 
-    -- Auto-select the first unit
+    -- Initialize selection
     if #treeData > 0 then
         treeGroup:SelectByPath(treeData[1].value)
     end
 end
-
-
