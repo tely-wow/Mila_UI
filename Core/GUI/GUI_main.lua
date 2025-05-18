@@ -122,21 +122,17 @@ function MilaUI:CreateGUIMain()
   -- Create all buttons first using the helper function from GUI_Utility.lua
   local generalButton = MilaUI:CreateTabButton(L.General, L.General, mainFrame.frame, "BOTTOMLEFT")
   local unitframesButton = MilaUI:CreateTabButton(L.Unitframes, L.Unitframes, mainFrame.frame, "BOTTOMLEFT")
-  local tagsButton = MilaUI:CreateTabButton(L.Tags, L.Tags, mainFrame.frame, "BOTTOMLEFT")
   local profilesButton = MilaUI:CreateTabButton(L.Profiles, L.Profiles, mainFrame.frame, "BOTTOMLEFT")
   
   -- Position the buttons
   unitframesButton:ClearAllPoints()
   unitframesButton:SetPoint("LEFT", generalButton, "RIGHT", buttonSpacing, 0)
   
-  tagsButton:ClearAllPoints()
-  tagsButton:SetPoint("LEFT", unitframesButton, "RIGHT", buttonSpacing, 0)
-  
   profilesButton:ClearAllPoints()
-  profilesButton:SetPoint("LEFT", tagsButton, "RIGHT", buttonSpacing, 0)
+  profilesButton:SetPoint("LEFT", unitframesButton, "RIGHT", buttonSpacing, 0)
   
   -- Store all buttons in a table for easier reference
-  local allButtons = {generalButton, unitframesButton, tagsButton, profilesButton}
+  local allButtons = {generalButton, unitframesButton, profilesButton}
   
   -- Add click handlers for each button
   generalButton:SetScript("OnClick", function()
@@ -153,12 +149,6 @@ function MilaUI:CreateGUIMain()
     HandleUnitframesTab(contentPanel)
   end)
   
-  tagsButton:SetScript("OnClick", function()
-    currentTab = L.Tags
-    MilaUI:UpdateTabButtonStates(tagsButton, allButtons)
-    contentPanel:ReleaseChildren()
-  end)
-  
   profilesButton:SetScript("OnClick", function()
     currentTab = L.Profiles
     MilaUI:UpdateTabButtonStates(profilesButton, allButtons)
@@ -171,7 +161,7 @@ function MilaUI:CreateGUIMain()
     unitframesTabs:SetTabs({
         { text = "General", value = "General" },
         { text = "Individual Frames", value = "IndividualFrames" },
-        { text = "Colours", value = "Colours" },
+        { text = "Tags", value = "Tags" },
     })
     unitframesTabs:SetLayout("Flow")
     unitframesTabs:SetFullWidth(true)
@@ -182,8 +172,8 @@ function MilaUI:CreateGUIMain()
     unitframesTabs:SetCallback("OnGroupSelected", function(container, _, subTab)
         container:ReleaseChildren()
 
-        -- ScrollFrame for General and Colours tabs
-        if subTab == "General" or subTab == "Colours" then
+        -- ScrollFrame for General tab
+        if subTab == "General" then
             local contentFrame = GUI:Create("ScrollFrame")
             contentFrame:SetLayout("Flow")
             contentFrame:SetFullWidth(true)
@@ -197,11 +187,7 @@ function MilaUI:CreateGUIMain()
                 end
             end)
 
-            if subTab == "General" then
-                MilaUI:DrawUnitframesGeneralTab(contentFrame)
-            else
-                MilaUI:DrawUnitframesColoursTab(contentFrame)
-            end
+            MilaUI:DrawUnitframesGeneralTab(contentFrame)
 
         elseif subTab == "IndividualFrames" then
             -- No scroll frame here — use container directly

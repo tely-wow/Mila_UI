@@ -177,7 +177,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             FrameXPosition:SetLabel("Frame X Position")
             FrameXPosition:SetSliderValues(-999, 999, 0.1)
             FrameXPosition:SetValue(Frame.XPosition)
-            FrameXPosition:SetCallback("OnMouseUp", function(widget, event, value) Frame.XPosition = value MilaUI:UpdateFrames() end)
+            FrameXPosition:SetCallback("OnValueChanged", function(widget, event, value) Frame.XPosition = value MilaUI:UpdateFrames() end)
             FrameXPosition:SetRelativeWidth(0.5)
             PositionandSize:AddChild(FrameXPosition)
 
@@ -186,7 +186,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             FrameYPosition:SetLabel("Frame Y Position")
             FrameYPosition:SetSliderValues(-999, 999, 0.1)
             FrameYPosition:SetValue(Frame.YPosition)
-            FrameYPosition:SetCallback("OnMouseUp", function(widget, event, value) Frame.YPosition = value MilaUI:UpdateFrames() end)
+            FrameYPosition:SetCallback("OnValueChanged", function(widget, event, value) Frame.YPosition = value MilaUI:UpdateFrames() end)
             FrameYPosition:SetRelativeWidth(0.5)
             PositionandSize:AddChild(FrameYPosition)
         elseif tabKey == "PowerBar" then
@@ -220,6 +220,77 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             PowerBarTexturePicker:SetCallback("OnValueChanged", function(widget, event, value) PowerBar.Texture = value MilaUI:UpdateFrames() end)
             PowerBarTexturePicker:SetRelativeWidth(0.5)
             scrollFrame:AddChild(PowerBarTexturePicker)
+            
+            -- PowerBar Positioning Group
+            local PowerBarPositioning = GUI:Create("InlineGroup")
+            PowerBarPositioning:SetTitle(pink .. "PowerBar Positioning")
+            PowerBarPositioning:SetLayout("Flow")
+            PowerBarPositioning:SetFullWidth(true)
+            scrollFrame:AddChild(PowerBarPositioning)
+            
+            -- PowerBar Anchor From dropdown
+            local PowerBarAnchorFrom = GUI:Create("Dropdown")
+            PowerBarAnchorFrom:SetLabel("Anchor From")
+            PowerBarAnchorFrom:SetList({
+                ["TOPLEFT"] = "Top Left",
+                ["TOP"] = "Top",
+                ["TOPRIGHT"] = "Top Right",
+                ["LEFT"] = "Left",
+                ["CENTER"] = "Center",
+                ["RIGHT"] = "Right",
+                ["BOTTOMLEFT"] = "Bottom Left",
+                ["BOTTOM"] = "Bottom",
+                ["BOTTOMRIGHT"] = "Bottom Right",
+            })
+            PowerBarAnchorFrom:SetValue(PowerBar.AnchorFrom or "TOPLEFT")
+            PowerBarAnchorFrom:SetCallback("OnValueChanged", function(widget, event, value) PowerBar.AnchorFrom = value MilaUI:UpdateFrames() end)
+            PowerBarAnchorFrom:SetRelativeWidth(0.33)
+            PowerBarPositioning:AddChild(PowerBarAnchorFrom)
+            
+            -- PowerBar Anchor To dropdown
+            local PowerBarAnchorTo = GUI:Create("Dropdown")
+            PowerBarAnchorTo:SetLabel("Anchor To")
+            PowerBarAnchorTo:SetList({
+                ["TOPLEFT"] = "Top Left",
+                ["TOP"] = "Top",
+                ["TOPRIGHT"] = "Top Right",
+                ["LEFT"] = "Left",
+                ["CENTER"] = "Center",
+                ["RIGHT"] = "Right",
+                ["BOTTOMLEFT"] = "Bottom Left",
+                ["BOTTOM"] = "Bottom",
+                ["BOTTOMRIGHT"] = "Bottom Right",
+            })
+            PowerBarAnchorTo:SetValue(PowerBar.AnchorTo or "BOTTOMLEFT")
+            PowerBarAnchorTo:SetCallback("OnValueChanged", function(widget, event, value) PowerBar.AnchorTo = value MilaUI:UpdateFrames() end)
+            PowerBarAnchorTo:SetRelativeWidth(0.33)
+            PowerBarPositioning:AddChild(PowerBarAnchorTo)
+            
+            -- PowerBar Anchor Parent input
+            local PowerBarAnchorParent = GUI:Create("EditBox")
+            PowerBarAnchorParent:SetLabel("Anchor Parent")
+            PowerBarAnchorParent:SetText(PowerBar.AnchorParent or "UIParent")
+            PowerBarAnchorParent:SetCallback("OnEnterPressed", function(widget, event, value) PowerBar.AnchorParent = value MilaUI:UpdateFrames() end)
+            PowerBarAnchorParent:SetRelativeWidth(0.33)
+            PowerBarPositioning:AddChild(PowerBarAnchorParent)
+            
+            -- PowerBar X Position slider
+            local PowerBarXPosition = GUI:Create("Slider")
+            PowerBarXPosition:SetLabel("X Position")
+            PowerBarXPosition:SetSliderValues(-999, 999, 0.1)
+            PowerBarXPosition:SetValue(PowerBar.XPosition or 0)
+            PowerBarXPosition:SetCallback("OnValueChanged", function(widget, event, value) PowerBar.XPosition = value MilaUI:UpdateFrames() end)
+            PowerBarXPosition:SetRelativeWidth(0.5)
+            PowerBarPositioning:AddChild(PowerBarXPosition)
+            
+            -- PowerBar Y Position slider
+            local PowerBarYPosition = GUI:Create("Slider")
+            PowerBarYPosition:SetLabel("Y Position")
+            PowerBarYPosition:SetSliderValues(-999, 999, 0.1)
+            PowerBarYPosition:SetValue(PowerBar.YPosition or 0)
+            PowerBarYPosition:SetCallback("OnValueChanged", function(widget, event, value) PowerBar.YPosition = value MilaUI:UpdateFrames() end)
+            PowerBarYPosition:SetRelativeWidth(0.5)
+            PowerBarPositioning:AddChild(PowerBarYPosition)
 
             -- PowerBar Growth Direction
             local PowerBarGrowthDirection = GUI:Create("Dropdown")
@@ -236,7 +307,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             -- PowerBar Width
             local PowerBarWidth = GUI:Create("Slider")
             PowerBarWidth:SetLabel("Width")
-            PowerBarWidth:SetSliderValues(1, 64, 1)
+            PowerBarWidth:SetSliderValues(1, 500, 1)
             PowerBarWidth:SetValue(PowerBar.Width)
             PowerBarWidth:SetCallback("OnMouseUp", function(widget, event, value) PowerBar.Width = value MilaUI:UpdateFrames() end)
             PowerBarWidth:SetRelativeWidth(0.5)
@@ -244,7 +315,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             -- PowerBar Height
             local PowerBarHeight = GUI:Create("Slider")
             PowerBarHeight:SetLabel("Height")
-            PowerBarHeight:SetSliderValues(1, 64, 1)
+            PowerBarHeight:SetSliderValues(1, 200, 1)
             PowerBarHeight:SetValue(PowerBar.Height)
             PowerBarHeight:SetCallback("OnMouseUp", function(widget, event, value) PowerBar.Height = value MilaUI:UpdateFrames() end)
             PowerBarHeight:SetRelativeWidth(0.5)
@@ -622,7 +693,203 @@ function MilaUI:DrawUnitframesGeneralTab(parent)
             MilaUI:UpdateFrames() 
         end,
         0.33, MouseoverHighlightOptions)
+    
+    -- *** COLOUR OPTIONS (Moved from Colors tab) ***
+    
+    -- Create the main container for color options
+    local ColouringOptionsContainer = MilaUI:CreateInlineGroup("Colour Options", mainContainer)
+    
+    -- Health Colour Options section
+    local HealthColourOptions = MilaUI:CreateInlineGroup("Health Colour Options", ColouringOptionsContainer)
+    
+    -- Foreground Colour picker
+    MilaUI:CreateColorPicker("Foreground Colour", 
+        General.ForegroundColour or {1,1,1,1},
+        function(widget, _, r, g, b, a) 
+            General.ForegroundColour = {r, g, b, a} 
+            MilaUI:UpdateFrames() 
+        end,
+        0.25, true, HealthColourOptions)
+    
+    -- Health colour checkboxes
+    MilaUI:CreateCheckBox("Use Class / Reaction Colour", 
+        General.ColourByClass,
+        function(widget, event, value) 
+            General.ColourByClass = value 
+            MilaUI:UpdateFrames() 
+        end,
+        0.25, HealthColourOptions)
+    
+    MilaUI:CreateCheckBox("Use Disconnected Colour", 
+        General.ColourIfDisconnected,
+        function(widget, event, value) 
+            General.ColourIfDisconnected = value 
+            MilaUI:UpdateFrames() 
+        end,
+        0.25, HealthColourOptions)
+    
+    MilaUI:CreateCheckBox("Use Tapped Colour", 
+        General.ColourIfTapped,
+        function(widget, event, value) 
+            General.ColourIfTapped = value 
+            MilaUI:UpdateFrames() 
+        end,
+        0.25, HealthColourOptions)
+    
+    -- Background Colour Options section
+    local BackgroundColourOptions = MilaUI:CreateInlineGroup("Background Colour Options", ColouringOptionsContainer)
+    
+    -- Background Colour picker
+    MilaUI:CreateColorPicker("Background Colour", 
+        General.BackgroundColour or {0,0,0,1},
+        function(widget, _, r, g, b, a) 
+            General.BackgroundColour = {r, g, b, a} 
+            MilaUI:UpdateFrames() 
+        end,
+        1, true, BackgroundColourOptions)
+    
+    -- Background multiplier slider
+    local BackgroundColourMultiplier = MilaUI:CreateSlider("Multiplier", 
+        0, 1, 0.01,
+        General.BackgroundMultiplier or 1,
+        function(widget, event, value) 
+            General.BackgroundMultiplier = value 
+            MilaUI:UpdateFrames() 
+        end,
+        0.25, BackgroundColourOptions)
+    
+    -- Background colour options
+    local BackgroundColourByForeground = MilaUI:CreateCheckBox("Colour By Foreground", 
+        General.ColourBackgroundByForeground,
+        function(widget, event, value) 
+            General.ColourBackgroundByForeground = value 
+            MilaUI:UpdateFrames() 
+            if value then 
+                BackgroundColourMultiplier:SetDisabled(false) 
+            else 
+                BackgroundColourMultiplier:SetDisabled(true) 
+            end 
+        end,
+        0.25, BackgroundColourOptions)
+    
+    -- Initialize multiplier disabled state
+    if General.ColourBackgroundByForeground then
+        BackgroundColourMultiplier:SetDisabled(false)
+    else
+        BackgroundColourMultiplier:SetDisabled(true)
+    end
+    
+    MilaUI:CreateCheckBox("Colour If Dead", 
+        General.ColourBackgroundIfDead,
+        function(widget, event, value) 
+            General.ColourBackgroundIfDead = value 
+            MilaUI:UpdateFrames() 
+        end,
+        0.25, BackgroundColourOptions)
+    
+    MilaUI:CreateCheckBox("Colour By Class / Reaction", 
+        General.ColourBackgroundByClass,
+        function(widget, event, value) 
+            General.ColourBackgroundByClass = value 
+            MilaUI:UpdateFrames() 
+        end,
+        0.25, BackgroundColourOptions)
+    
+    -- Border Colour Options section
+    local BorderColourOptions = MilaUI:CreateInlineGroup("Border Colour Options", ColouringOptionsContainer)
+    
+    -- Border Colour picker
+    MilaUI:CreateColorPicker("Border Colour", 
+        General.BorderColour or {1,1,1,1},
+        function(widget, _, r, g, b, a) 
+            General.BorderColour = {r, g, b, a} 
+            MilaUI:UpdateFrames() 
+        end,
+        0.33, true, BorderColourOptions)
+    
+    -- Custom Colours
+    local CustomColours = MilaUI:CreateInlineGroup("Custom Colours", mainContainer)
+    
+    local ResetCustomColoursButton = GUI:Create("Button")
+    ResetCustomColoursButton:SetText("Reset Custom Colours")
+    ResetCustomColoursButton:SetCallback("OnClick", function(widget, event, value) 
+        MilaUI:ResetColours() 
+        -- Close and reopen the GUI properly
+        MilaUI_CloseGUIMain()
+        MilaUI_OpenGUIMain()
+    end)
+    ResetCustomColoursButton:SetRelativeWidth(1)
+    CustomColours:AddChild(ResetCustomColoursButton)
+    
+    -- Power Colours
+    local PowerColours = MilaUI:CreateInlineGroup("Power Colours", CustomColours)
 
+    local PowerNames = {
+        [0] = "Mana", [1] = "Rage", [2] = "Focus", [3] = "Energy", [6] = "Rune", [8] = "Runic Power", [11] = "Maelstrom", [13] = "Insanity", [17] = "Fury", [18] = "Pain"
+    }
+    local PowerOrder = {0, 1, 2, 3, 6, 8, 11, 13, 17, 18}
+    for _, powerType in ipairs(PowerOrder) do
+        local powerColour = (General.CustomColours and General.CustomColours.Power and General.CustomColours.Power[powerType]) or {1,1,1}
+        local PowerColour = GUI:Create("ColorPicker")
+        PowerColour:SetLabel(PowerNames[powerType] or tostring(powerType))
+        local R, G, B = unpack(powerColour)
+        PowerColour:SetColor(R, G, B)
+        PowerColour:SetCallback("OnValueChanged", function(widget, _, r, g, b)
+            if not General.CustomColours then General.CustomColours = {} end
+            if not General.CustomColours.Power then General.CustomColours.Power = {} end
+            General.CustomColours.Power[powerType] = {r, g, b}
+            MilaUI:UpdateFrames()
+        end)
+        PowerColour:SetHasAlpha(false)
+        PowerColour:SetRelativeWidth(0.25)
+        PowerColours:AddChild(PowerColour)
+    end
+
+    -- Reaction Colours
+    local ReactionColours = MilaUI:CreateInlineGroup("Reaction Colours", CustomColours)
+
+    local ReactionNames = {
+        [1] = "Hated", [2] = "Hostile", [3] = "Unfriendly", [4] = "Neutral", [5] = "Friendly", [6] = "Honored", [7] = "Revered", [8] = "Exalted"
+    }
+    for reactionType, reactionColour in pairs((General.CustomColours and General.CustomColours.Reaction) or {}) do
+        local ReactionColour = GUI:Create("ColorPicker")
+        ReactionColour:SetLabel(ReactionNames[reactionType] or tostring(reactionType))
+        local R, G, B = unpack(reactionColour)
+        ReactionColour:SetColor(R, G, B)
+        ReactionColour:SetCallback("OnValueChanged", function(widget, _, r, g, b)
+            if not General.CustomColours then General.CustomColours = {} end
+            if not General.CustomColours.Reaction then General.CustomColours.Reaction = {} end
+            General.CustomColours.Reaction[reactionType] = {r, g, b}
+            MilaUI:UpdateFrames()
+        end)
+        ReactionColour:SetHasAlpha(false)
+        ReactionColour:SetRelativeWidth(0.25)
+        ReactionColours:AddChild(ReactionColour)
+    end
+
+    -- Status Colours
+    local StatusColours = MilaUI:CreateInlineGroup("Status Colours", CustomColours)
+
+    local StatusNames = {
+        [1] = "Dead",
+        [2] = "Tapped", 
+        [3] = "Offline"
+    }
+    for statusType, statusColour in pairs((General.CustomColours and General.CustomColours.Status) or {}) do
+        local StatusColour = GUI:Create("ColorPicker")
+        StatusColour:SetLabel(StatusNames[statusType] or tostring(statusType))
+        local R, G, B = unpack(statusColour)
+        StatusColour:SetColor(R, G, B)
+        StatusColour:SetCallback("OnValueChanged", function(widget, _, r, g, b)
+            if not General.CustomColours then General.CustomColours = {} end
+            if not General.CustomColours.Status then General.CustomColours.Status = {} end
+            General.CustomColours.Status[statusType] = {r, g, b}
+            MilaUI:UpdateFrames()
+        end)
+        StatusColour:SetHasAlpha(false)
+        StatusColour:SetRelativeWidth(0.33)
+        StatusColours:AddChild(StatusColour)
+    end
 end
 
 function MilaUI:DrawUnitframesColoursTab(parent)
