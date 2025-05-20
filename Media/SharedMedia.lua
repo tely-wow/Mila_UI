@@ -54,5 +54,6 @@ LSM:Register("statusbuar", "Minimalist", [[Interface\Addons\MilaUI\Media\Statusb
 LSM:Register("statusbuar", "Melli", [[Interface\Addons\MilaUI\Media\Statusbars\Melli.tga]])
 LSM:Register("background", "ElvUI Blank", [[Interface\Addons\MilaUI\Media\Statusbars\White8x8.tga]])
 LSM:Register("statusbar", "Solid", [[Interface\Addons\Mila_UI\Media\Statusbars\solid.tga]])
+LSM:Register("statusbar", "AbsorbBar", [[Interface\Addons\Mila_UI\Media\Statusbars\AbsorbBar.tga]])
 
 

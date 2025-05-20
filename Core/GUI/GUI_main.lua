@@ -13,6 +13,7 @@ local pink = "|cffFF77B5"
 local lavender = "|cFFCBA0E3"
 -- State
 local isOpen, mainFrame = false, nil
+local initialLoad = true
 
 -- Expose AceGUI and localization
 MilaUI.GUI = GUI
@@ -35,28 +36,60 @@ mainFrame = nil
 mainTabs = nil
 unitframesTabs = nil
 
-function MilaUI:CreateGUIMain()
-  if isOpen then return end
-  isOpen = true
-  local LSMFonts = LSM:HashTable(LSM.MediaType.FONT)
-  local LSMTextures = LSM:HashTable(LSM.MediaType.STATUSBAR)
+-- Reference to the old DrawTagsContainer function from GUI.lua
+function MilaUI:InitDrawTagsContainer()
+    -- Check if the function exists in the old GUI.lua file
+    if MilaUI.DrawTagsContainer then
+        -- Create a reference to the old function
+        MilaUI.DrawTagsContainer_Old = MilaUI.DrawTagsContainer
+    end
+end
+
+-- Initialize the main GUI
+function MilaUI:InitGUI()
+    if not MilaUI.DB then return end
+    
+    -- Initialize the DrawTagsContainer reference
+    MilaUI:InitDrawTagsContainer()
+    isOpen = true
+    local LSMFonts = LSM:HashTable(LSM.MediaType.FONT)
+    local LSMTextures = LSM:HashTable(LSM.MediaType.STATUSBAR)
+  
   -- Main frame
-  mainFrame = GUI:Create("Frame")
+  mainFrame = GUI:Create("Window")
   mainFrame:SetTitle(pink .. GUI_TITLE)
   mainFrame:SetLayout("Manual")
   mainFrame:SetWidth(GUI_WIDTH)
   mainFrame:SetHeight(GUI_HEIGHT)
   mainFrame:EnableResize(true)
+
+  -- Background with padding
+  local bg = mainFrame.frame:CreateTexture(nil, "BACKGROUND")
+  bg:SetColorTexture(0.1, 0.1, 0.4, 0.85)
+  bg:SetPoint("TOPLEFT", 6, -6)
+  bg:SetPoint("BOTTOMRIGHT", -6, 6)
+
+  -- Border around entire frame
+  local border = CreateFrame("Frame", nil, mainFrame.frame, "BackdropTemplate")
+  border:SetAllPoints()
+  border:SetBackdrop({
+    bgFile = nil,
+    edgeFile = "Interface\\AddOns\\Mila_UI\\Media\\Borders\\border-glow-overlay.tga",
+    edgeSize = 16,
+  })
+  border:SetBackdropBorderColor(1.0, 0.41, 1.0)
+
   mainFrame:SetCallback("OnClose", function(widget)
     GUI:Release(widget)
     isOpen = false
   end)
-
-
+  -- Register with the UI escape key handler
+  _G["MilaUI_MainFrame"] = mainFrame.frame
+  tinsert(UISpecialFrames, "MilaUI_MainFrame")
 
   -- Create a container for the logo
   local logoGroup = GUI:Create("SimpleGroup")
-  logoGroup:SetLayout("Manual")
+  logoGroup:SetLayout("Fill")
   logoGroup:SetPoint("TOPLEFT", mainFrame.frame, "TOPLEFT", 8, -25)
   logoGroup:SetWidth(150)
   logoGroup:SetHeight(150)
@@ -78,9 +111,9 @@ function MilaUI:CreateGUIMain()
   -- Create the lock/unlock button
   local function updateLockButtonText(btn)
     if MilaUI.DB.global.FramesLocked then
-      btn:SetText("Unlock")
+      btn:SetText(pink .. "Unlock")
     else
-      btn:SetText("Lock")
+      btn:SetText(pink .. "Lock")
     end
   end
 
@@ -101,216 +134,239 @@ function MilaUI:CreateGUIMain()
   lockButton.frame:SetPoint("TOPLEFT", lockLabel.frame, "BOTTOMLEFT", 0, -2)
   mainFrame:AddChild(lockButton)
 
-
-
-
-
-  -- Create the main content area first
-  local contentPanel = GUI:Create("SimpleGroup")
-  contentPanel:SetLayout("Flow")
-  contentPanel:SetFullWidth(true)
-  contentPanel.frame:SetPoint("TOPLEFT", logoGroup.frame, "BOTTOMLEFT", 10, -20)
-  contentPanel.frame:SetPoint("BOTTOMRIGHT", mainFrame.frame, "BOTTOMRIGHT", -50, 60) -- Leave space at bottom for buttons
-  mainFrame:AddChild(contentPanel)
+  -- Create the main content area with a tree group
+  local mainTree = GUI:Create("TreeGroup")
+  mainTree:SetLayout("Fill")
+  mainTree:SetFullWidth(true)
+  mainTree:SetFullHeight(true)
+  mainTree.frame:SetPoint("TOPLEFT", logoGroup.frame, "BOTTOMLEFT", 10, -20)
+  mainTree.frame:SetPoint("BOTTOMRIGHT", mainFrame.frame, "BOTTOMRIGHT", -20, 20)
+  mainFrame:AddChild(mainTree)
   
-  -- Create tab buttons at the bottom using native WoW UI buttons
-  local currentTab = L.General -- Track the currently selected tab
+  -- Define the tree structure
+  local treeData = {
+    { value = "General", text = "General Settings" },
+    { 
+      value = "Units", text = "Unit Frames",
+      children = {
+        { value = "Player", text = L.Player },
+        { value = "Target", text = L.Target },
+        { value = "Focus", text = L.Focus },
+        { value = "Pet", text = L.Pet },
+        { value = "TargetTarget", text = L.TargetTarget },
+        { value = "FocusTarget", text = L.FocusTarget },
+        { value = "Boss", text = L.Boss },
+      },
+      expanded = true
+    },
+    { value = "Tags", text = "Tags" },
+    { value = "Profiles", text = "Profiles" },
+  }
   
-  -- Create the buttons first without click handlers
-  local buttonSpacing = 0
+  mainTree:SetTree(treeData)
+  mainTree:SetStatusTable({Units = true})
+  mainTree:SetCallback("OnClick", function(widget, uniquevalue)
+    print("Clicked:", uniquevalue)
+  end)
+  mainTree:SetStatusTable({["Units"] = true})
   
-  -- Create all buttons first using the helper function from GUI_Utility.lua
-  local generalButton = MilaUI:CreateTabButton(L.General, L.General, mainFrame.frame, "BOTTOMLEFT")
-  local unitframesButton = MilaUI:CreateTabButton(L.Unitframes, L.Unitframes, mainFrame.frame, "BOTTOMLEFT")
-  local profilesButton = MilaUI:CreateTabButton(L.Profiles, L.Profiles, mainFrame.frame, "BOTTOMLEFT")
-  
-  -- Position the buttons
-  unitframesButton:ClearAllPoints()
-  unitframesButton:SetPoint("LEFT", generalButton, "RIGHT", buttonSpacing, 0)
-  
-  profilesButton:ClearAllPoints()
-  profilesButton:SetPoint("LEFT", unitframesButton, "RIGHT", buttonSpacing, 0)
-  
-  -- Store all buttons in a table for easier reference
-  local allButtons = {generalButton, unitframesButton, profilesButton}
-  
-  -- Add click handlers for each button
-  generalButton:SetScript("OnClick", function()
-    currentTab = L.General
-    MilaUI:UpdateTabButtonStates(generalButton, allButtons)
-    contentPanel:ReleaseChildren()
-    HandleGeneralTab(contentPanel)
+  -- Directly call the OnGroupSelected callback with 'General' as the selection
+  C_Timer.After(0.1, function()
+    mainTree:Fire("OnGroupSelected", "General")
   end)
   
-  unitframesButton:SetScript("OnClick", function()
-    currentTab = L.Unitframes
-    MilaUI:UpdateTabButtonStates(unitframesButton, allButtons)
-    contentPanel:ReleaseChildren()
-    HandleUnitframesTab(contentPanel)
-  end)
-  
-  profilesButton:SetScript("OnClick", function()
-    currentTab = L.Profiles
-    MilaUI:UpdateTabButtonStates(profilesButton, allButtons)
-    contentPanel:ReleaseChildren()
-  end)
-  
-  function HandleUnitframesTab(parent)
-    -- Add a nested TabGroup for 'General', 'Individual Frames', and 'Colours'
-    local unitframesTabs = GUI:Create("TabGroup")
-    unitframesTabs:SetTabs({
-        { text = "General", value = "General" },
-        { text = "Individual Frames", value = "IndividualFrames" },
-        { text = "Tags", value = "Tags" },
-    })
-    unitframesTabs:SetLayout("Flow")
-    unitframesTabs:SetFullWidth(true)
-    unitframesTabs:SetFullHeight(true)
-    parent:AddChild(unitframesTabs)
-
-    -- Handle tab switching
-    unitframesTabs:SetCallback("OnGroupSelected", function(container, _, subTab)
-        container:ReleaseChildren()
-
-        -- ScrollFrame for General tab
-        if subTab == "General" then
-            local contentFrame = GUI:Create("ScrollFrame")
-            contentFrame:SetLayout("Flow")
-            contentFrame:SetFullWidth(true)
-            contentFrame:SetFullHeight(true)
-            container:AddChild(contentFrame)
-
-            C_Timer.After(0.1, function()
-                if contentFrame and contentFrame.frame and contentFrame.scrollframe then
-                    contentFrame.scrollframe:UpdateScrollChildRect()
-                    contentFrame:DoLayout()
-                end
-            end)
-
-            MilaUI:DrawUnitframesGeneralTab(contentFrame)
-
-        elseif subTab == "IndividualFrames" then
-            -- No scroll frame here — use container directly
-            MilaUI:DrawUnitframesTabContent(container)
-            
-            -- Force layout update after a short delay
-            C_Timer.After(0.1, function()
-                if container and container.frame then
-                    container:DoLayout()
-                end
-            end)
+  -- Handle tree selection
+  mainTree:SetCallback("OnGroupSelected", function(container, _, selection)
+    -- If this is the initial load and no selection is made, select General
+    if initialLoad then
+      initialLoad = false
+      if not selection or selection == "" then
+        mainTree:SelectByPath("General")
+        return
+      end
+    end
+    container:ReleaseChildren()
+    
+    -- Create a scroll frame for the content
+    local contentFrame = GUI:Create("ScrollFrame")
+    contentFrame:SetLayout("Flow")
+    contentFrame:SetFullWidth(true)
+    contentFrame:SetFullHeight(true)
+    container:AddChild(contentFrame)
+    
+    -- Parse the selection path
+    local main, sub = strsplit("\001", selection)
+    
+    -- General Settings
+    if main == "General" then
+      HandleGeneralTab(contentFrame)
+    
+    -- Tags Settings
+    elseif main == "Tags" then
+      if MilaUI.DrawTagsContainer then
+        MilaUI:DrawTagsContainer(contentFrame)
+      else
+        local label = GUI:Create("Label")
+        label:SetText("Tags functionality is currently unavailable.")
+        label:SetFullWidth(true)
+        contentFrame:AddChild(label)
+      end
+    
+    -- Profiles Settings
+    elseif main == "Profiles" then
+      MilaUI:DrawProfileContainer(contentFrame)
+      C_Timer.After(0.1, function()
+        local p = parent
+        while p and p.DoLayout do
+            p:DoLayout()
+            p = p.parent
         end
     end)
-
-    -- Show the default tab
-    unitframesTabs:SelectTab("General")
-  end
-  
-  function HandleGeneralTab(parent)
-    local General = MilaUI.DB.profile.General
-    local UIScale = GUI:Create("InlineGroup")
-    UIScale:SetLayout("Flow")
-    UIScale:SetTitle(pink .. "Custom UI Scale")
-    UIScale.titletext:SetFontObject(GameFontNormalLarge)
-    UIScale:SetFullWidth(true)
-    UIScale:SetHeight(20)
-    -- Enable UI Scale checkbox
-    local UIScaleToggle = GUI:Create("CheckBox")
-    UIScaleToggle:SetLabel("Enable custom UI Scale")
-    UIScaleToggle:SetValue(MilaUI.DB.global.UIScaleEnabled)
-    UIScaleToggle:SetRelativeWidth(0.3)
-    UIScale:AddChild(MilaUI:CreateHorizontalSpacer(0.02))
-    UIScale:AddChild(UIScaleToggle)
-    -- UIScale slider
-    local UIScaleSlider = GUI:Create("Slider")
-    UIScaleSlider:SetSliderValues(0.4, 2, 0.01)
-    UIScaleSlider:SetValue(MilaUI.DB.global.UIScale)
-    UIScaleSlider:SetWidth(200)
-    UIScaleSlider:SetHeight(20)
-    UIScaleSlider:SetLabel("UI Scale")
-    UIScaleSlider:SetCallback("OnMouseUp", function(widget, event, value)
-      if value > 2 then value = 1 print(pink .. "♥MILA UI ♥: " .. lavender .. "UI Scale reset to 1. Maximum of 2 for UIScale.") end
-      MilaUI.DB.global.UIScale = value
-      MilaUI:UpdateUIScale()
-      UIScaleSlider:SetValue(value)
-    end)
-    UIScale:AddChild(UIScaleSlider)
-    UIScaleToggle:SetCallback("OnValueChanged", function(widget, event, value)
-      MilaUI.DB.global.UIScaleEnabled = value
-      if value then
-        UIScaleSlider:SetDisabled(false)
-        MilaUI:UpdateUIScale()
+    
+    -- Unit Frames
+    elseif main == "Units" and sub == nil then
+      -- Show the general unitframes tab when no specific unit is selected
+      if MilaUI.DrawUnitframesGeneralTab then
+        MilaUI:DrawUnitframesGeneralTab(contentFrame)
       else
-        UIScaleSlider:SetDisabled(true)
-        UIParent:SetScale(1)
+        local label = GUI:Create("Label")
+        label:SetFullWidth(true)
+        contentFrame:AddChild(label)
+      end
+    elseif main == "Units" and sub then
+      -- Directly call DrawUnitContainer to handle the unit settings
+      if MilaUI.DrawUnitContainer then
+        MilaUI:DrawUnitContainer(contentFrame, sub)
+      else
+        local label = GUI:Create("Label")
+        label:SetText("Unit settings are currently unavailable.")
+        label:SetFullWidth(true)
+        contentFrame:AddChild(label)
+      end
+    end
+    
+    -- Force layout update after a short delay
+    C_Timer.After(0.1, function()
+      if container and container.frame then
+        container:DoLayout()
       end
     end)
-    if not MilaUI.DB.global.UIScaleEnabled then
-      UIScaleSlider:SetDisabled(true)
-    end
-    parent:AddChild(UIScale)
-    
-    local FontOptions = GUI:Create("InlineGroup")
-    FontOptions:SetLayout("Flow")
-    FontOptions:SetTitle(pink .. "Font Options")
-    FontOptions.titletext:SetFontObject(GameFontNormalLarge)
-    FontOptions:SetFullWidth(true)
-    FontOptions:SetHeight(20)
-    parent:AddChild(FontOptions)
-    
-    local Font = MilaUI_GUI:Create("LSM30_Font")
-    Font:SetLabel("Font")
-    Font:SetList(LSMFonts)
-    Font:SetValue(General.Font)
-    -- NOTE: General.Font now stores the font key (e.g., "Friz Quadrata TT"). Always use LSM:Fetch("font", General.Font) when applying fonts!
-    Font:SetCallback("OnValueChanged", function(widget, event, value)
-      General.Font = value
-      MilaUI:CreateReloadPrompt()
-    end)
-    Font:SetRelativeWidth(0.3)
-    Font:SetPoint("TOPLEFT", FontOptions.frame, "TOPLEFT", 100, 0)
-    FontOptions:AddChild(Font)
-    
-    local FontFlag = MilaUI_GUI:Create("Dropdown")
-    FontFlag:SetLabel("Font Flag")
-    FontFlag:SetList({
-        ["NONE"] = "None",
-        ["OUTLINE"] = "Outline",
-        ["THICKOUTLINE"] = "Thick Outline",
-        ["MONOCHROME"] = "Monochrome",
-        ["OUTLINE, MONOCHROME"] = "Outline, Monochrome",
-        ["THICKOUTLINE, MONOCHROME"] = "Thick Outline, Monochrome",
-    })
-    FontFlag:SetValue(General.FontFlag)
-    FontFlag:SetCallback("OnValueChanged", function(widget, event, value) General.FontFlag = value MilaUI:UpdateFrames() end)
-    FontFlag:SetRelativeWidth(0.2)
-    FontOptions:AddChild(FontFlag)
+  end)
+  
+  -- Select the default tree item
+  mainTree:SetStatusTable({Units = true})
+end
+
+function HandleGeneralTab(parent)
+  -- Create a container for the content
+  local container = GUI:Create("SimpleGroup")
+  container:SetLayout("Flow")
+  container:SetFullWidth(true)
+  container:SetFullHeight(true)
+  parent:AddChild(container)
+  
+  -- Add the AceConfig GUI for general settings
+  if MilaUI.DrawGeneralTab then
+    MilaUI:DrawGeneralTab(container)
+  else
+    local label = GUI:Create("Label")
+    label:SetFullWidth(true)
+    container:AddChild(label)
   end
   
-  -- Initialize with the General tab selected
-  MilaUI:UpdateTabButtonStates(generalButton, allButtons) -- Disable the active button
-  HandleGeneralTab(contentPanel)
-
-  mainFrame:Show()
+  local General = MilaUI.DB.profile.General
+  local UIScale = GUI:Create("InlineGroup")
+  UIScale:SetLayout("Flow")
+  UIScale:SetTitle(pink .. "Custom UI Scale")
+  UIScale.titletext:SetFontObject(GameFontNormalLarge)
+  UIScale:SetFullWidth(true)
+  UIScale:SetHeight(20)
+  -- Enable UI Scale checkbox
+  local UIScaleToggle = GUI:Create("CheckBox")
+  UIScaleToggle:SetLabel("Enable custom UI Scale")
+  UIScaleToggle:SetValue(MilaUI.DB.global.UIScaleEnabled)
+  UIScaleToggle:SetRelativeWidth(0.3)
+  UIScale:AddChild(MilaUI:CreateHorizontalSpacer(0.02))
+  UIScale:AddChild(UIScaleToggle)
+  -- UIScale slider
+  local UIScaleSlider = GUI:Create("Slider")
+  UIScaleSlider:SetSliderValues(0.4, 2, 0.01)
+  UIScaleSlider:SetValue(MilaUI.DB.global.UIScale)
+  UIScaleSlider:SetWidth(200)
+  UIScaleSlider:SetHeight(20)
+  UIScaleSlider:SetLabel(lavender .. "UI Scale")
+  UIScaleSlider:SetCallback("OnMouseUp", function(widget, event, value)
+    if value > 2 then value = 1 print(pink .. "♥MILA UI ♥: " .. lavender .. "UI Scale reset to 1. Maximum of 2 for UIScale.") end
+    MilaUI.DB.global.UIScale = value
+    MilaUI:UpdateUIScale()
+    UIScaleSlider:SetValue(value)
+  end)
+  UIScale:AddChild(UIScaleSlider)
+  UIScaleToggle:SetCallback("OnValueChanged", function(widget, event, value)
+    MilaUI.DB.global.UIScaleEnabled = value
+    if value then
+      UIScaleSlider:SetDisabled(false)
+      MilaUI:UpdateUIScale()
+    else
+      UIScaleSlider:SetDisabled(true)
+      UIParent:SetScale(1)
+    end
+  end)
+  if not MilaUI.DB.global.UIScaleEnabled then
+    UIScaleSlider:SetDisabled(true)
+  end
+  container:AddChild(UIScale)
+  
+  local FontOptions = GUI:Create("InlineGroup")
+  FontOptions:SetLayout("Flow")
+  FontOptions:SetTitle(pink .. "Font Options")
+  FontOptions.titletext:SetFontObject(GameFontNormalLarge)
+  FontOptions:SetFullWidth(true)
+  FontOptions:SetHeight(20)
+  container:AddChild(FontOptions)
+  
+  local Font = MilaUI_GUI:Create("LSM30_Font")
+  Font:SetLabel(lavender .. "Font")
+  Font:SetList(LSM:HashTable(LSM.MediaType.FONT))
+  Font:SetValue(General.Font)
+  -- NOTE: General.Font now stores the font key (e.g., "Friz Quadrata TT"). Always use LSM:Fetch("font", General.Font) when applying fonts!
+  Font:SetCallback("OnValueChanged", function(widget, event, value)
+    General.Font = value
+    MilaUI:CreateReloadPrompt()
+  end)
+  Font:SetRelativeWidth(0.3)
+  FontOptions:AddChild(Font)
+  
+  local FontFlag = MilaUI_GUI:Create("Dropdown")
+  FontFlag:SetLabel(lavender .. "Font Flag")
+  FontFlag:SetList({
+      ["NONE"] = "None",
+      ["OUTLINE"] = "Outline",
+      ["THICKOUTLINE"] = "Thick Outline",
+      ["MONOCHROME"] = "Monochrome",
+      ["OUTLINE, MONOCHROME"] = "Outline, Monochrome",
+      ["THICKOUTLINE, MONOCHROME"] = "Thick Outline, Monochrome",
+  })
+  FontFlag:SetValue(General.FontFlag)
+  FontFlag:SetCallback("OnValueChanged", function(widget, event, value) General.FontFlag = value MilaUI:UpdateFrames() end)
+  FontFlag:SetRelativeWidth(0.2)
+  FontOptions:AddChild(FontFlag)
 end
+
 
 -- Public open/close
 function MilaUI_OpenGUIMain()
-  MilaUI:CreateGUIMain()
+  MilaUI:InitGUI()
+  
+  -- Select General tab after initialization
+  C_Timer.After(0.1, function()
+    if mainTree then
+      mainTree:SelectByPath("General")
+    end
+  end)
 end
 
 function MilaUI_CloseGUIMain()
   if mainFrame then mainFrame:Hide() end
 end
 
--- ReOpenGUI function moved to GUI_Utility.lua
-
--- Slash command
-SLASH_MILAUI1 = "/milaui"
-SLASH_MILAUI2 = "/mui"
-SlashCmdList["MILAUI"] = function(msg, editBox)
-  -- Open the GUI
-  MilaUI_OpenGUIMain()
-  -- Return true to indicate the command was handled (closes the chat input box)
-  return true
-end

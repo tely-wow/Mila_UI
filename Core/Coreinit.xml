@@ -4,7 +4,5 @@
   <Script file="Range.lua"/>
   <Script file="Modules/Unitframes/Utility.lua"/>
   <Script file="Share.lua"/>
-  <Script file="GUI/GUI_Utility.lua"/>
-  <Script file="GUI/GUI_main.lua"/>
-  <Script file="GUI/GUI_unitframes.lua"/>
+  <Include file="GUI/gui.xml"/>
 </Ui>

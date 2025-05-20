@@ -201,6 +201,7 @@ function MilaUI:ResetColours()
             [3] = {0.6, 0.6, 0.6}, -- Disconnected
         }
     }
+    MilaUI:UpdateFrames()
 end
 
 function MilaUI:UnlockFrame(frame)
@@ -341,21 +342,40 @@ function MilaUI:UnlockFrames()
     end
 end
 
--- Helper: Create a vertical spacer for AceGUI layouts
-function MilaUI:CreateVerticalSpacer(height)
+function MilaUI:CreateVerticalSpacer(height, parent)
     local spacer = MilaUI_GUI:Create("Label")
-    spacer:SetText(" ")
+    spacer:SetText("\n") -- One or more newlines to create vertical height
     spacer:SetFullWidth(true)
-    if height then
-        spacer:SetHeight(height)
+
+    -- Use font trick to stretch vertical space
+    local font, _, flags = spacer.label:GetFont()
+    spacer.label:SetFont(font, height or 14, flags)
+
+    if parent then 
+        parent:AddChild(spacer) 
     end
     return spacer
 end
 
-function MilaUI:CreateHorizontalSpacer(width)
-    local spacer = MilaUI_GUI:Create("Label")
-    spacer:SetText(" ")
-    spacer:SetRelativeWidth(width or 0.1) -- 0.1 = 10% of the parent width
+
+
+
+-- Helper: Create a horizontal spacer for AceGUI layouts
+function MilaUI:CreateHorizontalSpacer(width, parent)
+    -- Create a simple group instead of a label for more reliable spacing
+    local spacer = MilaUI_GUI:Create("SimpleGroup")
+    spacer:SetLayout("Flow")
+    spacer:SetRelativeWidth(width or 0.1)
+    spacer:SetHeight(1)
+    
+    -- Add to parent if provided (only once!)
+    if parent then 
+        -- Use pcall to safely add the child and catch any errors
+        local success, errorMsg = pcall(function()
+            parent:AddChild(spacer)
+        end)
+    end
+    
     return spacer
 end
 
@@ -394,6 +414,64 @@ function MilaUI:GetUnitDatabaseKey(unitName)
     
     -- Return the mapped name or the original if no mapping exists
     return unitMap[unitName] or unitName
+end
+
+-- Helper function to create a large heading with custom font size
+function MilaUI:CreateLargeHeading(text, parent, fontSize)
+    local heading = MilaUI_GUI:Create("SFX-Header")
+    heading:SetText(pink .. text)
+    heading:SetFullWidth(true)
+    heading:SetCenter(true)
+    -- Set font size using the simpler approach
+    fontSize = fontSize or 16 -- Default to 16 if not specified
+    local label = heading.Label
+    if label and label.SetFont then
+        local font, _, flags = label:GetFont()
+        label:SetFont(font, fontSize, flags)
+    end
+    
+    -- Create a container to hold both the heading and the spacer
+    local container = MilaUI_GUI:Create("SimpleGroup")
+    container:SetLayout("Flow")
+    container:SetFullWidth(true)
+    
+    -- Add the heading to the container
+    container:AddChild(heading)
+    
+    
+    -- Add the container to the parent if provided
+    if parent then 
+        parent:AddChild(container) 
+    end
+    
+    return container
+end
+
+-- Helper function to create a small header
+function MilaUI:CreateSmallHeader(text, fontSize, relWidth)
+    local header = MilaUI_GUI:Create("Label")
+    header:SetText(text)
+    header:SetFont("Interface\\AddOns\\Mila_UI\\Media\\Fonts\\Expressway.ttf", fontSize or 14, "OUTLINE")
+    header:SetRelativeWidth(relWidth or 1)
+    header:SetFullWidth(true)
+    header:SetText(pink .. text)
+
+    if relativeWidth then
+        print("DEBUG: Setting relative width to " .. relativeWidth)
+        header:SetRelativeWidth(relativeWidth)
+    else
+        print("DEBUG: Setting full width")
+        header:SetFullWidth(true)
+    end
+
+    fontSize = fontSize or 14
+    print("DEBUG: Setting font size to " .. fontSize)
+    if header.label and header.label.SetFont then
+        local font, _, flags = header.label:GetFont()
+        header.label:SetFont(font, fontSize, flags)
+    end
+
+    return header
 end
 
 -- Helper function to create a properly sized scrollframe with a container

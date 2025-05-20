@@ -1,0 +1,11 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+  <Script file="GUI_Utility.lua"/>
+  <Script file="GUI_main.lua"/>
+  <Script file="GUI_Profile.lua"/>
+  <Script file="Unitframes/GUI_Unitframes.lua"/>
+  <Script file="Unitframes/GUI_UFGeneral.lua"/>
+  <Script file="Unitframes/GUI_UFTags.lua"/>
+  <Script file="Unitframes/GUI_UFText.lua"/>
+  <Script file="Unitframes/GUI_UFBuffs.lua"/>
+  <Script file="Unitframes/GUI_UFIndicator.lua"/>
+</Ui>

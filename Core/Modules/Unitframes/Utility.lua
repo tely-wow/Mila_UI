@@ -280,8 +280,9 @@ local function CreateAbsorbBar(self, Unit)
 
     if Absorbs.Enabled and not self.unitAbsorbs then
         self.unitAbsorbs = CreateFrame("StatusBar", nil, self.unitHealthBar)
-        local absorbsTexturePath = LSM:Fetch("statusbar", General.ForegroundTexture)
+        local absorbsTexturePath = LSM:Fetch("statusbar", General.AbsorbTexture)
         self.unitAbsorbs:SetStatusBarTexture(absorbsTexturePath)
+        self.unitAbsorbs:SetStatusBarColor(0.6, 0.8, 1, 1)
         local HealthBarTexture = self.unitHealthBar:GetStatusBarTexture()
         if HealthBarTexture then
             self.unitAbsorbs:ClearAllPoints()
@@ -311,7 +312,7 @@ local function CreateHealAbsorbBar(self, Unit)
     
     if HealAbsorbs.Enabled and not self.unitHealAbsorbs then
         self.unitHealAbsorbs = CreateFrame("StatusBar", nil, self.unitHealthBar)
-        local healAbsorbsTexturePath = LSM:Fetch("statusbar", General.ForegroundTexture)
+        local healAbsorbsTexturePath = LSM:Fetch("statusbar", General.AbsorbTexture)
         self.unitHealAbsorbs:SetStatusBarTexture(healAbsorbsTexturePath)
         local HealthBarTexture = self.unitHealthBar:GetStatusBarTexture()
         if HealthBarTexture then
@@ -438,7 +439,23 @@ local function CreateBuffs(self, Unit)
     if Buffs.Enabled and not self.unitBuffs then
         self.unitBuffs = CreateFrame("Frame", nil, self)
         self.unitBuffs:SetSize(self:GetWidth(), Buffs.Size)
-        self.unitBuffs:SetPoint(Buffs.AnchorFrom, self, Buffs.AnchorTo, Buffs.XOffset, Buffs.YOffset)
+        
+        -- Determine anchor based on AnchorFrame setting
+        local anchorFrame = self
+        if Buffs.AnchorFrame then
+            if Buffs.AnchorFrame == "HealthBar" and self.unitHealthBar then
+                anchorFrame = self.unitHealthBar
+            elseif Buffs.AnchorFrame == "PowerBar" and self.unitPowerBar then
+                anchorFrame = self.unitPowerBar
+            elseif Buffs.AnchorFrame == "Debuffs" and self.unitDebuffs then
+                anchorFrame = self.unitDebuffs
+            elseif Buffs.AnchorFrame ~= "Buffs" and _G[Buffs.AnchorFrame] then
+                -- Try to find a global frame with this name
+                anchorFrame = _G[Buffs.AnchorFrame]
+            end
+        end
+        
+        self.unitBuffs:SetPoint(Buffs.AnchorFrom, anchorFrame, Buffs.AnchorTo, Buffs.XOffset, Buffs.YOffset)
         self.unitBuffs.size = Buffs.Size
         self.unitBuffs.spacing = Buffs.Spacing
         self.unitBuffs.num = Buffs.Num
@@ -457,7 +474,23 @@ local function CreateDebuffs(self, Unit)
     if Debuffs.Enabled and not self.unitDebuffs then
         self.unitDebuffs = CreateFrame("Frame", nil, self)
         self.unitDebuffs:SetSize(self:GetWidth(), Debuffs.Size)
-        self.unitDebuffs:SetPoint(Debuffs.AnchorFrom, self, Debuffs.AnchorTo, Debuffs.XOffset, Debuffs.YOffset)
+        
+        -- Determine anchor based on AnchorFrame setting
+        local anchorFrame = self
+        if Debuffs.AnchorFrame then
+            if Debuffs.AnchorFrame == "HealthBar" and self.unitHealthBar then
+                anchorFrame = self.unitHealthBar
+            elseif Debuffs.AnchorFrame == "PowerBar" and self.unitPowerBar then
+                anchorFrame = self.unitPowerBar
+            elseif Debuffs.AnchorFrame == "Buffs" and self.unitBuffs then
+                anchorFrame = self.unitBuffs
+            elseif Debuffs.AnchorFrame ~= "Debuffs" and _G[Debuffs.AnchorFrame] then
+                -- Try to find a global frame with this name
+                anchorFrame = _G[Debuffs.AnchorFrame]
+            end
+        end
+        
+        self.unitDebuffs:SetPoint(Debuffs.AnchorFrom, anchorFrame, Debuffs.AnchorTo, Debuffs.XOffset, Debuffs.YOffset)
         self.unitDebuffs.size = Debuffs.Size
         self.unitDebuffs.spacing = Debuffs.Spacing
         self.unitDebuffs.num = Debuffs.Num
@@ -684,7 +717,15 @@ local function CreateCustomBorder(self, unit, frameType)
     -- Create the border if enabled
     if borderSettings and borderSettings.Enabled then
         local BorderFrame = CreateFrame("Frame", nil, parent)
-        BorderFrame:SetAllPoints(parent)
+        
+        -- For PowerBar, offset the border 1 pixel to the right
+        if frameType == "Power" then
+            BorderFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 0.5, 0)
+            BorderFrame:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0.5, 0)
+        else
+            BorderFrame:SetAllPoints(parent)
+        end
+        
         BorderFrame:SetFrameLevel(parent:GetFrameLevel() + 1)
         local BorderTexture = BorderFrame:CreateTexture(nil, "OVERLAY")
         BorderTexture:SetAllPoints(BorderFrame)
@@ -869,7 +910,7 @@ local function UpdateAbsorbBar(FrameName)
     local HealthPrediction = MilaUI.DB.profile[Unit].Health.HealthPrediction
     local Absorbs = HealthPrediction.Absorbs
     if FrameName.unitAbsorbs and Absorbs.Enabled then
-        local absorbsTexturePath = LSM:Fetch("statusbar", General.ForegroundTexture)
+        local absorbsTexturePath = LSM:Fetch("statusbar", General.AbsorbTexture)
         FrameName.unitAbsorbs:SetStatusBarTexture(absorbsTexturePath)
         local HealthBarTexture = FrameName.unitHealthBar:GetStatusBarTexture()
         if HealthBarTexture then
@@ -897,7 +938,7 @@ local function UpdateHealAbsorbBar(FrameName)
     local HealthPrediction = MilaUI.DB.profile[Unit].Health.HealthPrediction
     local HealAbsorbs = HealthPrediction.HealAbsorbs
     if FrameName.unitHealAbsorbs and HealAbsorbs.Enabled then
-        local healAbsorbsTexturePath = LSM:Fetch("statusbar", General.ForegroundTexture)
+        local healAbsorbsTexturePath = LSM:Fetch("statusbar", General.AbsorbTexture)
         FrameName.unitHealAbsorbs:SetStatusBarTexture(healAbsorbsTexturePath)
         local HealthBarTexture = FrameName.unitHealthBar:GetStatusBarTexture()
         if HealthBarTexture then
@@ -1030,10 +1071,32 @@ end
 local function UpdateBuffs(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
     local Buffs = MilaUI.DB.profile[Unit].Buffs
+    
+    -- Safety check: ensure unitBuffs exists
+    if not FrameName.unitBuffs then
+        return
+    end
+    
     if Buffs.Enabled then
         FrameName.unitBuffs:ClearAllPoints()
         FrameName.unitBuffs:SetSize(FrameName:GetWidth(), Buffs.Size)
-        FrameName.unitBuffs:SetPoint(Buffs.AnchorFrom, FrameName, Buffs.AnchorTo, Buffs.XOffset, Buffs.YOffset)
+        
+        -- Determine anchor based on AnchorFrame setting
+        local anchorFrame = FrameName
+        if Buffs.AnchorFrame then
+            if Buffs.AnchorFrame == "HealthBar" and FrameName.unitHealthBar then
+                anchorFrame = FrameName.unitHealthBar
+            elseif Buffs.AnchorFrame == "PowerBar" and FrameName.unitPowerBar then
+                anchorFrame = FrameName.unitPowerBar
+            elseif Buffs.AnchorFrame == "Debuffs" and FrameName.unitDebuffs then
+                anchorFrame = FrameName.unitDebuffs
+            elseif Buffs.AnchorFrame ~= "Buffs" and _G[Buffs.AnchorFrame] then
+                -- Try to find a global frame with this name
+                anchorFrame = _G[Buffs.AnchorFrame]
+            end
+        end
+        
+        FrameName.unitBuffs:SetPoint(Buffs.AnchorFrom, anchorFrame, Buffs.AnchorTo, Buffs.XOffset, Buffs.YOffset)
         FrameName.unitBuffs.size = Buffs.Size
         FrameName.unitBuffs.spacing = Buffs.Spacing
         FrameName.unitBuffs.num = Buffs.Num
@@ -1055,10 +1118,32 @@ end
 local function UpdateDebuffs(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
     local Debuffs = MilaUI.DB.profile[Unit].Debuffs
+    
+    -- Safety check: ensure unitDebuffs exists
+    if not FrameName.unitDebuffs then
+        return
+    end
+    
     if Debuffs.Enabled then
         FrameName.unitDebuffs:ClearAllPoints()
         FrameName.unitDebuffs:SetSize(FrameName:GetWidth(), Debuffs.Size)
-        FrameName.unitDebuffs:SetPoint(Debuffs.AnchorFrom, FrameName, Debuffs.AnchorTo, Debuffs.XOffset, Debuffs.YOffset)
+        
+        -- Determine anchor based on AnchorFrame setting
+        local anchorFrame = FrameName
+        if Debuffs.AnchorFrame then
+            if Debuffs.AnchorFrame == "HealthBar" and FrameName.unitHealthBar then
+                anchorFrame = FrameName.unitHealthBar
+            elseif Debuffs.AnchorFrame == "PowerBar" and FrameName.unitPowerBar then
+                anchorFrame = FrameName.unitPowerBar
+            elseif Debuffs.AnchorFrame == "Buffs" and FrameName.unitBuffs then
+                anchorFrame = FrameName.unitBuffs
+            elseif Debuffs.AnchorFrame ~= "Debuffs" and _G[Debuffs.AnchorFrame] then
+                -- Try to find a global frame with this name
+                anchorFrame = _G[Debuffs.AnchorFrame]
+            end
+        end
+        
+        FrameName.unitDebuffs:SetPoint(Debuffs.AnchorFrom, anchorFrame, Debuffs.AnchorTo, Debuffs.XOffset, Debuffs.YOffset)
         FrameName.unitDebuffs.size = Debuffs.Size
         FrameName.unitDebuffs.spacing = Debuffs.Spacing
         FrameName.unitDebuffs.num = Debuffs.Num
