@@ -36,21 +36,10 @@ mainFrame = nil
 mainTabs = nil
 unitframesTabs = nil
 
--- Reference to the old DrawTagsContainer function from GUI.lua
-function MilaUI:InitDrawTagsContainer()
-    -- Check if the function exists in the old GUI.lua file
-    if MilaUI.DrawTagsContainer then
-        -- Create a reference to the old function
-        MilaUI.DrawTagsContainer_Old = MilaUI.DrawTagsContainer
-    end
-end
 
 -- Initialize the main GUI
 function MilaUI:InitGUI()
     if not MilaUI.DB then return end
-    
-    -- Initialize the DrawTagsContainer reference
-    MilaUI:InitDrawTagsContainer()
     isOpen = true
     local LSMFonts = LSM:HashTable(LSM.MediaType.FONT)
     local LSMTextures = LSM:HashTable(LSM.MediaType.STATUSBAR)
@@ -203,14 +192,7 @@ function MilaUI:InitGUI()
     
     -- Tags Settings
     elseif main == "Tags" then
-      if MilaUI.DrawTagsContainer then
-        MilaUI:DrawTagsContainer(contentFrame)
-      else
-        local label = GUI:Create("Label")
-        label:SetText("Tags functionality is currently unavailable.")
-        label:SetFullWidth(true)
-        contentFrame:AddChild(label)
-      end
+      MilaUI:DrawTagsContainer(contentFrame)
     
     -- Profiles Settings
     elseif main == "Profiles" then
