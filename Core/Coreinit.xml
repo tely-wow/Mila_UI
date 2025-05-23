@@ -3,6 +3,7 @@
   <Script file="Tags.lua"/>
   <Script file="Range.lua"/>
   <Script file="Modules/Unitframes/Utility.lua"/>
+  <Script file="Modules/Unitframes/Platercolours.lua"/>
   <Script file="Share.lua"/>
   <Include file="GUI/gui.xml"/>
 </Ui>

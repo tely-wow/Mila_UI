@@ -1276,6 +1276,13 @@ function MilaUI:SetupSlashCommands()
         end
         print("Value:", value)
     end
+    SLASH_MILAUICOLORS1 = "/milacolors"
+    SlashCmdList["MILAUICOLORS"] = function()
+        local colors = MilaUI.DB.profile.General.CustomColours.Reaction
+        for k, v in pairs(colors) do
+            print("Reaction", k, "->", string.format("r=%.2f g=%.2f b=%.2f", v[1], v[2], v[3]))
+        end
+    end
 end
 
 function MilaUIAddon:OnEnable()

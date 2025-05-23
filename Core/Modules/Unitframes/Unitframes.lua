@@ -46,7 +46,7 @@ local function SharedStyle(self, unit)
     name:SetPoint("LEFT", health, "LEFT", 5, 0)
     name:SetFontObject(GameFontNormalSmall)
     name:SetJustifyH("LEFT")
-    self:Tag(name, "[name]") -- Use oUF tag to display the unit's name
+    self:Tag(name, "[name]")
     self.Name = name
 
     -- Health Text (Current/Max)
@@ -54,7 +54,7 @@ local function SharedStyle(self, unit)
     healthText:SetPoint("RIGHT", health, "RIGHT", -5, 0)
     healthText:SetFontObject(GameFontNormalSmall)
     healthText:SetJustifyH("RIGHT")
-    self:Tag(healthText, "[health:current-max]") -- Use oUF tag
+    self:Tag(healthText, "[health:current-max]")
     self.Health.Value = healthText
 
     -- Power Text (Current/Max)
@@ -62,7 +62,7 @@ local function SharedStyle(self, unit)
     powerText:SetPoint("CENTER", power, "CENTER", 0, 0)
     powerText:SetFontObject(GameFontNormalSmall)
     powerText:SetJustifyH("CENTER")
-    self:Tag(powerText, "[power:current-max]") -- Use oUF tag
+    self:Tag(powerText, "[power:current-max]")
     self.Power.Value = powerText
 
     -- Apply unit-specific styles if defined
@@ -76,6 +76,7 @@ function MilaUI.UF:SpawnUnit(unit, name)
     local frame = oUF:Spawn(unit, name or ("MilaUI_"..unit))
     if frame then
         MilaUI:print(string.format("Spawned %s frame.", unit))
+        MilaUI.UF[unit] = frame
     else
         MilaUI:print(string.format("Failed to spawn %s frame.", unit))
     end
@@ -89,24 +90,22 @@ oUF:RegisterStyle("MilaUI", SharedStyle)
 oUF:SetActiveStyle("MilaUI")
 
 -- Spawn Header for Boss Frames
--- This tells oUF how to create and manage boss1, boss2, etc.
 local bossHeader = oUF:SpawnHeader(
-    "MilaUI_BossHeader", -- Unique name for the header frame
-    nil, -- Template (can be nil)
-    "boss", -- Visibility condition (show when boss units exist)
-    -- Attributes for the header and its children (boss frames)
+    "MilaUI_BossHeader", -
+    nil, 
+    "boss", -
     "showPlayer", false,
     "showBoss", true,
     "showArena", false,
     "showParty", false,
     "showRaid", false,
-    "point", "TOPRIGHT", -- Anchor point of the header
-    "xOffset", -150,     -- Horizontal offset from anchor
-    "yOffset", -150,     -- Vertical offset from anchor
-    "maxColumns", 1,     -- Arrange boss frames in a single column
-    "unitsPerColumn", 5, -- Max 5 boss frames per column
-    "columnSpacing", 10,  -- Spacing between columns (if more than 1)
-    "unitSpacing", 10    -- Spacing between individual boss frames
+    "point", "TOPRIGHT",
+    "xOffset", -150,
+    "yOffset", -150,
+    "maxColumns", 1,
+    "unitsPerColumn", 5,
+    "columnSpacing", 10,
+    "unitSpacing", 10
 )
 
 MilaUI:print("Unitframe module loaded and style registered.")

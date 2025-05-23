@@ -98,50 +98,55 @@ local function ColourBackgroundByUnitStatus(self)
     local General = MilaUI.DB.profile.General
     local CustomColour = General.CustomColours
     local unit = self.unit
-    if not unit then return end
-    if not UnitExists(unit) then return end
+    local bar = self.Health
+    if not unit or not bar or not bar.bg or not UnitExists(unit) then return end
+
+    local bg = bar.bg
+
     if UnitIsDead(unit) then
-        if General.ColourBackgroundByReaction then
-            if General.ColourBackgroundIfDead then
-                self.unitHealthBarBackground:SetVertexColor(CustomColour.Status[1][1], CustomColour.Status[1][2], CustomColour.Status[1][3], General.BackgroundColour[4])
-            else
-                self.unitHealthBarBackground.multiplier = General.BackgroundMultiplier
-                self.unitHealthBar.bg = self.unitHealthBarBackground
-            end
-        elseif General.ColourBackgroundIfDead then
-            self.unitHealthBarBackground:SetVertexColor(CustomColour.Status[1][1], CustomColour.Status[1][2], CustomColour.Status[1][3], General.BackgroundColour[4])
-            self.unitHealthBar.bg = nil
+        if General.ColourBackgroundIfDead then
+            -- Use custom dead color
+            local r, g, b = unpack(CustomColour.Status[1])
+            bg:SetVertexColor(r, g, b, General.BackgroundColour[4])
+        elseif General.ColourBackgroundByReaction then
+            -- Use fallback multiplier on foreground
+            local a = General.BackgroundMultiplier
+            local fr, fg, fb = bar:GetStatusBarColor()
+            bg:SetVertexColor(fr * a, fg * a, fb * a, General.BackgroundColour[4])
         else
-            self.unitHealthBarBackground:SetVertexColor(unpack(General.BackgroundColour))
-            self.unitHealthBar.bg = nil
+            -- Static fallback color
+            bg:SetVertexColor(unpack(General.BackgroundColour))
         end
-    elseif not UnitIsDead(unit) then
+    else
         if General.ColourBackgroundByForeground then
-            self.unitHealthBarBackground.multiplier = General.BackgroundMultiplier
-            self.unitHealthBar.bg = self.unitHealthBarBackground
+            local a = General.BackgroundMultiplier
+            local r, g, b = bar:GetStatusBarColor()
+            bg:SetVertexColor(r * a, g * a, b * a, General.BackgroundColour[4])
         elseif General.ColourBackgroundByClass then
-            local unitClass = select(2, UnitClass(unit))
-            local unitColor = RAID_CLASS_COLORS[unitClass]
+            local r, g, b
             if UnitIsPlayer(unit) then
-                self.unitHealthBarBackground:SetVertexColor(unitColor.r, unitColor.g, unitColor.b, General.BackgroundColour[4])
-                self.unitHealthBar.bg = nil
+                local class = select(2, UnitClass(unit))
+                local color = RAID_CLASS_COLORS[class]
+                if color then r, g, b = color.r, color.g, color.b end
             else
                 local reaction = UnitReaction(unit, "player")
-                if reaction then
-                    local r, g, b = unpack(oUF.colors.reaction[reaction])
-                    unitColor = { r = r, g = g, b = b }
+                if reaction and oUF.colors.reaction[reaction] then
+                    r, g, b = unpack(oUF.colors.reaction[reaction])
                 end
             end
-            if unitColor then
-                self.unitHealthBarBackground:SetVertexColor(unitColor.r, unitColor.g, unitColor.b, General.BackgroundColour[4])
-                self.unitHealthBar.bg = nil
+
+            if r and g and b then
+                bg:SetVertexColor(r, g, b, General.BackgroundColour[4])
+            else
+                bg:SetVertexColor(unpack(General.BackgroundColour))
             end
         else
-            self.unitHealthBarBackground:SetVertexColor(unpack(General.BackgroundColour))
-            self.unitHealthBar.bg = nil
+            -- Default static color
+            bg:SetVertexColor(unpack(General.BackgroundColour))
         end
     end
 end
+
 
 function MilaUI:FormatLargeNumber(value)
     if value < 999 then
@@ -212,66 +217,105 @@ local function CreateHealthBar(self, Unit)
         bgFile = Health.BackgroundTexture,
         edgeFile = General.BorderTexture,
         edgeSize = General.BorderSize,
-        insets = { left = General.BorderInset, right = General.BorderInset, top = General.BorderInset, bottom = General.BorderInset },
+        insets = {
+            left = General.BorderInset,
+            right = General.BorderInset,
+            top = General.BorderInset,
+            bottom = General.BorderInset
+        },
     }
 
+    -- Optional border
     if not self.unitBorder and not Health.CustomBorder.Enabled then
         self.unitBorder = CreateFrame("Frame", nil, self, "BackdropTemplate")
         self.unitBorder:SetAllPoints()
         self.unitBorder:SetBackdrop(BackdropTemplate)
-        self.unitBorder:SetBackdropColor(0,0,0,0)
+        self.unitBorder:SetBackdropColor(0, 0, 0, 0)
         self.unitBorder:SetBackdropBorderColor(unpack(General.BorderColour))
         self.unitBorder:SetFrameLevel(1)
     end
 
+    -- Health bar
     if not self.unitHealthBar then
-        self.unitHealthBar = CreateFrame("StatusBar", nil, self)
-        self.unitHealthBar:SetSize(Health.Width - 2, Health.Height - 2)
-        self.unitHealthBar:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -1)
-        self.unitHealthBarSetClipsChildren(true)
-        local healthTexturePath = LSM:Fetch("statusbar", Health.Texture)
-        self.unitHealthBar:SetStatusBarTexture(healthTexturePath)
-        local tex = self.unitHealthBar:GetStatusBarTexture()
-        tex:SetTexCoord(0,1,0,1)
-        if Health.CustomMask.Enabled then tex:SetMask(Health.CustomMask.MaskTexture) end
-        self.unitHealthBar.colorClass = General.ColourByClass
-        self.unitHealthBar.colorReaction = General.ColourByClass
-        self.unitHealthBar.colorDisconnected = General.ColourIfDisconnected
-        self.unitHealthBar.colorTapping = General.ColourIfTapped
-        self.unitHealthBar.colorHealth = true
+        local health = CreateFrame("StatusBar", nil, self)
+        health:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -1)
+        health:SetSize(Health.Width - 2, Health.Height - 2)
+        health:SetStatusBarTexture(LSM:Fetch("statusbar", Health.Texture))
+        local tex = health:GetStatusBarTexture()
+        tex:SetTexCoord(0, 1, 0, 1)
+        if Health.CustomMask.Enabled then
+            tex:SetMask(Health.CustomMask.MaskTexture)
+        end
+
+        -- oUF background (health.bg)
+        local bg = health:CreateTexture(nil, "BACKGROUND")
+        bg:SetAllPoints()
+        bg:SetTexture(LSM:Fetch("statusbar", Health.BackgroundTexture))
+        bg:SetTexCoord(0, 1, 0, 1)
+        if Health.CustomMask.Enabled then
+            bg:SetMask(Health.CustomMask.MaskTexture)
+        end
+        bg:SetVertexColor(unpack(General.BackgroundColour))
+        bg:Show()
+
+        health.bg = bg
+
+        -- Color logic
+        health.colorClass        = General.ColourByClass
+        health.colorReaction     = General.ColourByClass
+        health.colorDisconnected = General.ColourIfDisconnected
+        health.colorTapping      = General.ColourIfTapped
+        health.colorHealth       = true
+
         if Unit == "Pet" then
             local ColourByPlayerClass = MilaUI.DB.profile.Pet.Health.ColourByPlayerClass
             if ColourByPlayerClass then
-                self.unitHealthBar.colorClass = false
-                self.unitHealthBar.colorReaction = false
-                self.unitHealthBar.colorHealth = false
+                health.colorClass = false
+                health.colorReaction = false
+                health.colorHealth = false
                 local unitClass = select(2, UnitClass("player"))
                 local unitColor = RAID_CLASS_COLORS[unitClass]
                 if unitColor then
-                    self.unitHealthBar:SetStatusBarColor(unitColor.r, unitColor.g, unitColor.b, General.ForegroundColour[4])
+                    health:SetStatusBarColor(unitColor.r, unitColor.g, unitColor.b, General.ForegroundColour[4])
                 end
             end
         end
-        self.unitHealthBar:SetMinMaxValues(0, 100)
-        self.unitHealthBar:SetAlpha(General.ForegroundColour[4])
-        self.unitHealthBar.PostUpdate = function() ColourBackgroundByUnitStatus(self) end
-        if Health.Direction == "RL" then
-            self.unitHealthBar:SetReverseFill(true)
-        elseif Health.Direction == "LR" then
-            self.unitHealthBar:SetReverseFill(false)
+
+        health:SetMinMaxValues(0, 100)
+        health:SetAlpha(General.ForegroundColour[4])
+        health.PostUpdateColor = function(bar, unit, r, g, b)
+            local parent = bar.__owner or bar:GetParent()
+            if parent and parent.ColourBackgroundByUnitStatus then
+                parent:ColourBackgroundByUnitStatus()
+            elseif ColourBackgroundByUnitStatus then
+                ColourBackgroundByUnitStatus(parent or bar)
+            end
+            -- NPC: Custom color via Plater
+            if not UnitIsPlayer(unit) then
+                local guid = UnitGUID(unit)
+                if guid then
+                    local mobID = MilaUI:ExtractMobID(guid)
+                    if mobID then
+                        local color = MilaUI:GetColorForMobID(mobID)
+                        if color then
+                            bar:SetStatusBarColor(color.r, color.g, color.b)
+                        end
+                    end
+                end
+            end
         end
-        self.unitHealthBar:SetFrameLevel(2)
-        self.Health = self.unitHealthBar
-        self.unitHealthBarBackground = self:CreateTexture(nil, "BACKGROUND")
-        self.unitHealthBarBackground:SetSize(Health.Width - 2, Health.Height - 2)
-        self.unitHealthBarBackground:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -1)
-        local healthBgTexturePath = LSM:Fetch("statusbar", Health.BackgroundTexture)
-        self.unitHealthBarBackground:SetTexture(healthBgTexturePath)
-        self.unitHealthBarBackground:SetTexCoord(0, 1, 0, 1)
-        if Health.CustomMask.Enabled then self.unitHealthBarBackground:SetMask(Health.CustomMask.MaskTexture) end
-        self.unitHealthBarBackground:SetAlpha(General.BackgroundColour[4])
+        if Health.Direction == "RL" then
+            health:SetReverseFill(true)
+        elseif Health.Direction == "LR" then
+            health:SetReverseFill(false)
+        end
+        health:SetFrameLevel(2)
+
+        self.unitHealthBar = health
+        self.Health = health
     end
 end
+
 
 local function CreateAbsorbBar(self, Unit)
     local General = MilaUI.DB.profile.General
@@ -774,12 +818,6 @@ function MilaUI:CreateUnitFrame(Unit)
         self.unitHealthBar:ClearAllPoints()
         self.unitHealthBar:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -1)
         self.unitHealthBar:SetSize(Health.Width - 2, Health.Height - 2)
-        
-        if self.unitHealthBarBackground then
-            self.unitHealthBarBackground:ClearAllPoints()
-            self.unitHealthBarBackground:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -1)
-            self.unitHealthBarBackground:SetSize(Health.Width - 2, Health.Height - 2)
-        end
     end
     
     -- Health prediction setup
@@ -853,56 +891,79 @@ local function UpdateHealthBar(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
     local General = MilaUI.DB.profile.General
     local Health = MilaUI.DB.profile[Unit].Health
-
-    if FrameName.unitBorder and not MilaUI.DB.profile[Unit].Health.CustomBorder.Enabled then
+    -- Update border if applicable
+    if FrameName.unitBorder and not Health.CustomBorder.Enabled then
         FrameName.unitBorder:SetBackdropBorderColor(unpack(General.BorderColour))
         FrameName.unitBorder:SetFrameLevel(1)
     end
-    if FrameName.unitHealthBar then
-        FrameName.unitHealthBar:SetSize(Health.Width - 2, Health.Height - 2)
-        FrameName.unitHealthBar:ClearAllPoints()
-        FrameName.unitHealthBar:SetPoint("TOPLEFT", FrameName, "TOPLEFT", 1, -1)
+
+    local bar = FrameName.unitHealthBar
+    if bar then
+        -- Resize and reposition health bar
+        bar:SetSize(Health.Width - 2, Health.Height - 2)
+        bar:ClearAllPoints()
+        bar:SetPoint("TOPLEFT", FrameName, "TOPLEFT", 1, -1)
+
+        -- Apply texture and optional mask
         local healthTexturePath = LSM:Fetch("statusbar", Health.Texture)
-        FrameName.unitHealthBar:SetStatusBarTexture(healthTexturePath)
-        local tex = FrameName.unitHealthBar:GetStatusBarTexture()
-        if Health.CustomMask.Enabled and Health.CustomMask.MaskTexture and not tex.mask then tex:SetMask(Health.CustomMask.MaskTexture) end
-        FrameName.unitHealthBar.colorClass = General.ColourByClass
-        FrameName.unitHealthBar.colorReaction = General.ColourByClass
-        FrameName.unitHealthBar.colorDisconnected = General.ColourIfDisconnected
-        FrameName.unitHealthBar.colorTapping = General.ColourIfTapped
-        FrameName.unitHealthBar.colorHealth = true
-        FrameName.unitHealthBar:SetAlpha(General.ForegroundColour[4])
-        FrameName.unitHealthBar.PostUpdateColor = function() ColourBackgroundByUnitStatus(FrameName) end
+        bar:SetStatusBarTexture(healthTexturePath)
+        local tex = bar:GetStatusBarTexture()
+        if Health.CustomMask.Enabled and Health.CustomMask.MaskTexture and not tex.mask then
+            tex:SetMask(Health.CustomMask.MaskTexture)
+        end
+
+        -- Update oUF color logic flags
+        bar.colorClass        = General.ColourByClass
+        bar.colorReaction     = General.ColourByClass
+        bar.colorDisconnected = General.ColourIfDisconnected
+        bar.colorTapping      = General.ColourIfTapped
+        bar.colorHealth       = true
+        bar:SetAlpha(General.ForegroundColour[4])
+
+        -- Special color override for pet
         if Unit == "Pet" then
             local ColourByPlayerClass = MilaUI.DB.profile.Pet.Health.ColourByPlayerClass
             if ColourByPlayerClass then
-                FrameName.unitHealthBar.colorClass = false
-                FrameName.unitHealthBar.colorReaction = false
-                FrameName.unitHealthBar.colorHealth = false
+                bar.colorClass = false
+                bar.colorReaction = false
+                bar.colorHealth = false
                 local unitClass = select(2, UnitClass("player"))
                 local unitColor = RAID_CLASS_COLORS[unitClass]
                 if unitColor then
-                    FrameName.unitHealthBar:SetStatusBarColor(unitColor.r, unitColor.g, unitColor.b, General.ForegroundColour[4])
+                    bar:SetStatusBarColor(unitColor.r, unitColor.g, unitColor.b, General.ForegroundColour[4])
                 end
             end
             FrameName.unitHealthBar:ForceUpdate()
         end
+
+        -- Reverse fill direction
         if Health.Direction == "RL" then
             FrameName.unitHealthBar:SetReverseFill(true)
         elseif Health.Direction == "LR" then
             FrameName.unitHealthBar:SetReverseFill(false)
         end
-        FrameName.unitHealthBar:SetFrameLevel(2)
-        -- Frame Health Bar Background
-        FrameName.unitHealthBarBackground:SetSize(Health.Width - 2, Health.Height - 2)
-        FrameName.unitHealthBarBackground:SetPoint("TOPLEFT", FrameName, "TOPLEFT", 1, -1)
-        local healthBgTexturePath = LSM:Fetch("statusbar", Health.Texture)
-        FrameName.unitHealthBarBackground:SetTexture(healthBgTexturePath)
-        if Health.CustomMask.Enabled then FrameName.unitHealthBarBackground:SetMask(Health.CustomMask.MaskTexture) end
-        FrameName.unitHealthBarBackground:SetAlpha(General.BackgroundColour[4])
-        FrameName.unitHealthBar:ForceUpdate()
+
+        -- Ensure proper layering
+        bar:SetFrameLevel(2)
+
+        -- ✅ NEW: Update background (health.bg)
+        if bar.bg then
+            bar.bg:SetSize(Health.Width - 2, Health.Height - 2)
+            bar.bg:ClearAllPoints()
+            bar.bg:SetPoint("TOPLEFT", FrameName, "TOPLEFT", 1, -1)
+            local bgTexture = LSM:Fetch("statusbar", Health.BackgroundTexture)
+            bar.bg:SetTexture(bgTexture)
+            if Health.CustomMask.Enabled and Health.CustomMask.MaskTexture and not bar.bg.mask then
+                bar.bg:SetMask(Health.CustomMask.MaskTexture)
+            end
+            bar.bg:SetVertexColor(unpack(General.BackgroundColour))
+            bar.bg:SetAlpha(General.BackgroundColour[4])
+        end
+
+        bar:ForceUpdate()
     end
 end
+
 
 local function UpdateAbsorbBar(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
@@ -974,14 +1035,8 @@ local function UpdatePowerBar(FrameName)
     }
     
     if PowerBar.Enabled and FrameName.unitPowerBar then
-        -- Update health bar height to match settings
-        FrameName.unitHealthBar:SetHeight(MilaUI.DB.profile[Unit].Health.Height - 2)
-        FrameName.unitHealthBarBackground:SetHeight(MilaUI.DB.profile[Unit].Health.Height - 2)
-        
-        -- Update power bar position and size using database values
         FrameName.unitPowerBar:ClearAllPoints()
         
-        -- Get anchor points from database or use defaults
         local anchorFrom = PowerBar.AnchorFrom or "TOPLEFT"
         local anchorTo = PowerBar.AnchorTo or "BOTTOMLEFT"
         local anchorParent = PowerBar.AnchorParent or "unitHealthBar"

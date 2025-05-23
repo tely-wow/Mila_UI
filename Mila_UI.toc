@@ -4,7 +4,7 @@
 ## SavedVariables: MilaUIDB
 ## Author: Mila and Alex
 ## Version: 69
-## OptionalDeps: oUF
+## OptionalDeps: oUF, Plater
 ## X-oUF: MilaUI
 ## IconTexture: Interface\AddOns\Mila_UI\Media\logo.tga
 
