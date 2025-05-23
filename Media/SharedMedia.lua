@@ -49,10 +49,8 @@ LSM:Register("statusbar", "b-Mila Player Castbar", [[Interface\Addons\MilaUI\Med
 LSM:Register("statusbar", "ElvUI Norm", [[Interface\Addons\MilaUI\Media\Statusbars\NormTex2.tga]])
 LSM:Register("statusbar", "ElvUI Norm1", [[Interface\Addons\MilaUI\Media\Statusbars\NormTex3.tga]])
 LSM:Register("statusbar", "ElvUI Gloss", [[Interface\Addons\MilaUI\Media\Statusbars\NormTex.tga]])
-LSM:Register("statusbar", "ElvUI Blank", [[Interface\Addons\MilaUI\Media\Statusbars\White8x8.tga]])
 LSM:Register("statusbuar", "Minimalist", [[Interface\Addons\MilaUI\Media\Statusbars\Minimalist.tga]])
 LSM:Register("statusbuar", "Melli", [[Interface\Addons\MilaUI\Media\Statusbars\Melli.tga]])
-LSM:Register("background", "ElvUI Blank", [[Interface\Addons\MilaUI\Media\Statusbars\White8x8.tga]])
 LSM:Register("statusbar", "Solid", [[Interface\Addons\Mila_UI\Media\Statusbars\solid.tga]])
 LSM:Register("statusbar", "AbsorbBar", [[Interface\Addons\Mila_UI\Media\Statusbars\AbsorbBar.tga]])
 
