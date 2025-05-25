@@ -412,11 +412,6 @@ MilaUIAddon.Defaults = {
                     Tag             = "[Power:PerPP]",
                 },
             },
-            Range = {
-                Enable = false,
-                OOR = 0.5,
-                IR = 1.0
-            },
         },
         TargetTarget = {
             Frame = {
@@ -571,11 +566,6 @@ MilaUIAddon.Defaults = {
                     YOffset         = 0,
                     Tag             = "[Name:LastNameOnly]",
                 },
-            },
-            Range = {
-                Enable = false,
-                OOR = 0.5,
-                IR = 1.0
             }
         },
         Focus = {
@@ -739,11 +729,6 @@ MilaUIAddon.Defaults = {
                     YOffset         = -28,
                     Tag             = "[Power:PerPP]",
                 },
-            },
-            Range = {
-                Enable = false,
-                OOR = 0.5,
-                IR = 1.0
             }
         },
         FocusTarget = {
@@ -899,11 +884,6 @@ MilaUIAddon.Defaults = {
                     YOffset         = 0,
                     Tag             = "",
                 },
-            },
-            Range = {
-                Enable = true,
-                OOR = 0.5,
-                IR = 1.0
             }
         },
         Pet = {
@@ -1061,11 +1041,6 @@ MilaUIAddon.Defaults = {
                     YOffset         = 0,
                     Tag             = "",
                 },
-            },
-            Range = {
-                Enable = false,
-                OOR = 0.5,
-                IR = 1.0
             }
         },
         Boss = {
@@ -1226,12 +1201,7 @@ MilaUIAddon.Defaults = {
                     YOffset         = 0,
                     Tag             = "",
                 },
-            },
-            Range = {
-                Enable = true,
-                OOR = 0.5,
-                IR = 1.0
-            },
+            }
         }
     }
 }

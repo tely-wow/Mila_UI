@@ -100,13 +100,13 @@ local bossHeader = oUF:SpawnHeader(
     "showArena", false,
     "showParty", false,
     "showRaid", false,
-    "point", "TOPRIGHT", -- Anchor point of the header
-    "xOffset", -150,     -- Horizontal offset from anchor
-    "yOffset", -150,     -- Vertical offset from anchor
-    "maxColumns", 1,     -- Arrange boss frames in a single column
-    "unitsPerColumn", 5, -- Max 5 boss frames per column
-    "columnSpacing", 10,  -- Spacing between columns (if more than 1)
-    "unitSpacing", 10    -- Spacing between individual boss frames
+    "point", "TOPRIGHT", 
+    "xOffset", -150, 
+    "yOffset", -150, 
+    "maxColumns", 1, 
+    "unitsPerColumn", 5, 
+    "columnSpacing", 10,
+    "unitSpacing", 10
 )
 
 MilaUI:print("Unitframe module loaded and style registered.")

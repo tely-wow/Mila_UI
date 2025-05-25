@@ -400,7 +400,6 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
     
     -- Convert UI unit name to database key
     local dbUnitName = self:GetUnitDatabaseKey(unitName)
-    local Range = MilaUI.DB.profile[dbUnitName].Range
     
     -- Debug output to help troubleshoot
     if not MilaUI.DB.profile[dbUnitName] then
@@ -464,7 +463,6 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
 
             local Health = MilaUI.DB.profile[dbUnitName].Health
             local Frame = MilaUI.DB.profile[dbUnitName].Frame
-            local Range = MilaUI.DB.profile[dbUnitName].Range
 
             -- Texture and Border
             MilaUI:CreateLargeHeading("Texture and Border", contentFrame, 16)
@@ -626,49 +624,13 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             FrameAnchorTo:SetCallback("OnValueChanged", function(widget, event, value) Frame.AnchorTo = value MilaUI:UpdateFrames() end)
             FrameAnchorTo:SetRelativeWidth(0.5)
             Anchor:AddChild(FrameAnchorTo)
-
-            -- Only show range options for non-player units
-            if dbUnitName ~= "Player" then
-                MilaUI:CreateLargeHeading("Range", contentFrame)
-                local RangeOptions = GUI:Create("InlineGroup")
-                RangeOptions:SetLayout("Flow")
-                RangeOptions:SetRelativeWidth(1)
-                contentFrame:AddChild(RangeOptions)
-
-                local RangeEnabled = GUI:Create("CheckBox")
-                RangeEnabled:SetLabel("Enable Range Indicator")
-                RangeEnabled:SetValue(Range.Enable)
-                RangeEnabled:SetCallback("OnValueChanged", function(widget, event, value) Range.Enable = value MilaUI:CreateReloadPrompt() end)
-                RangeEnabled:SetFullWidth(true)
-                RangeOptions:AddChild(RangeEnabled)
-
-                local OOR = GUI:Create("Slider")
-                OOR:SetLabel(lavender .. "Out of Range Alpha")
-                OOR:SetSliderValues(0, 1, 0.01)
-                OOR:SetValue(Range.OOR)
-                OOR:SetCallback("OnMouseUp", function(widget, event, value) Range.OOR = value MilaUI:UpdateFrames() end)
-                OOR:SetRelativeWidth(0.5)
-                RangeOptions:AddChild(OOR)
-
-                local IR = GUI:Create("Slider")
-                IR:SetLabel(lavender .. "In Range Alpha")
-                IR:SetSliderValues(0, 1, 0.01)
-                IR:SetValue(Range.IR)
-                IR:SetCallback("OnMouseUp", function(widget, event, value) Range.IR = value MilaUI:UpdateFrames() end)
-                IR:SetRelativeWidth(0.5)
-                RangeOptions:AddChild(IR)
-
-                C_Timer.After(0.1, function()
-                    local p = contentFrame
-                    while p and p.DoLayout do
-                        p:DoLayout()
-                        p = p.parent
-                    end
-                end)
-            end
-
-
-            
+            C_Timer.After(0.1, function()
+                local p = contentFrame
+                while p and p.DoLayout do
+                    p:DoLayout()
+                    p = p.parent
+                end
+            end)
         elseif tabKey == "PowerBar" then
             local General = MilaUI.DB.profile.UnitframesGeneral or MilaUI.DB.profile.General
             local LSM = LibStub:GetLibrary("LibSharedMedia-3.0")

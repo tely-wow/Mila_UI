@@ -155,7 +155,6 @@ function MilaUI:InitGUI()
   mainTree:SetTree(treeData)
   mainTree:SetStatusTable({Units = true})
   mainTree:SetCallback("OnClick", function(widget, uniquevalue)
-    print("Clicked:", uniquevalue)
   end)
   mainTree:SetStatusTable({["Units"] = true})
   

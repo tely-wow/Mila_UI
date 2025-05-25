@@ -1442,15 +1442,6 @@ local function UpdateCustomBorder(FrameName)
     end
 end
 
-local function UpdateRange(FrameName)
-    local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
-    local Range = MilaUI.DB.profile[Unit].Range
-    if Range and Range.Enable then
-        FrameName.__RangeAlphaSettings = Range
-    else
-        FrameName.__RangeAlphaSettings = nil
-    end
-end
 
 function MilaUI:UpdateUnitFrame(FrameName)
     if not FrameName then return end
@@ -1467,7 +1458,6 @@ function MilaUI:UpdateUnitFrame(FrameName)
     UpdateIndicators(FrameName)
     UpdateTextFields(FrameName)
     UpdateMouseoverHighlight(FrameName)
-    UpdateRange(FrameName)
     if MilaUI.DB.profile.TestMode then MilaUI:DisplayBossFrames() end
 end
 

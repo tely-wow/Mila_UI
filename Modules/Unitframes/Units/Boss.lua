@@ -20,7 +20,6 @@ function MilaUI:SpawnBossFrames()
     for i = 1, 8 do
         local BossFrame = oUF:Spawn("boss" .. i, "MilaUI_Boss" .. i)
         MilaUI.BossFrames[i] = BossFrame
-        MilaUI:RegisterRangeFrame(BossFrame, "boss" .. i)
         MilaUI:RegisterTargetHighlightFrame(BossFrame, "boss" .. i)
     end
     MilaUI:UpdateBossFrames()

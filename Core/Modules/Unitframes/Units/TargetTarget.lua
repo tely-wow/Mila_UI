@@ -9,5 +9,4 @@ function MilaUI:SpawnTargetTargetFrame()
     self.TargetTargetFrame = oUF:Spawn("targettarget", "MilaUI_TargetTarget")
     local AnchorParent = (_G[Frame.AnchorParent] and _G[Frame.AnchorParent]:IsObjectType("Frame")) and _G[Frame.AnchorParent] or UIParent
     self.TargetTargetFrame:SetPoint(Frame.AnchorFrom, AnchorParent, Frame.AnchorTo, Frame.XPosition, Frame.YPosition)
-    MilaUI:RegisterRangeFrame(self.TargetTargetFrame, "targettarget")
 end
