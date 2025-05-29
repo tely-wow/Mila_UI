@@ -63,71 +63,120 @@ function MilaUI:DrawUnitframesGeneralTab(parent)
     -- *** COLOUR OPTIONS (Moved from Colors tab) ***
     
     -- Create the main container for color options
-    local ColouringOptionsContainer = MilaUI:CreateInlineGroup("Colour Options", mainContainer)
-    
+   
+    local ColouringOptionsContainer = GUI:Create("InlineGroup")
+    ColouringOptionsContainer:SetTitle(pink .. "Health Colour Options")
+    ColouringOptionsContainer:SetLayout("Flow")
+    ColouringOptionsContainer:SetFullWidth(true)
+    mainContainer:AddChild(ColouringOptionsContainer)
+
     -- Health Colour Options section
-    local HealthColourOptions = MilaUI:CreateInlineGroup("Health Colour Options", ColouringOptionsContainer)
+    local PlaterColour = GUI:Create("CheckBox")
+    PlaterColour:SetLabel("Use Plater Colour")
+    PlaterColour:SetValue(General.ColourByPlater)
+    PlaterColour:SetCallback("OnValueChanged", function(widget, event, value) 
+        General.ColourByPlater = value 
+        MilaUI:UpdateFrames()
+        if value then 
+            ForegroundColour:SetDisabled(true) 
+            ColourByClass:SetDisabled(true)
+        else 
+            ForegroundColour:SetDisabled(false) 
+            ColourByClass:SetDisabled(false)
+        end 
+    end)
+    PlaterColour:SetRelativeWidth(0.25)
+    ColouringOptionsContainer:AddChild(PlaterColour)
     
+    local ColourOptions = GUI:Create("InlineGroup")
+    ColourOptions:SetLayout("Flow")
+    ColourOptions:SetRelativeWidth(0.75)
+    ColouringOptionsContainer:AddChild(ColourOptions)
     -- Foreground Colour picker
-    MilaUI:CreateColorPicker("Foreground Colour", 
-        General.ForegroundColour or {1,1,1,1},
-        function(widget, _, r, g, b, a) 
+    local ForegroundColour = GUI:Create("ColorPicker")
+    ForegroundColour:SetLabel("Foreground Colour")
+    local R, G, B, A = unpack(General.ForegroundColour or {1,1,1,1})
+    ForegroundColour:SetColor(R, G, B, A)
+    ForegroundColour:SetCallback("OnValueChanged", function(widget, _, r, g, b, a) 
             General.ForegroundColour = {r, g, b, a} 
             MilaUI:UpdateFrames() 
-        end,
-        0.25, true, HealthColourOptions)
-    
-    -- Health colour checkboxes
-    MilaUI:CreateCheckBox("Use Class / Reaction Colour", 
-        General.ColourByClass,
-        function(widget, event, value) 
+        end)
+    ForegroundColour:SetRelativeWidth(0.5)
+    ColourOptions:AddChild(ForegroundColour)
+    if General.ColourByPlater then
+        ForegroundColour:SetDisabled(true)
+    else
+        ForegroundColour:SetDisabled(false)
+    end
+
+    local ColourByClass = GUI:Create("CheckBox")
+    ColourByClass:SetLabel("Use Class / Reaction Colour")
+    ColourByClass:SetValue(General.ColourByClass)
+    ColourByClass:SetCallback("OnValueChanged", function(widget, event, value) 
             General.ColourByClass = value 
             MilaUI:UpdateFrames() 
-        end,
-        0.25, HealthColourOptions)
+        end)
+    ColourByClass:SetRelativeWidth(0.5)
+    ColourOptions:AddChild(ColourByClass)
+    if General.ColourByPlater then
+        ColourByClass:SetDisabled(true)
+    else
+        ColourByClass:SetDisabled(false)
+    end
     
-    MilaUI:CreateCheckBox("Use Disconnected Colour", 
-        General.ColourIfDisconnected,
-        function(widget, event, value) 
+    local ColourIfDisconnected = GUI:Create("CheckBox")
+    ColourIfDisconnected:SetLabel("Use Disconnected Colour")
+    ColourIfDisconnected:SetValue(General.ColourIfDisconnected)
+    ColourIfDisconnected:SetCallback("OnValueChanged", function(widget, event, value) 
             General.ColourIfDisconnected = value 
             MilaUI:UpdateFrames() 
-        end,
-        0.25, HealthColourOptions)
+        end)
+    ColourIfDisconnected:SetRelativeWidth(0.5)
+    ColourOptions:AddChild(ColourIfDisconnected)
     
-    MilaUI:CreateCheckBox("Use Tapped Colour", 
-        General.ColourIfTapped,
-        function(widget, event, value) 
+    local ColourIfTapped = GUI:Create("CheckBox")
+    ColourIfTapped:SetLabel("Use Tapped Colour")
+    ColourIfTapped:SetValue(General.ColourIfTapped)
+    ColourIfTapped:SetCallback("OnValueChanged", function(widget, event, value) 
             General.ColourIfTapped = value 
             MilaUI:UpdateFrames() 
-        end,
-        0.25, HealthColourOptions)
+        end)
+    ColourIfTapped:SetRelativeWidth(0.5)
+    ColourOptions:AddChild(ColourIfTapped)
     
+    MilaUI:CreateVerticalSpacer(15, ColourOptions)
     -- Background Colour Options section
     local BackgroundColourOptions = MilaUI:CreateInlineGroup("Background Colour Options", ColouringOptionsContainer)
     
     -- Background Colour picker
-    MilaUI:CreateColorPicker("Background Colour", 
-        General.BackgroundColour or {0,0,0,1},
-        function(widget, _, r, g, b, a) 
+    local BackgroundColour = GUI:Create("ColorPicker")
+    BackgroundColour:SetLabel("Background Colour")
+    local R, G, B, A = unpack(General.BackgroundColour or {0,0,0,1})
+    BackgroundColour:SetColor(R, G, B, A)
+    BackgroundColour:SetCallback("OnValueChanged", function(widget, _, r, g, b, a) 
             General.BackgroundColour = {r, g, b, a} 
             MilaUI:UpdateFrames() 
-        end,
-        1, true, BackgroundColourOptions)
+        end)
+    BackgroundColour:SetRelativeWidth(1)
+    BackgroundColourOptions:AddChild(BackgroundColour)
     
     -- Background multiplier slider
-    local BackgroundColourMultiplier = MilaUI:CreateSlider("Multiplier", 
-        0, 1, 0.01,
-        General.BackgroundMultiplier or 1,
-        function(widget, event, value) 
+    local BackgroundColourMultiplier = GUI:Create("Slider")
+    BackgroundColourMultiplier:SetLabel("Multiplier")
+    BackgroundColourMultiplier:SetSliderValues(0, 1, 0.01)
+    BackgroundColourMultiplier:SetValue(General.BackgroundMultiplier or 1)
+    BackgroundColourMultiplier:SetCallback("OnMouseUp", function(widget, event, value) 
             General.BackgroundMultiplier = value 
             MilaUI:UpdateFrames() 
-        end,
-        0.25, BackgroundColourOptions)
+        end)
+    BackgroundColourMultiplier:SetRelativeWidth(0.25)
+    BackgroundColourOptions:AddChild(BackgroundColourMultiplier)
     
     -- Background colour options
-    local BackgroundColourByForeground = MilaUI:CreateCheckBox("Colour By Foreground", 
-        General.ColourBackgroundByForeground,
-        function(widget, event, value) 
+    local BackgroundColourByForeground = GUI:Create("CheckBox")
+    BackgroundColourByForeground:SetLabel("Colour By Foreground")
+    BackgroundColourByForeground:SetValue(General.ColourBackgroundByForeground)
+    BackgroundColourByForeground:SetCallback("OnValueChanged", function(widget, event, value) 
             General.ColourBackgroundByForeground = value 
             MilaUI:UpdateFrames() 
             if value then 
@@ -135,9 +184,9 @@ function MilaUI:DrawUnitframesGeneralTab(parent)
             else 
                 BackgroundColourMultiplier:SetDisabled(true) 
             end 
-        end,
-        0.25, BackgroundColourOptions)
-    
+        end)
+    BackgroundColourByForeground:SetRelativeWidth(0.25)
+    BackgroundColourOptions:AddChild(BackgroundColourByForeground)
     -- Initialize multiplier disabled state
     if General.ColourBackgroundByForeground then
         BackgroundColourMultiplier:SetDisabled(false)

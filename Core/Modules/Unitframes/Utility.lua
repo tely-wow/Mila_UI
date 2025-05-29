@@ -291,14 +291,16 @@ local function CreateHealthBar(self, Unit)
                 ColourBackgroundByUnitStatus(parent or bar)
             end
             -- NPC: Custom color via Plater
-            if not UnitIsPlayer(unit) then
-                local guid = UnitGUID(unit)
-                if guid then
-                    local mobID = MilaUI:ExtractMobID(guid)
-                    if mobID then
-                        local color = MilaUI:GetColorForMobID(mobID)
-                        if color then
-                            bar:SetStatusBarColor(color.r, color.g, color.b)
+            if MilaUI.DB.profile.General.ColourByPlaterNameplates then
+                if not UnitIsPlayer(unit) then
+                    local guid = UnitGUID(unit)
+                    if guid then
+                        local mobID = MilaUI:ExtractMobID(guid)
+                        if mobID then
+                            local color = MilaUI:GetColorForMobID(mobID)
+                            if color then
+                                bar:SetStatusBarColor(color.r, color.g, color.b)
+                            end
                         end
                     end
                 end

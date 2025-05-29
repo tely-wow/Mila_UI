@@ -28,6 +28,7 @@ MilaUIAddon.Defaults = {
             BorderColour                      = {0 / 255, 0 / 255, 0 / 255, 1},
             BorderSize                        = 1,
             BorderInset                       = 1,
+            ColourByPlaterNameplates          = true,
             ColourByClass                     = true,
             ColourByReaction                  = true,
             ColourIfDisconnected              = true,
