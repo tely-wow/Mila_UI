@@ -885,6 +885,7 @@ local function UpdateFrame(FrameName)
         FrameName:SetSize(Health.Width, Health.Height)
         local AnchorParent = (_G[Frame.AnchorParent] and _G[Frame.AnchorParent]:IsObjectType("Frame")) and _G[Frame.AnchorParent] or UIParent
         FrameName:SetPoint(Frame.AnchorFrom, AnchorParent, Frame.AnchorTo, Frame.XPosition, Frame.YPosition)
+        if Frame.CustomScale then FrameName:SetScale(Frame.Scale) end
     end
 
 end

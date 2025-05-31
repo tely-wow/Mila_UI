@@ -9,4 +9,5 @@ function MilaUI:SpawnFocusTargetFrame()
     self.FocusTargetFrame = oUF:Spawn("focustarget", "MilaUI_FocusTarget")
     local AnchorParent = (_G[Frame.AnchorParent] and _G[Frame.AnchorParent]:IsObjectType("Frame")) and _G[Frame.AnchorParent] or UIParent
     self.FocusTargetFrame:SetPoint(Frame.AnchorFrom, AnchorParent, Frame.AnchorTo, Frame.XPosition, Frame.YPosition)
+    if Frame.CustomScale then self.FocusTargetFrame:SetScale(Frame.Scale) end
 end

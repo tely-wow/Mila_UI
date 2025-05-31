@@ -123,6 +123,7 @@ function MilaUI:InitGUI()
   lockButton.frame:SetPoint("TOPLEFT", lockLabel.frame, "BOTTOMLEFT", 0, -2)
   mainFrame:AddChild(lockButton)
 
+
   -- Create the main content area with a tree group
   local mainTree = GUI:Create("TreeGroup")
   mainTree:SetLayout("Fill")
@@ -262,6 +263,20 @@ function HandleGeneralTab(parent)
   UIScale.titletext:SetFontObject(GameFontNormalLarge)
   UIScale:SetFullWidth(true)
   UIScale:SetHeight(20)
+
+  --Escape Menu Scale
+  local EscapeMenuScale = GUI:Create("Slider")
+  EscapeMenuScale:SetSliderValues(0.4, 2, 0.01)
+  EscapeMenuScale:SetValue(MilaUI.DB.profile.General.GameMenuScale)
+  EscapeMenuScale:SetRelativeWidth(0.5)
+  EscapeMenuScale:SetLabel(lavender .. "Escape Menu Scale")
+  EscapeMenuScale:SetCallback("OnMouseUp", function(widget, event, value)
+    if value > 2 then value = 1 print(pink .. "♥MILA UI ♥: " .. lavender .. "Escape Menu Scale reset to 1. Maximum of 2 for EscapeMenuScale.") end
+    MilaUI.DB.profile.General.GameMenuScale = value
+    MilaUI:UpdateEscapeMenuScale()
+    EscapeMenuScale:SetValue(value)
+  end)
+  UIScale:AddChild(EscapeMenuScale)
   -- Enable UI Scale checkbox
   local UIScaleToggle = GUI:Create("CheckBox")
   UIScaleToggle:SetLabel("Enable custom UI Scale")

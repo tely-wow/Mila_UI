@@ -21,6 +21,7 @@ function MilaUI:SpawnBossFrames()
         local BossFrame = oUF:Spawn("boss" .. i, "MilaUI_Boss" .. i)
         MilaUI.BossFrames[i] = BossFrame
         MilaUI:RegisterTargetHighlightFrame(BossFrame, "boss" .. i)
+        if MilaUI.DB.profile.Boss.Frame.CustomScale then BossFrame:SetScale(MilaUI.DB.profile.Boss.Frame.Scale) end
     end
     MilaUI:UpdateBossFrames()
 end

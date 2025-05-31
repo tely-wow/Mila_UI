@@ -407,6 +407,13 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
         return
     end
 
+    --Enable / Disable Unit
+    local EnableUnit = GUI:Create("CheckBox")
+    EnableUnit:SetLabel("Enable Unit")
+    EnableUnit:SetValue(MilaUI.DB.profile[dbUnitName].Frame.Enabled)
+    EnableUnit:SetCallback("OnValueChanged", function(widget, event, value) MilaUI.DB.profile[dbUnitName].Frame.Enabled = value MilaUI:CreateReloadPrompt() end)
+    EnableUnit:SetRelativeWidth(1)
+    container:AddChild(EnableUnit)
     -- Create a tab group using AceGUI's built-in tab system
     local tabGroup = GUI:Create("TabGroup")
     tabGroup:SetLayout("Flow")
@@ -463,6 +470,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
 
             local Health = MilaUI.DB.profile[dbUnitName].Health
             local Frame = MilaUI.DB.profile[dbUnitName].Frame
+            local HealthPrediction = MilaUI.DB.profile[dbUnitName].Health.HealthPrediction
 
             -- Texture and Border
             MilaUI:CreateLargeHeading("Texture and Border", contentFrame, 16)
@@ -530,7 +538,59 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
                 TextureandBorder:AddChild(GrowthDirection)
             end
             contentFrame:AddChild(TextureandBorder)
+            MilaUI:CreateLargeHeading("Heal Prediction", contentFrame)
+            
+            local AbsorbsContainer = GUI:Create("InlineGroup")
+            local HealPrediction = GUI:Create("CheckBox")
+            HealPrediction:SetLabel(lavender .. "Enable Heal Prediction")
+            HealPrediction:SetValue(HealthPrediction.Enabled)
+            HealPrediction:SetCallback("OnValueChanged", function(widget, event, value) HealthPrediction.Enabled = value MilaUI:UpdateFrames() end)
+            HealPrediction:SetRelativeWidth(1)
+            contentFrame:AddChild(HealPrediction)
+            AbsorbsContainer:SetTitle("Absorbs")
+            AbsorbsContainer:SetLayout("Flow")
+            AbsorbsContainer:SetRelativeWidth(0.5)
+            contentFrame:AddChild(AbsorbsContainer)
+        
+            local AbsorbsEnabled = GUI:Create("CheckBox")
+            AbsorbsEnabled:SetLabel(lavender .. "Enable Absorbs")
+            AbsorbsEnabled:SetValue(HealthPrediction.Absorbs.Enabled)
+            AbsorbsEnabled:SetCallback("OnValueChanged", function(widget, event, value) HealthPrediction.Absorbs.Enabled = value MilaUI:CreateReloadPrompt() end)
+            AbsorbsEnabled:SetRelativeWidth(1)
+            AbsorbsContainer:AddChild(AbsorbsEnabled)
+        
+            local AbsorbsColourPicker = GUI:Create("ColorPicker")
+            AbsorbsColourPicker:SetLabel(lavender .. "Colour")
+            local AR, AG, AB, AA = unpack(HealthPrediction.Absorbs.Colour)
+            AbsorbsColourPicker:SetColor(AR, AG, AB, AA)
+            AbsorbsColourPicker:SetCallback("OnValueChanged", function(widget, _, r, g, b, a) HealthPrediction.Absorbs.Colour = {r, g, b, a} MilaUI:UpdateFrames() end)
+            AbsorbsColourPicker:SetHasAlpha(true)
+            AbsorbsColourPicker:SetRelativeWidth(1)
+            AbsorbsContainer:AddChild(AbsorbsColourPicker)
+        
+            local HealAbsorbsContainer = GUI:Create("InlineGroup")
+            HealAbsorbsContainer:SetTitle(lavender .. "Heal Absorbs")
+            HealAbsorbsContainer:SetLayout("Flow")
+            HealAbsorbsContainer:SetRelativeWidth(0.5)
+            contentFrame:AddChild(HealAbsorbsContainer)
+        
+            local HealAbsorbsEnabled = GUI:Create("CheckBox")
+            HealAbsorbsEnabled:SetLabel(lavender .. "Enable Heal Absorbs")
+            HealAbsorbsEnabled:SetValue(HealthPrediction.HealAbsorbs.Enabled)
+            HealAbsorbsEnabled:SetCallback("OnValueChanged", function(widget, event, value) HealthPrediction.HealAbsorbs.Enabled = value MilaUI:UpdateFrames() end)
+            HealAbsorbsEnabled:SetRelativeWidth(1)
+            HealAbsorbsContainer:AddChild(HealAbsorbsEnabled)
+        
+            local HealAbsorbsColourPicker = GUI:Create("ColorPicker")
+            HealAbsorbsColourPicker:SetLabel(lavender .. "Colour")
+            local HAR, HAG, HAB, HAA = unpack(HealthPrediction.HealAbsorbs.Colour)
+            HealAbsorbsColourPicker:SetColor(HAR, HAG, HAB, HAA)
+            HealAbsorbsColourPicker:SetCallback("OnValueChanged", function(widget, _, r, g, b, a) HealthPrediction.HealAbsorbs.Colour = {r, g, b, a} MilaUI:UpdateFrames() end)
+            HealAbsorbsColourPicker:SetHasAlpha(true)
+            HealAbsorbsColourPicker:SetRelativeWidth(1)
+            HealAbsorbsContainer:AddChild(HealAbsorbsColourPicker)
 
+            -- Size and Position
             MilaUI:CreateLargeHeading("Size and Position", contentFrame)
             MilaUI:CreateVerticalSpacer(20, contentFrame)
             local Size = GUI:Create("InlineGroup")
@@ -548,6 +608,14 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             contentFrame:AddChild(Size)
             contentFrame:AddChild(Position)
             contentFrame:AddChild(Anchor)
+            -- Frame Scale
+            local FrameScale = GUI:Create("Slider")
+            FrameScale:SetLabel(lavender .. "Scale")
+            FrameScale:SetSliderValues(0, 1, 0.01)
+            FrameScale:SetValue(Frame.Scale)
+            FrameScale:SetCallback("OnMouseUp", function(widget, event, value) Frame.Scale = value MilaUI:UpdateFrames() end)
+            FrameScale:SetRelativeWidth(1)
+            Size:AddChild(FrameScale)
             -- Frame Width
             local FrameWidth = GUI:Create("Slider")
             FrameWidth:SetLabel(lavender .. "Width")

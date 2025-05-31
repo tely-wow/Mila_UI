@@ -14,6 +14,7 @@ MilaUIAddon.Defaults = {
     profile = {
         TestMode = false,
         General = {
+            GameMenuScale                     = 1,
             Font                              = "Expressway",
             FontFlag                          = "OUTLINE",
             FontShadowColour                  = {0, 0, 0, 1},
@@ -75,8 +76,10 @@ MilaUIAddon.Defaults = {
         Player = {
             Frame = {
                 Enabled             = true,
-                Width               = 250,
-                Height              = 40,
+                CustomScale         = false,
+                Scale               = 1,
+                Width               = 230,
+                Height              = 38,
                 XPosition           = -300,
                 YPosition           = -150,
                 AnchorFrom          = "LEFT",
@@ -92,8 +95,8 @@ MilaUIAddon.Defaults = {
                 AnchorTo        = "LEFT",
             },
             Health = {
-                Width               = 250,
-                Height              = 40,
+                Width               = 230,
+                Height              = 38,
                 Direction           = "LR",
                 Texture             = "Smooth",
                 BackgroundTexture   = "Smooth",
@@ -106,6 +109,7 @@ MilaUIAddon.Defaults = {
                     BorderTexture = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\border_style2.tga",
                 },
                 HealthPrediction = {
+                    Enabled = true,
                     IncomingHeals = {},
                     HealAbsorbs = {
                         Enabled = true,
@@ -119,8 +123,8 @@ MilaUIAddon.Defaults = {
                 }
             },
             PowerBar = {
-                Width                   = 238,
-                Height                  = 20,
+                Width                   = 219,
+                Height                  = 19,
                 XPosition               = 0,
                 YPosition               = 0,
                 AnchorFrom              = "TOPRIGHT",
@@ -246,8 +250,10 @@ MilaUIAddon.Defaults = {
         Target = {
             Frame = {
                 Enabled             = true,
-                Width               = 250,
-                Height              = 40,
+                CustomScale         = false,
+                Scale               = 1,
+                Width               = 230,
+                Height              = 38,
                 XPosition           = 300,
                 YPosition           = -150,
                 AnchorFrom          = "CENTER",
@@ -263,8 +269,8 @@ MilaUIAddon.Defaults = {
                 AnchorTo        = "RIGHT",
             },
             Health = {
-                Width               = 250,
-                Height              = 40,
+                Width               = 230,
+                Height              = 38,
                 Direction           = "LR",
                 Texture             = "Smooth",
                 BackgroundTexture   = "Smooth",
@@ -277,6 +283,7 @@ MilaUIAddon.Defaults = {
                     BorderTexture = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\border_style2_mirrored.tga",
                 },
                 HealthPrediction = {
+                    Enabled = true,
                     IncomingHeals = {},
                     HealAbsorbs = {
                         Enabled = true,
@@ -290,8 +297,8 @@ MilaUIAddon.Defaults = {
                 }
             },
             PowerBar = {
-                Width                   = 238,
-                Height                  = 20,
+                Width                   = 219,
+                Height                  = 19,
                 Direction               = "LR",
                 Texture                 = "Smooth",
                 BackgroundTexture       = "Smooth",
@@ -417,13 +424,15 @@ MilaUIAddon.Defaults = {
         TargetTarget = {
             Frame = {
                 Enabled             = false,
-                Width               = 120,
-                Height              = 42,
+                CustomScale         = true,
+                Scale               = 0.4,
+                Width               = 230,
+                Height              = 38,
                 XPosition           = 1.1,
                 YPosition           = 0,
-                AnchorFrom          = "TOPLEFT",
-                AnchorTo            = "BOTTOMLEFT",
-                AnchorParent        = "MilaUI_TargetTarget",
+                AnchorFrom          = "TOPRIGHT",
+                AnchorTo            = "BOTTOMRIGHT",
+                AnchorParent        = "MilaUI_Target",
             },
             Portrait = {
                 Enabled         = false,
@@ -434,8 +443,8 @@ MilaUIAddon.Defaults = {
                 AnchorTo        = "RIGHT",
             },
             Health = {
-                Width               = 120,
-                Height              = 42,
+                Width               = 230,
+                Height              = 38,
                 Direction           = "LR",
                 Texture             = "Smooth",
                 BackgroundTexture   = "Smooth",
@@ -448,6 +457,7 @@ MilaUIAddon.Defaults = {
                     BorderTexture   = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\border_style2_mirrored.tga",
                 },
                 HealthPrediction = {
+                    Enabled = false,
                     IncomingHeals = {},
                     HealAbsorbs = {
                         Enabled = false,
@@ -461,8 +471,8 @@ MilaUIAddon.Defaults = {
                 }
             },
             PowerBar = {
-                Width                  = 272,
-                Height                 = 21,
+                Width                  = 230,
+                Height                 = 38,
                 XPosition              = 0,
                 YPosition              = 0,
                 AnchorFrom             = "RIGHT",
@@ -572,8 +582,10 @@ MilaUIAddon.Defaults = {
         Focus = {
             Frame = {
                 Enabled             = true,
-                Width               = 272,
-                Height              = 36,
+                CustomScale         = true,
+                Scale               = 0.6,
+                Width               = 230,
+                Height              = 38,
                 XPosition           = 0,
                 YPosition           = 40.1,
                 AnchorFrom          = "BOTTOMLEFT",
@@ -589,8 +601,8 @@ MilaUIAddon.Defaults = {
                 AnchorTo        = "RIGHT",
             },
             Health = {
-                Width               = 250,
-                Height              = 40,
+                Width               = 230,
+                Height              = 38,
                 Direction           = "LR",
                 Texture             = "Smooth",
                 BackgroundTexture   = "Smooth",
@@ -603,21 +615,22 @@ MilaUIAddon.Defaults = {
                     BorderTexture   = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\border_style2_mirrored.tga",
                 },
                 HealthPrediction = {
+                    Enabled = false,
                     IncomingHeals = {},
                     HealAbsorbs = {
                         Enabled = false,
                         Colour = {128/255, 64/255, 255/255, 1},
                     },
                     Absorbs = {
-                        Enabled         = false,
+                        Enabled         = true,
                         Colour          = {255/255, 205/255, 0/255, 1},
                         ColourByType    = true,
                     }
                 }
             },
             PowerBar = {
-                Width                  = 250,
-                Height                 = 20,
+                Width                  = 219,
+                Height                 = 19,
                 Direction              = "LR",
                 Texture                = "Smooth",
                 BackgroundTexture      = "Smooth",
@@ -735,6 +748,8 @@ MilaUIAddon.Defaults = {
         FocusTarget = {
             Frame = {
                 Enabled             = false,
+                CustomScale         = true,
+                Scale               = 0.4,
                 Width               = 120,
                 Height              = 28,
                 XPosition           = 0,
@@ -766,6 +781,7 @@ MilaUIAddon.Defaults = {
                     BorderTexture   = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\border_style2_mirrored.tga",
                 },
                 HealthPrediction = {
+                    Enabled = false,
                     IncomingHeals = {},
                     HealAbsorbs = {
                         Enabled = false,
@@ -890,8 +906,10 @@ MilaUIAddon.Defaults = {
         Pet = {
             Frame = {
                 Enabled             = true,
-                Width               = 272,
-                Height              = 10,
+                CustomScale         = true,
+                Scale               = 0.4,
+                Width               = 230,
+                Height              = 19,
                 XPosition           = 0,
                 YPosition           = -1.1,
                 AnchorFrom          = "TOPLEFT",
@@ -907,8 +925,8 @@ MilaUIAddon.Defaults = {
                 AnchorTo        = "LEFT",
             },
             Health = {
-                Width               = 272,
-                Height              = 10,
+                Width               = 230,
+                Height              = 19,
                 Direction           = "LR",
                 Texture             = "Smooth",
                 BackgroundTexture   = "Smooth",
@@ -922,6 +940,7 @@ MilaUIAddon.Defaults = {
                 },
                 ColourByPlayerClass = false,
                 HealthPrediction = {
+                    Enabled = false,
                     IncomingHeals = {},
                     HealAbsorbs = {
                         Enabled = false,
@@ -935,8 +954,8 @@ MilaUIAddon.Defaults = {
                 }
             },
             PowerBar = {
-                Width               = 272,
-                Height              = 10,
+                Width               = 219,
+                Height              = 19,
                 Direction           = "LR",
                 Texture             = "Smooth",
                 BackgroundTexture   = "Smooth",
@@ -1047,8 +1066,10 @@ MilaUIAddon.Defaults = {
         Boss = {
             Frame = {
                 Enabled             = true,
-                Width               = 250,
-                Height              = 42,
+                CustomScale         = false,
+                Scale               = 1,
+                Width               = 230,
+                Height              = 38,
                 XPosition           = 750.1,
                 YPosition           = 0.1,
                 Spacing             = 26.1,
@@ -1066,8 +1087,8 @@ MilaUIAddon.Defaults = {
                 AnchorTo        = "LEFT",
             },
             Health = {
-                Width               = 250,
-                Height              = 42,
+                Width               = 230,
+                Height              = 38,
                 Direction           = "LR",
                 Texture             = "Smooth",
                 BackgroundTexture   = "Smooth",
@@ -1080,6 +1101,7 @@ MilaUIAddon.Defaults = {
                     BorderTexture   = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\border_style2_mirrored.tga",
                 },
                 HealthPrediction = {
+                    Enabled = true,
                     IncomingHeals = {},
                     HealAbsorbs = {
                         Enabled = true,
@@ -1093,8 +1115,8 @@ MilaUIAddon.Defaults = {
                 }
             },
             PowerBar = {
-                Width               = 250,
-                Height              = 42,
+                Width               = 219,
+                Height              = 19,
                 Direction           = "LR",
                 Texture             = "Smooth",
                 BackgroundTexture   = "Smooth",
@@ -1259,6 +1281,7 @@ end
 function MilaUIAddon:OnEnable()
     if MilaUI.DB.global.UIScaleEnabled then UIParent:SetScale(MilaUI.DB.global.UIScale) end
     if MilaUI.DB.profile.TestMode then MilaUI.DB.profile.TestMode = false end
+    MilaUI:UpdateEscapeMenuScale()
     MilaUI:SetTagUpdateInterval()
     MilaUI:LoadCustomColours()
     MilaUI:SpawnPlayerFrame()

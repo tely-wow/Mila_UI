@@ -9,4 +9,5 @@ function MilaUI:SpawnTargetFrame()
     self.TargetFrame = oUF:Spawn("target", "MilaUI_Target")
     local AnchorParent = (_G[Frame.AnchorParent] and _G[Frame.AnchorParent]:IsObjectType("Frame")) and _G[Frame.AnchorParent] or UIParent
     self.TargetFrame:SetPoint(Frame.AnchorFrom, AnchorParent, Frame.AnchorTo, Frame.XPosition, Frame.YPosition)
+    if Frame.CustomScale then self.TargetFrame:SetScale(Frame.Scale) end
 end

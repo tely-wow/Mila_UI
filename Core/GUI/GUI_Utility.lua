@@ -223,31 +223,34 @@ function MilaUI:UnlockFrame(frame)
     if not frame or type(frame.SetMovable) ~= "function" then
         return
     end
-    
+   
     local frameName = frame:GetName()
     if frameName then
         local unitType = frameName:match("MilaUI_(%a+)")
-        
+       
         if unitType and MilaUI.DB and MilaUI.DB.profile and MilaUI.DB.profile[unitType] and MilaUI.DB.profile[unitType].Frame then
             local point, relativeTo, relativePoint, xOfs, yOfs = frame:GetPoint()
             if point then
+                -- Debug: Show current anchor info
+                local parentName = relativeTo and relativeTo:GetName() or "nil"
                 MilaUI.DB.profile[unitType].Frame.XPosition = xOfs
                 MilaUI.DB.profile[unitType].Frame.YPosition = yOfs
                 MilaUI.DB.profile[unitType].Frame.AnchorFrom = point
                 MilaUI.DB.profile[unitType].Frame.AnchorTo = relativePoint
-                
+               
                 if relativeTo and type(relativeTo.GetName) == "function" then
                     MilaUI.DB.profile[unitType].Frame.AnchorParent = relativeTo:GetName()
+                else
+                    MilaUI.DB.profile[unitType].Frame.AnchorParent = "UIParent"
                 end
             end
         end
     end
-    
+   
     frame:SetMovable(false)
     frame:SetScript("OnDragStart", nil)
     frame:SetScript("OnDragStop", nil)
- end
-
+end
 
 function MilaUI:LockFrames()
     local globalFrameNames = {
@@ -281,20 +284,7 @@ function MilaUI:LockFrames()
             end
         end
     end
-    if MilaUI.ArenaFrames then
-        for i, arenaFrameContainer in ipairs(MilaUI.ArenaFrames) do
-            if arenaFrameContainer and arenaFrameContainer.frame then
-                MilaUI:LockFrame(arenaFrameContainer.frame)
-            end
-        end
-    end
-    if MilaUI.PartyFrames then
-        for i, partyMemberFrame in pairs(MilaUI.PartyFrames) do
-            if partyMemberFrame and partyMemberFrame.frame then
-                MilaUI:LockFrame(partyMemberFrame.frame)
-            end
-        end
-    end
+    MilaUI:UpdateFrames()
 end
 
 function MilaUI:UnlockFrames()
@@ -323,20 +313,6 @@ function MilaUI:UnlockFrames()
         for i, bossFrameContainer in ipairs(MilaUI.BossFrames) do
             if bossFrameContainer and bossFrameContainer.frame then
                 MilaUI:UnlockFrame(bossFrameContainer.frame)
-            end
-        end
-    end
-    if MilaUI.ArenaFrames then
-        for i, arenaFrameContainer in ipairs(MilaUI.ArenaFrames) do
-            if arenaFrameContainer and arenaFrameContainer.frame then
-                MilaUI:UnlockFrame(arenaFrameContainer.frame)
-            end
-        end
-    end
-    if MilaUI.PartyFrames then
-        for i, partyMemberFrame in pairs(MilaUI.PartyFrames) do
-            if partyMemberFrame and partyMemberFrame.frame then
-                MilaUI:UnlockFrame(partyMemberFrame.frame)
             end
         end
     end
@@ -508,4 +484,8 @@ function MilaUI:CreateProperScrollFrame(parent, minHeight)
     end
     
     return scrollFrame
+end
+
+function MilaUI:UpdateEscapeMenuScale()
+    if MilaUI.DB.profile.General.GameMenuScale ~= 1 then GameMenuFrame:SetScale(MilaUI.DB.profile.General.GameMenuScale) end
 end

@@ -9,4 +9,5 @@ function MilaUI:SpawnPetFrame()
     self.PetFrame = oUF:Spawn("pet", "MilaUI_Pet")
     local AnchorParent = (_G[Frame.AnchorParent] and _G[Frame.AnchorParent]:IsObjectType("Frame")) and _G[Frame.AnchorParent] or UIParent
     self.PetFrame:SetPoint(Frame.AnchorFrom, AnchorParent, Frame.AnchorTo, Frame.XPosition, Frame.YPosition)
+    if Frame.CustomScale then self.PetFrame:SetScale(Frame.Scale) end
 end
