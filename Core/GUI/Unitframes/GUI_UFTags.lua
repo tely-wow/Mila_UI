@@ -1,6 +1,5 @@
 local _, MilaUI = ...
 local GUI = LibStub("AceGUI-3.0")
-local L = MilaUI.L or {}
 local pink = "|cffFF77B5"
 local lavender = "|cFFCBA0E3"
 -- Function to safely fetch tag descriptions

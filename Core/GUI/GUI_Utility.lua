@@ -170,7 +170,7 @@ function MilaUI:CopyUnit(sourceUnit, targetUnit)
 end
 
 function MilaUI:ResetColours()
-    local General = MilaUI.DB.profile.General
+    local General = MilaUI.DB.profile.Unitframes.General
     wipe(General.CustomColours)
     General.CustomColours = {
         Reaction = {
@@ -228,20 +228,20 @@ function MilaUI:UnlockFrame(frame)
     if frameName then
         local unitType = frameName:match("MilaUI_(%a+)")
        
-        if unitType and MilaUI.DB and MilaUI.DB.profile and MilaUI.DB.profile[unitType] and MilaUI.DB.profile[unitType].Frame then
+        if unitType and MilaUI.DB and MilaUI.DB.profile and MilaUI.DB.profile.Unitframes and MilaUI.DB.profile.Unitframes[unitType] and MilaUI.DB.profile.Unitframes[unitType].Frame then
             local point, relativeTo, relativePoint, xOfs, yOfs = frame:GetPoint()
             if point then
                 -- Debug: Show current anchor info
                 local parentName = relativeTo and relativeTo:GetName() or "nil"
-                MilaUI.DB.profile[unitType].Frame.XPosition = xOfs
-                MilaUI.DB.profile[unitType].Frame.YPosition = yOfs
-                MilaUI.DB.profile[unitType].Frame.AnchorFrom = point
-                MilaUI.DB.profile[unitType].Frame.AnchorTo = relativePoint
+                MilaUI.DB.profile.Unitframes[unitType].Frame.XPosition = xOfs
+                MilaUI.DB.profile.Unitframes[unitType].Frame.YPosition = yOfs
+                MilaUI.DB.profile.Unitframes[unitType].Frame.AnchorFrom = point
+                MilaUI.DB.profile.Unitframes[unitType].Frame.AnchorTo = relativePoint
                
                 if relativeTo and type(relativeTo.GetName) == "function" then
-                    MilaUI.DB.profile[unitType].Frame.AnchorParent = relativeTo:GetName()
+                    MilaUI.DB.profile.Unitframes[unitType].Frame.AnchorParent = relativeTo:GetName()
                 else
-                    MilaUI.DB.profile[unitType].Frame.AnchorParent = "UIParent"
+                    MilaUI.DB.profile.Unitframes[unitType].Frame.AnchorParent = "UIParent"
                 end
             end
         end
@@ -487,5 +487,5 @@ function MilaUI:CreateProperScrollFrame(parent, minHeight)
 end
 
 function MilaUI:UpdateEscapeMenuScale()
-    if MilaUI.DB.profile.General.GameMenuScale ~= 1 then GameMenuFrame:SetScale(MilaUI.DB.profile.General.GameMenuScale) end
+    if MilaUI.DB.global.GameMenuScale ~= 1 then GameMenuFrame:SetScale(MilaUI.DB.global.GameMenuScale) end
 end

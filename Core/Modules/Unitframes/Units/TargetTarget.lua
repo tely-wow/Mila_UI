@@ -2,8 +2,8 @@ local _, MilaUI = ...
 local oUF = MilaUI.oUF
 
 function MilaUI:SpawnTargetTargetFrame()
-    if not MilaUI.DB.profile.TargetTarget.Frame.Enabled then return end
-    local Frame = MilaUI.DB.profile.TargetTarget.Frame
+    if not MilaUI.DB.profile.Unitframes.TargetTarget.Frame.Enabled then return end
+    local Frame = MilaUI.DB.profile.Unitframes.TargetTarget.Frame
     oUF:RegisterStyle("MilaUI_TargetTarget", function(self) MilaUI.CreateUnitFrame(self, "TargetTarget") end)
     oUF:SetActiveStyle("MilaUI_TargetTarget")
     self.TargetTargetFrame = oUF:Spawn("targettarget", "MilaUI_TargetTarget")

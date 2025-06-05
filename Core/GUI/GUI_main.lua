@@ -14,7 +14,6 @@ local lavender = "|cFFCBA0E3"
 -- State
 local isOpen, mainFrame = false, nil
 local initialLoad = true
-
 -- Expose AceGUI and localization
 MilaUI.GUI = GUI
 MilaUI.L   = MilaUI.L or {}
@@ -39,10 +38,14 @@ unitframesTabs = nil
 
 -- Initialize the main GUI
 function MilaUI:InitGUI()
-    if not MilaUI.DB then return end
-    isOpen = true
-    local LSMFonts = LSM:HashTable(LSM.MediaType.FONT)
-    local LSMTextures = LSM:HashTable(LSM.MediaType.STATUSBAR)
+  if not MilaUI.DB then return end
+  isOpen = true
+  local LSMFonts = LSM:HashTable(LSM.MediaType.FONT)
+  local LSMTextures = LSM:HashTable(LSM.MediaType.STATUSBAR)
+
+local Global = MilaUI.DB.global
+local General = MilaUI.DB.profile.Unitframes.General
+local cursorMod = MilaUI.DB.profile.CursorMod
   
   -- Main frame
   mainFrame = GUI:Create("Window")
@@ -99,7 +102,7 @@ function MilaUI:InitGUI()
 
   -- Create the lock/unlock button
   local function updateLockButtonText(btn)
-    if MilaUI.DB.global.FramesLocked then
+    if Global.FramesLocked then
       btn:SetText(pink .. "Unlock")
     else
       btn:SetText(pink .. "Lock")
@@ -110,8 +113,8 @@ function MilaUI:InitGUI()
   updateLockButtonText(lockButton)
   lockButton:SetWidth(80)
   lockButton:SetCallback("OnClick", function(widget)
-    MilaUI.DB.global.FramesLocked = not MilaUI.DB.global.FramesLocked
-    if MilaUI.DB.global.FramesLocked then
+    Global.FramesLocked = not Global.FramesLocked
+    if Global.FramesLocked then
       MilaUI:LockFrames()
       print(pink.."♥MILA UI ♥"..lavender.." Unitframes LOCKED!")
     else
@@ -240,6 +243,9 @@ function MilaUI:InitGUI()
 end
 
 function HandleGeneralTab(parent)
+  local Global = MilaUI.DB.global
+  local General = MilaUI.DB.profile.Unitframes.General
+  local cursorMod = MilaUI.DB.profile.CursorMod
   -- Create a container for the content
   local container = GUI:Create("SimpleGroup")
   container:SetLayout("Flow")
@@ -255,24 +261,21 @@ function HandleGeneralTab(parent)
     label:SetFullWidth(true)
     container:AddChild(label)
   end
-  
-  local General = MilaUI.DB.profile.General
+  MilaUI:CreateLargeHeading("Custom UI Scale", container)
   local UIScale = GUI:Create("InlineGroup")
   UIScale:SetLayout("Flow")
-  UIScale:SetTitle(pink .. "Custom UI Scale")
-  UIScale.titletext:SetFontObject(GameFontNormalLarge)
   UIScale:SetFullWidth(true)
   UIScale:SetHeight(20)
 
   --Escape Menu Scale
   local EscapeMenuScale = GUI:Create("Slider")
   EscapeMenuScale:SetSliderValues(0.4, 2, 0.01)
-  EscapeMenuScale:SetValue(MilaUI.DB.profile.General.GameMenuScale)
+  EscapeMenuScale:SetValue(Global.GameMenuScale)
   EscapeMenuScale:SetRelativeWidth(0.5)
   EscapeMenuScale:SetLabel(lavender .. "Escape Menu Scale")
   EscapeMenuScale:SetCallback("OnMouseUp", function(widget, event, value)
     if value > 2 then value = 1 print(pink .. "♥MILA UI ♥: " .. lavender .. "Escape Menu Scale reset to 1. Maximum of 2 for EscapeMenuScale.") end
-    MilaUI.DB.profile.General.GameMenuScale = value
+    Global.GameMenuScale = value
     MilaUI:UpdateEscapeMenuScale()
     EscapeMenuScale:SetValue(value)
   end)
@@ -280,26 +283,26 @@ function HandleGeneralTab(parent)
   -- Enable UI Scale checkbox
   local UIScaleToggle = GUI:Create("CheckBox")
   UIScaleToggle:SetLabel("Enable custom UI Scale")
-  UIScaleToggle:SetValue(MilaUI.DB.global.UIScaleEnabled)
+  UIScaleToggle:SetValue(Global.UIScaleEnabled)
   UIScaleToggle:SetRelativeWidth(0.3)
   UIScale:AddChild(MilaUI:CreateHorizontalSpacer(0.02))
   UIScale:AddChild(UIScaleToggle)
   -- UIScale slider
   local UIScaleSlider = GUI:Create("Slider")
   UIScaleSlider:SetSliderValues(0.4, 2, 0.01)
-  UIScaleSlider:SetValue(MilaUI.DB.global.UIScale)
+  UIScaleSlider:SetValue(Global.UIScale)
   UIScaleSlider:SetWidth(200)
   UIScaleSlider:SetHeight(20)
   UIScaleSlider:SetLabel(lavender .. "UI Scale")
   UIScaleSlider:SetCallback("OnMouseUp", function(widget, event, value)
     if value > 2 then value = 1 print(pink .. "♥MILA UI ♥: " .. lavender .. "UI Scale reset to 1. Maximum of 2 for UIScale.") end
-    MilaUI.DB.global.UIScale = value
+    Global.UIScale = value
     MilaUI:UpdateUIScale()
     UIScaleSlider:SetValue(value)
   end)
   UIScale:AddChild(UIScaleSlider)
   UIScaleToggle:SetCallback("OnValueChanged", function(widget, event, value)
-    MilaUI.DB.global.UIScaleEnabled = value
+    Global.UIScaleEnabled = value
     if value then
       UIScaleSlider:SetDisabled(false)
       MilaUI:UpdateUIScale()
@@ -308,17 +311,235 @@ function HandleGeneralTab(parent)
       UIParent:SetScale(1)
     end
   end)
-  if not MilaUI.DB.global.UIScaleEnabled then
+  if not Global.UIScaleEnabled then
     UIScaleSlider:SetDisabled(true)
   end
   container:AddChild(UIScale)
+ MilaUI:CreateVerticalSpacer(20, UIScale)
+ MilaUI:CreateVerticalSpacer(20, container)
   
+  --CursorMod Options
+  MilaUI:CreateLargeHeading("CursorMod Options", container)
+  local CursorModOptions = GUI:Create("InlineGroup")
+  CursorModOptions:SetLayout("Flow")
+  CursorModOptions:SetFullWidth(true)
+  
+  
+  local MilaUIAddon = LibStub("AceAddon-3.0"):GetAddon("MilaUI")
+  local CursorMod = MilaUIAddon:GetModule("CursorMod")
+  
+  container:AddChild(CursorModOptions)
+  
+  -- Helper function to enable/disable all children of a container
+  local function SetGroupEnabled(container, enabled)
+      if not container or not container.children then return end
+      for _, child in ipairs(container.children) do
+          if child.SetDisabled then
+              child:SetDisabled(not enabled)
+          end
+          -- Recursively handle nested containers
+          if child.children then
+              SetGroupEnabled(child, enabled)
+          end
+      end
+  end
+  
+  -- Create the enable checkbox first
+  local enablecursormod = GUI:Create("CheckBox")
+  enablecursormod:SetLabel(lavender .. "Enable CursorMod")
+  enablecursormod:SetValue(CursorMod:IsEnabled())
+  CursorModOptions:AddChild(enablecursormod)
+  
+  -- Create the groups that will be referenced in the checkbox callback
+  local CursorModGeneral = GUI:Create("InlineGroup")
+  CursorModGeneral:SetLayout("Flow")
+  CursorModGeneral:SetTitle(pink .. "General")
+  CursorModGeneral:SetFullWidth(true)
+  CursorModOptions:AddChild(CursorModGeneral)
+  
+  local cursormodapperance = GUI:Create("InlineGroup")
+  cursormodapperance:SetLayout("Flow")
+  cursormodapperance:SetTitle(pink .. "Appearance")
+  cursormodapperance:SetFullWidth(true)
+  CursorModOptions:AddChild(cursormodapperance)
+  
+  -- Set up the callback after all UI elements are created
+  enablecursormod:SetCallback("OnValueChanged", function(_, _, value)
+      if value then
+          MilaUIAddon:EnableModule("CursorMod")
+          SetGroupEnabled(CursorModGeneral, true)
+          SetGroupEnabled(cursormodapperance, true)
+      else
+          MilaUIAddon:DisableModule("CursorMod")
+          SetGroupEnabled(CursorModGeneral, false)
+          SetGroupEnabled(cursormodapperance, false)
+      end
+  end)
+  
+  -- Initialize the UI state based on whether CursorMod is enabled
+  if not CursorMod:IsEnabled() then
+      SetGroupEnabled(CursorModGeneral, false)
+      SetGroupEnabled(cursormodapperance, false)
+  end
+
+  local showOnlyInCombat = GUI:Create("CheckBox")
+  showOnlyInCombat:SetLabel(lavender .. "Show Only in Combat")
+  showOnlyInCombat:SetValue(MilaUI.DB.profile.CursorMod.showOnlyInCombat)
+  showOnlyInCombat:SetCallback("OnValueChanged", function(_, _, value)
+      MilaUI.DB.profile.CursorMod.showOnlyInCombat = value
+  end)
+  CursorModGeneral:AddChild(showOnlyInCombat)
+  
+  local CursorFreelookStartDelta = GUI:Create("Slider")
+  CursorFreelookStartDelta:SetLabel(lavender .. "Freelook Start Delta")
+  CursorFreelookStartDelta:SetSliderValues(0.0001, 0.01, 0.0001)
+  CursorFreelookStartDelta:SetValue(MilaUI.DB.profile.CursorMod.lookStartDelta or 0.001)
+  CursorFreelookStartDelta:SetCallback("OnValueChanged", function(_, _, value)
+      MilaUI.DB.profile.CursorMod.lookStartDelta = value
+      -- Update the setting if CursorMod is enabled
+      local CursorMod = MilaUIAddon:GetModule("CursorMod")
+      if CursorMod:IsEnabled() then
+          CursorMod:SetLookStartDelta(value)
+      end
+  end)
+  CursorModGeneral:AddChild(CursorFreelookStartDelta)
+
+  local cursormodgamecursor = GUI:Create("CheckBox")
+  cursormodgamecursor:SetLabel(lavender .. "Change Game Cursor Size")
+  cursormodgamecursor:SetValue(MilaUI.DB.profile.CursorMod.changeCursorSize)
+  cursormodgamecursor:SetCallback("OnValueChanged", function(_, _, value)
+      MilaUI.DB.profile.CursorMod.changeCursorSize = value
+      -- Update the setting if CursorMod is enabled
+      local CursorMod = MilaUIAddon:GetModule("CursorMod")
+      if CursorMod:IsEnabled() then
+          CursorMod:SetChangeCursorSize(value)
+      end
+  end)
+  CursorModGeneral:AddChild(cursormodgamecursor)
+  local cursormodtexture = GUI:Create("Dropdown")
+  cursormodtexture:SetLabel(lavender .. "Cursor Texture")
+  cursormodtexture:SetList({
+      [1] = "Custom Point",
+      [2] = "Retail Cursor",
+      [3] = "Classic Cursor", 
+      [4] = "Inverse Point",
+      [5] = "Ghostly Point",
+      [6] = "Talent Search 1",
+      [7] = "Talent Search 2",
+  })
+  cursormodtexture:SetValue(MilaUI.DB.profile.CursorMod.texPoint)
+  cursormodtexture:SetCallback("OnValueChanged", function(_, _, value)
+      MilaUI.DB.profile.CursorMod.texPoint = value
+      -- Update the setting if CursorMod is enabled
+      local CursorMod = MilaUIAddon:GetModule("CursorMod")
+      if CursorMod:IsEnabled() then
+          CursorMod:SetTexture(value)
+      end
+  end)
+  cursormodapperance:AddChild(cursormodtexture)
+  local cursormodsize = GUI:Create("Dropdown")
+  cursormodsize:SetLabel(lavender .. "Cursor Size")
+  cursormodsize:SetList({
+      [0] = "32x32",
+      [1] = "48x48",
+      [2] = "64x64",
+      [3] = "96x96",
+      [4] = "128x128",
+  })
+  cursormodsize:SetValue(MilaUI.DB.profile.CursorMod.size)
+  cursormodsize:SetCallback("OnValueChanged", function(_, _, value)
+      MilaUI.DB.profile.CursorMod.size = value
+      -- Update the setting if CursorMod is enabled
+      local CursorMod = MilaUIAddon:GetModule("CursorMod")
+      if CursorMod:IsEnabled() then
+          CursorMod:SetSize(value)
+      end
+  end)
+  cursormodapperance:AddChild(cursormodsize)
+  local cursormodopacity = GUI:Create("Slider")
+  cursormodopacity:SetSliderValues(0, 1, 0.01)
+  cursormodopacity:SetLabel(lavender .. "Opacity")
+  cursormodopacity:SetValue(MilaUI.DB.profile.CursorMod.opacity)
+  cursormodopacity:SetCallback("OnValueChanged", function(_, _, value)
+      MilaUI.DB.profile.CursorMod.opacity = value
+      -- Update the setting if CursorMod is enabled
+      local CursorMod = MilaUIAddon:GetModule("CursorMod")
+      if CursorMod:IsEnabled() then
+          CursorMod:SetOpacity(value)
+      end
+  end)
+  cursormodapperance:AddChild(cursormodopacity)
+
+  local cursormodscalecontainer = GUI:Create("InlineGroup")
+  cursormodscalecontainer:SetLayout("Flow")
+  cursormodscalecontainer:SetRelativeWidth(0.5)
+  cursormodscalecontainer:SetTitle(pink .. "Scale")
+  cursormodapperance:AddChild(cursormodscalecontainer)
+
+  local cursormodautoscale = GUI:Create("CheckBox")
+  cursormodautoscale:SetLabel(lavender .. "Auto Scale")
+  cursormodautoscale:SetValue(MilaUI.DB.profile.CursorMod.autoScale)
+  cursormodautoscale:SetCallback("OnValueChanged", function(_, _, value)
+      MilaUI.DB.profile.CursorMod.autoScale = value
+      -- Update the setting if CursorMod is enabled
+      local CursorMod = MilaUIAddon:GetModule("CursorMod")
+      if CursorMod:IsEnabled() then
+          CursorMod:SetAutoScale(value)
+          if value then
+              cursormodscaleslider:SetDisabled(true)
+          else
+              cursormodscaleslider:SetDisabled(false)
+          end
+      end
+  end)
+  cursormodscalecontainer:AddChild(cursormodautoscale)
+
+  local cursormodscaleslider = GUI:Create("Slider")
+  cursormodscaleslider:SetSliderValues(0.4, 2, 0.01)
+  cursormodscaleslider:SetLabel(lavender .. "Manual Scale")
+  cursormodscaleslider:SetValue(MilaUI.DB.profile.CursorMod.scale)
+  cursormodscaleslider:SetCallback("OnValueChanged", function(_, _, value)
+      MilaUI.DB.profile.CursorMod.scale = value
+      -- Update the setting if CursorMod is enabled
+      local CursorMod = MilaUIAddon:GetModule("CursorMod")
+      if CursorMod:IsEnabled() then
+          CursorMod:SetScale(value)
+      end
+  end)
+  cursormodscalecontainer:AddChild(cursormodscaleslider)
+  
+  local cursormodcolorcontainer = GUI:Create("InlineGroup")
+  cursormodcolorcontainer:SetLayout("Flow")
+  cursormodcolorcontainer:SetFullWidth(true)
+  cursormodcolorcontainer:SetTitle(pink .. "Color")
+  cursormodcolorcontainer:SetRelativeWidth(0.5)
+  cursormodapperance:AddChild(cursormodcolorcontainer)
+  local cursormodclasscolor = GUI:Create("CheckBox")
+  cursormodclasscolor:SetLabel(lavender .. "Class Color")
+  cursormodclasscolor:SetValue(MilaUI.DB.profile.CursorMod.classColor)
+  cursormodclasscolor:SetCallback("OnValueChanged", function(_, _, value)
+      MilaUI.DB.profile.CursorMod.classColor = value
+      -- Update the setting if CursorMod is enabled
+      local CursorMod = MilaUIAddon:GetModule("CursorMod")
+      if CursorMod:IsEnabled() then
+          CursorMod:SetClassColor(value)
+      end
+  end)
+  cursormodcolorcontainer:AddChild(cursormodclasscolor)
+  local cursormodcolorpicker = GUI:Create("ColorPicker")
+  cursormodcolorpicker:SetLabel(lavender .. "Color")
+  local AR, AG, AB, AA = unpack(MilaUI.DB.profile.CursorMod.color)
+  cursormodcolorpicker:SetColor(AR, AG, AB, AA)
+  cursormodcolorpicker:SetCallback("OnValueChanged", function(widget, _, r, g, b, a) MilaUI.DB.profile.CursorMod.color = {r, g, b, a} CursorMod:SetColor(r, g, b, a) end)
+  cursormodcolorpicker:SetHasAlpha(true)
+  cursormodcolorpicker:SetRelativeWidth(1)
+  cursormodcolorcontainer:AddChild(cursormodcolorpicker)
+  
+  -- Font Options
+  MilaUI:CreateLargeHeading("Font Options", container)
   local FontOptions = GUI:Create("InlineGroup")
   FontOptions:SetLayout("Flow")
-  FontOptions:SetTitle(pink .. "Font Options")
-  FontOptions.titletext:SetFontObject(GameFontNormalLarge)
   FontOptions:SetFullWidth(true)
-  FontOptions:SetHeight(20)
   container:AddChild(FontOptions)
   
   local Font = MilaUI_GUI:Create("LSM30_Font")

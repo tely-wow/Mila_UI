@@ -35,9 +35,9 @@ function MilaUI:UpdateAllTags()
 end
 
 local function PostCreateButton(_, button, Unit, AuraType)
-    local General = MilaUI.DB.profile.General
-    local BuffCount = MilaUI.DB.profile[Unit].Buffs.Count
-    local DebuffCount = MilaUI.DB.profile[Unit].Debuffs.Count
+    local General = MilaUI.DB.profile.Unitframes.General
+    local BuffCount = MilaUI.DB.profile.Unitframes[Unit].Buffs.Count
+    local DebuffCount = MilaUI.DB.profile.Unitframes[Unit].Debuffs.Count
     -- Icon Options
     local auraIcon = button.Icon
     auraIcon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
@@ -74,9 +74,9 @@ local function PostCreateButton(_, button, Unit, AuraType)
 end
 
 local function PostUpdateButton(_, button, Unit, AuraType)
-    local General = MilaUI.DB.profile.General
-    local BuffCount = MilaUI.DB.profile[Unit].Buffs.Count
-    local DebuffCount = MilaUI.DB.profile[Unit].Debuffs.Count
+    local General = MilaUI.DB.profile.Unitframes.General
+    local BuffCount = MilaUI.DB.profile.Unitframes[Unit].Buffs.Count
+    local DebuffCount = MilaUI.DB.profile.Unitframes[Unit].Debuffs.Count
 
     local auraCount = button.Count
     if AuraType == "HELPFUL" then
@@ -95,7 +95,7 @@ local function PostUpdateButton(_, button, Unit, AuraType)
 end
 
 local function ColourBackgroundByUnitStatus(self)
-    local General = MilaUI.DB.profile.General
+    local General = MilaUI.DB.profile.Unitframes.General
     local CustomColour = General.CustomColours
     local unit = self.unit
     local bar = self.Health
@@ -210,9 +210,9 @@ function MilaUI:ResetDefaultSettings()
 end
 
 local function CreateHealthBar(self, Unit)
-    local General = MilaUI.DB.profile.General
-    local Frame = MilaUI.DB.profile[Unit].Frame
-    local Health = MilaUI.DB.profile[Unit].Health
+    local General = MilaUI.DB.profile.Unitframes.General
+    local Frame = MilaUI.DB.profile.Unitframes[Unit].Frame
+    local Health = MilaUI.DB.profile.Unitframes[Unit].Health
     local BackdropTemplate = {
         bgFile = Health.BackgroundTexture,
         edgeFile = General.BorderTexture,
@@ -268,7 +268,7 @@ local function CreateHealthBar(self, Unit)
         health.colorHealth       = true
 
         if Unit == "Pet" then
-            local ColourByPlayerClass = MilaUI.DB.profile.Pet.Health.ColourByPlayerClass
+            local ColourByPlayerClass = MilaUI.DB.profile.Unitframes.Pet.Health.ColourByPlayerClass
             if ColourByPlayerClass then
                 health.colorClass = false
                 health.colorReaction = false
@@ -291,7 +291,7 @@ local function CreateHealthBar(self, Unit)
                 ColourBackgroundByUnitStatus(parent or bar)
             end
             -- NPC: Custom color via Plater
-            if MilaUI.DB.profile.General.ColourByPlaterNameplates then
+            if MilaUI.DB.profile.Unitframes.General.ColourByPlaterNameplates then
                 if not UnitIsPlayer(unit) then
                     local guid = UnitGUID(unit)
                     if guid then
@@ -320,9 +320,9 @@ end
 
 
 local function CreateAbsorbBar(self, Unit)
-    local General = MilaUI.DB.profile.General
-    local Health = MilaUI.DB.profile[Unit].Health
-    local HealthPrediction = MilaUI.DB.profile[Unit].Health.HealthPrediction
+    local General = MilaUI.DB.profile.Unitframes.General
+    local Health = MilaUI.DB.profile.Unitframes[Unit].Health
+    local HealthPrediction = MilaUI.DB.profile.Unitframes[Unit].Health.HealthPrediction
     local Absorbs = HealthPrediction.Absorbs
 
     if Absorbs.Enabled and not self.unitAbsorbs then
@@ -352,9 +352,9 @@ local function CreateAbsorbBar(self, Unit)
 end
 
 local function CreateHealAbsorbBar(self, Unit)
-    local General = MilaUI.DB.profile.General
-    local Health = MilaUI.DB.profile[Unit].Health
-    local HealthPrediction = MilaUI.DB.profile[Unit].Health.HealthPrediction
+    local General = MilaUI.DB.profile.Unitframes.General
+    local Health = MilaUI.DB.profile.Unitframes[Unit].Health
+    local HealthPrediction = MilaUI.DB.profile.Unitframes[Unit].Health.HealthPrediction
     local HealAbsorbs = HealthPrediction.HealAbsorbs
     
     if HealAbsorbs.Enabled and not self.unitHealAbsorbs then
@@ -383,9 +383,9 @@ local function CreateHealAbsorbBar(self, Unit)
 end
 
 local function CreatePowerBar(self, Unit)
-    local General = MilaUI.DB.profile.General
-    local PowerBar = MilaUI.DB.profile[Unit].PowerBar
-    local r, g, b, a = unpack(MilaUI.DB.profile.General.BackgroundColour)
+    local General = MilaUI.DB.profile.Unitframes.General
+    local PowerBar = MilaUI.DB.profile.Unitframes[Unit].PowerBar
+    local r, g, b, a = unpack(MilaUI.DB.profile.Unitframes.General.BackgroundColour)
     local BackdropTemplate = {
         bgFile = General.BackgroundTexture,
         edgeFile = General.BorderTexture,
@@ -482,7 +482,7 @@ local function CreatePowerBar(self, Unit)
 end
 
 local function CreateBuffs(self, Unit)
-    local Buffs = MilaUI.DB.profile[Unit].Buffs
+    local Buffs = MilaUI.DB.profile.Unitframes[Unit].Buffs
     if Buffs.Enabled and not self.unitBuffs then
         self.unitBuffs = CreateFrame("Frame", nil, self)
         self.unitBuffs:SetSize(self:GetWidth(), Buffs.Size)
@@ -517,7 +517,7 @@ local function CreateBuffs(self, Unit)
 end
 
 local function CreateDebuffs(self, Unit)
-    local Debuffs = MilaUI.DB.profile[Unit].Debuffs
+    local Debuffs = MilaUI.DB.profile.Unitframes[Unit].Debuffs
     if Debuffs.Enabled and not self.unitDebuffs then
         self.unitDebuffs = CreateFrame("Frame", nil, self)
         self.unitDebuffs:SetSize(self:GetWidth(), Debuffs.Size)
@@ -552,8 +552,8 @@ local function CreateDebuffs(self, Unit)
 end
 
 local function CreatePortrait(self, Unit)
-    local General = MilaUI.DB.profile.General
-    local Portrait = MilaUI.DB.profile[Unit].Portrait
+    local General = MilaUI.DB.profile.Unitframes.General
+    local Portrait = MilaUI.DB.profile.Unitframes[Unit].Portrait
     local BackdropTemplate = {
         bgFile = General.BackgroundTexture,
         edgeFile = General.BorderTexture,
@@ -577,10 +577,10 @@ local function CreatePortrait(self, Unit)
 end
 
 local function CreateIndicators(self, Unit)
-    local TargetIndicator = MilaUI.DB.profile[Unit].TargetIndicator
-    local CombatIndicator = MilaUI.DB.profile[Unit].CombatIndicator
-    local LeaderIndicator = MilaUI.DB.profile[Unit].LeaderIndicator
-    local TargetMarker = MilaUI.DB.profile[Unit].TargetMarker
+    local TargetIndicator = MilaUI.DB.profile.Unitframes[Unit].TargetIndicator
+    local CombatIndicator = MilaUI.DB.profile.Unitframes[Unit].CombatIndicator
+    local LeaderIndicator = MilaUI.DB.profile.Unitframes[Unit].LeaderIndicator
+    local TargetMarker = MilaUI.DB.profile.Unitframes[Unit].TargetMarker
 
     if not self.unitIsTargetIndicator and Unit == "Boss" and TargetIndicator.Enabled then
         self.unitIsTargetIndicator = CreateFrame("Frame", nil, self, "BackdropTemplate")
@@ -618,11 +618,11 @@ local function CreateIndicators(self, Unit)
 end
 
 local function CreateTextFields(self, Unit)
-    local General = MilaUI.DB.profile.General
-    local Frame = MilaUI.DB.profile[Unit].Frame
-    local FirstText = MilaUI.DB.profile[Unit].Texts.First
-    local SecondText = MilaUI.DB.profile[Unit].Texts.Second
-    local ThirdText = MilaUI.DB.profile[Unit].Texts.Third
+    local General = MilaUI.DB.profile.Unitframes.General
+    local Frame = MilaUI.DB.profile.Unitframes[Unit].Frame
+    local FirstText = MilaUI.DB.profile.Unitframes[Unit].Texts.First
+    local SecondText = MilaUI.DB.profile.Unitframes[Unit].Texts.Second
+    local ThirdText = MilaUI.DB.profile.Unitframes[Unit].Texts.Third
     if not self.unitHighLevelFrame then 
         self.unitHighLevelFrame = CreateFrame("Frame", nil, self)
         self.unitHighLevelFrame:SetSize(Frame.Width, Frame.Height)
@@ -670,8 +670,8 @@ end
 
 local function CreateMouseoverHighlight(self) -- 'self' here is equivalent to 'FrameName'
     local Unit = MilaUI.Frames[self.unit] or "Boss" -- Define Unit based on self.unit
-    local MouseoverHighlight = MilaUI.DB.profile.General.MouseoverHighlight
-    local CustomBorderSettings = MilaUI.DB.profile[Unit].Health.CustomBorder
+    local MouseoverHighlight = MilaUI.DB.profile.Unitframes.General.MouseoverHighlight
+    local CustomBorderSettings = MilaUI.DB.profile.Unitframes[Unit].Health.CustomBorder
 
     if MouseoverHighlight.Enabled then
         if not self.unitHighlight then
@@ -738,17 +738,17 @@ local function CreateMouseoverHighlight(self) -- 'self' here is equivalent to 'F
 end
 
 local function CreateCustomBorder(self, unit, frameType)
-    local r, g, b, a = unpack(MilaUI.DB.profile.General.BorderColour)
+    local r, g, b, a = unpack(MilaUI.DB.profile.Unitframes.General.BorderColour)
     
     -- Determine which border settings to use based on frameType
     local borderSettings
     local parent
     
     if frameType == "Power" then
-        borderSettings = MilaUI.DB.profile[unit].PowerBar.CustomBorder
+        borderSettings = MilaUI.DB.profile.Unitframes[unit].PowerBar.CustomBorder
         parent = self.unitPowerBar
     else -- Default to Health
-        borderSettings = MilaUI.DB.profile[unit].Health.CustomBorder
+        borderSettings = MilaUI.DB.profile.Unitframes[unit].Health.CustomBorder
         parent = self.unitHealthBar
     end
     
@@ -788,7 +788,7 @@ end
 
 
 local function ApplyScripts(self)
-    local MouseoverHighlight = MilaUI.DB.profile.General.MouseoverHighlight
+    local MouseoverHighlight = MilaUI.DB.profile.Unitframes.General.MouseoverHighlight
     self:RegisterForClicks("AnyUp")
     self:SetAttribute("*type1", "target")
     self:SetAttribute("*type2", "togglemenu")
@@ -799,9 +799,9 @@ local function ApplyScripts(self)
 end
 
 function MilaUI:CreateUnitFrame(Unit)
-    local Health = MilaUI.DB.profile[Unit].Health
-    local PowerBar = MilaUI.DB.profile[Unit].PowerBar
-    local Frame = MilaUI.DB.profile[Unit].Frame
+    local Health = MilaUI.DB.profile.Unitframes[Unit].Health
+    local PowerBar = MilaUI.DB.profile.Unitframes[Unit].PowerBar
+    local Frame = MilaUI.DB.profile.Unitframes[Unit].Frame
     local HealthPrediction = Health.HealthPrediction
     local Absorbs = HealthPrediction.Absorbs
     local HealAbsorbs = HealthPrediction.HealAbsorbs
@@ -875,9 +875,9 @@ end
 
 local function UpdateFrame(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
-    local Frame = MilaUI.DB.profile[Unit].Frame
-    local Health = MilaUI.DB.profile[Unit].Health
-    local PowerBar = MilaUI.DB.profile[Unit].PowerBar
+    local Frame = MilaUI.DB.profile.Unitframes[Unit].Frame
+    local Health = MilaUI.DB.profile.Unitframes[Unit].Health
+    local PowerBar = MilaUI.DB.profile.Unitframes[Unit].PowerBar
     if FrameName then
         FrameName:ClearAllPoints()
         -- Set the frame size based only on the health bar dimensions
@@ -892,8 +892,8 @@ end
 
 local function UpdateHealthBar(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
-    local General = MilaUI.DB.profile.General
-    local Health = MilaUI.DB.profile[Unit].Health
+    local General = MilaUI.DB.profile.Unitframes.General
+    local Health = MilaUI.DB.profile.Unitframes[Unit].Health
     -- Update border if applicable
     if FrameName.unitBorder and not Health.CustomBorder.Enabled then
         FrameName.unitBorder:SetBackdropBorderColor(unpack(General.BorderColour))
@@ -925,7 +925,7 @@ local function UpdateHealthBar(FrameName)
 
         -- Special color override for pet
         if Unit == "Pet" then
-            local ColourByPlayerClass = MilaUI.DB.profile.Pet.Health.ColourByPlayerClass
+            local ColourByPlayerClass = MilaUI.DB.profile.Unitframes.Pet.Health.ColourByPlayerClass
             if ColourByPlayerClass then
                 bar.colorClass = false
                 bar.colorReaction = false
@@ -970,9 +970,9 @@ end
 
 local function UpdateAbsorbBar(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
-    local General = MilaUI.DB.profile.General
-    local Health = MilaUI.DB.profile[Unit].Health
-    local HealthPrediction = MilaUI.DB.profile[Unit].Health.HealthPrediction
+    local General = MilaUI.DB.profile.Unitframes.General
+    local Health = MilaUI.DB.profile.Unitframes[Unit].Health
+    local HealthPrediction = MilaUI.DB.profile.Unitframes[Unit].Health.HealthPrediction
     local Absorbs = HealthPrediction.Absorbs
     if FrameName.unitAbsorbs and Absorbs.Enabled then
         local absorbsTexturePath = LSM:Fetch("statusbar", General.AbsorbTexture)
@@ -998,9 +998,9 @@ end
 
 local function UpdateHealAbsorbBar(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
-    local General = MilaUI.DB.profile.General
-    local Health = MilaUI.DB.profile[Unit].Health
-    local HealthPrediction = MilaUI.DB.profile[Unit].Health.HealthPrediction
+    local General = MilaUI.DB.profile.Unitframes.General
+    local Health = MilaUI.DB.profile.Unitframes[Unit].Health
+    local HealthPrediction = MilaUI.DB.profile.Unitframes[Unit].Health.HealthPrediction
     local HealAbsorbs = HealthPrediction.HealAbsorbs
     if FrameName.unitHealAbsorbs and HealAbsorbs.Enabled then
         local healAbsorbsTexturePath = LSM:Fetch("statusbar", General.AbsorbTexture)
@@ -1027,8 +1027,8 @@ end
 
 local function UpdatePowerBar(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
-    local General = MilaUI.DB.profile.General
-    local PowerBar = MilaUI.DB.profile[Unit].PowerBar
+    local General = MilaUI.DB.profile.Unitframes.General
+    local PowerBar = MilaUI.DB.profile.Unitframes[Unit].PowerBar
     local r, g, b, a = unpack(General.BackgroundColour)
     local BackdropTemplate = {
         bgFile = General.BackgroundTexture,
@@ -1129,7 +1129,7 @@ end
 
 local function UpdateBuffs(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
-    local Buffs = MilaUI.DB.profile[Unit].Buffs
+    local Buffs = MilaUI.DB.profile.Unitframes[Unit].Buffs
     
     -- Safety check: ensure unitBuffs exists
     if not FrameName.unitBuffs then
@@ -1176,7 +1176,7 @@ end
 
 local function UpdateDebuffs(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
-    local Debuffs = MilaUI.DB.profile[Unit].Debuffs
+    local Debuffs = MilaUI.DB.profile.Unitframes[Unit].Debuffs
     
     -- Safety check: ensure unitDebuffs exists
     if not FrameName.unitDebuffs then
@@ -1223,8 +1223,8 @@ end
 
 local function UpdatePortrait(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
-    local General = MilaUI.DB.profile.General
-    local Portrait = MilaUI.DB.profile[Unit].Portrait
+    local General = MilaUI.DB.profile.Unitframes.General
+    local Portrait = MilaUI.DB.profile.Unitframes[Unit].Portrait
     local BackdropTemplate = {
         bgFile = General.BackgroundTexture,
         edgeFile = General.BorderTexture,
@@ -1245,10 +1245,10 @@ end
 
 local function UpdateIndicators(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
-    local TargetIndicator = MilaUI.DB.profile[Unit].TargetIndicator
-    local CombatIndicator = MilaUI.DB.profile[Unit].CombatIndicator
-    local LeaderIndicator = MilaUI.DB.profile[Unit].LeaderIndicator
-    local TargetMarker = MilaUI.DB.profile[Unit].TargetMarker
+    local TargetIndicator = MilaUI.DB.profile.Unitframes[Unit].TargetIndicator
+    local CombatIndicator = MilaUI.DB.profile.Unitframes[Unit].CombatIndicator
+    local LeaderIndicator = MilaUI.DB.profile.Unitframes[Unit].LeaderIndicator
+    local TargetMarker = MilaUI.DB.profile.Unitframes[Unit].TargetMarker
 
     if FrameName.unitIsTargetIndicator and not TargetIndicator.Enabled then
         FrameName.unitIsTargetIndicator:Hide()
@@ -1286,11 +1286,11 @@ end
 
 local function UpdateTextFields(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
-    local Frame = MilaUI.DB.profile[Unit].Frame
-    local General = MilaUI.DB.profile.General
-    local FirstText = MilaUI.DB.profile[Unit].Texts.First
-    local SecondText = MilaUI.DB.profile[Unit].Texts.Second
-    local ThirdText = MilaUI.DB.profile[Unit].Texts.Third
+    local Frame = MilaUI.DB.profile.Unitframes[Unit].Frame
+    local General = MilaUI.DB.profile.Unitframes.General
+    local FirstText = MilaUI.DB.profile.Unitframes[Unit].Texts.First
+    local SecondText = MilaUI.DB.profile.Unitframes[Unit].Texts.Second
+    local ThirdText = MilaUI.DB.profile.Unitframes[Unit].Texts.Third
     if FrameName.unitHighLevelFrame then
         FrameName.unitHighLevelFrame:ClearAllPoints()
         FrameName.unitHighLevelFrame:SetSize(Frame.Width, Frame.Height)
@@ -1340,8 +1340,8 @@ end
 
 local function UpdateMouseoverHighlight(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss" -- Define Unit
-    local MouseoverHighlight = MilaUI.DB.profile.General.MouseoverHighlight
-    local CustomBorderSettings = MilaUI.DB.profile[Unit].Health.CustomBorder
+    local MouseoverHighlight = MilaUI.DB.profile.Unitframes.General.MouseoverHighlight
+    local CustomBorderSettings = MilaUI.DB.profile.Unitframes[Unit].Health.CustomBorder
 
     if MouseoverHighlight.Enabled and FrameName.unitHighlight then
         local MHR, MHG, MHB, MHA = unpack(MouseoverHighlight.Colour)
@@ -1401,9 +1401,9 @@ end
 
 local function UpdateCustomBorder(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
-    local GeneralSettings = MilaUI.DB.profile.General
-    local CustomBorderHealth = MilaUI.DB.profile[Unit].Health.CustomBorder
-    local CustomBorderPower = MilaUI.DB.profile[Unit].PowerBar.CustomBorder
+    local GeneralSettings = MilaUI.DB.profile.Unitframes.General
+    local CustomBorderHealth = MilaUI.DB.profile.Unitframes[Unit].Health.CustomBorder
+    local CustomBorderPower = MilaUI.DB.profile.Unitframes[Unit].PowerBar.CustomBorder
 
     if CustomBorderHealth.Enabled then
         if not FrameName.MilaUICustomBorderFrame then
@@ -1467,7 +1467,7 @@ end
 function MilaUI:UpdateBossFrames()
     if not MilaUI.BossFrames then return end
     for _, BossFrame in ipairs(MilaUI.BossFrames) do MilaUI:UpdateUnitFrame(BossFrame) end
-    local Frame = MilaUI.DB.profile.Boss.Frame
+    local Frame = MilaUI.DB.profile.Unitframes.Boss.Frame
     local BossSpacing = Frame.Spacing
     local growDown = Frame.GrowthY == "DOWN"
     for i, BossFrame in ipairs(MilaUI.BossFrames) do
@@ -1511,7 +1511,7 @@ function MilaUI:UpdateBossFrames()
 end
 
 function MilaUI:LoadCustomColours()
-    local General = MilaUI.DB.profile.General
+    local General = MilaUI.DB.profile.Unitframes.General
     local PowerTypesToString = {
         [0] = "MANA",
         [1] = "RAGE",
@@ -1542,10 +1542,10 @@ function MilaUI:LoadCustomColours()
 end
 
 function MilaUI:DisplayBossFrames()
-    local General = MilaUI.DB.profile.General
-    local Frame = MilaUI.DB.profile.Boss.Frame
-    local Health = MilaUI.DB.profile.Boss.Health
-    local PowerBar = MilaUI.DB.profile.Boss.PowerBar
+    local General = MilaUI.DB.profile.Unitframes.General
+    local Frame = MilaUI.DB.profile.Unitframes.Boss.Frame
+    local Health = MilaUI.DB.profile.Unitframes.Boss.Health
+    local PowerBar = MilaUI.DB.profile.Unitframes.Boss.PowerBar
     local HealthPrediction = Health.HealthPrediction
     local Absorbs = HealthPrediction.Absorbs
     local HealAbsorbs = HealthPrediction.HealAbsorbs

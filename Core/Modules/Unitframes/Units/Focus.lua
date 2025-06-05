@@ -2,8 +2,8 @@ local _, MilaUI = ...
 local oUF = MilaUI.oUF
 
 function MilaUI:SpawnFocusFrame()
-    if not MilaUI.DB.profile.Focus.Frame.Enabled then return end
-    local Frame = MilaUI.DB.profile.Focus.Frame
+    if not MilaUI.DB.profile.Unitframes.Focus.Frame.Enabled then return end
+    local Frame = MilaUI.DB.profile.Unitframes.Focus.Frame
     oUF:RegisterStyle("MilaUI_Focus", function(self) MilaUI.CreateUnitFrame(self, "Focus") end)
     oUF:SetActiveStyle("MilaUI_Focus")
     self.FocusFrame = oUF:Spawn("focus", "MilaUI_Focus")

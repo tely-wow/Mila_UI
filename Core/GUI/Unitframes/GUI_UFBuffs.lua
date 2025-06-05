@@ -1,5 +1,4 @@
 local _, MilaUI = ...
-local L = MilaUI.L -- Assuming L is attached to MilaUI or accessible globally
 local GUI = LibStub("AceGUI-3.0") 
 local LSM = LibStub:GetLibrary("LibSharedMedia-3.0") or LibStub("LibSharedMedia-3.0")
 MilaUI.GUI = GUI
@@ -9,7 +8,7 @@ local unitSettingsContainer = nil
 
 
 function MilaUI:DrawBuffsContainer(dbUnitName, contentFrame)
-    local Buffs = MilaUI.DB.profile[dbUnitName].Buffs
+    local Buffs = MilaUI.DB.profile.Unitframes[dbUnitName].Buffs
     
     -- Buffs Options Container
     MilaUI:CreateLargeHeading("Buff Options", contentFrame)
@@ -284,7 +283,7 @@ function MilaUI:DrawBuffsContainer(dbUnitName, contentFrame)
 end
 
 function MilaUI:DrawDebuffsContainer(dbUnitName, contentFrame)
-    local Debuffs = MilaUI.DB.profile[dbUnitName].Debuffs
+    local Debuffs = MilaUI.DB.profile.Unitframes[dbUnitName].Debuffs
     
     -- Debuffs Options Container
     MilaUI:CreateLargeHeading("Debuff Options", contentFrame)

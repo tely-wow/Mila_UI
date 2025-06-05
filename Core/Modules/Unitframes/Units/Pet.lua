@@ -2,8 +2,8 @@ local _, MilaUI = ...
 local oUF = MilaUI.oUF
 
 function MilaUI:SpawnPetFrame()
-    if not MilaUI.DB.profile.Pet.Frame.Enabled then return end
-    local Frame = MilaUI.DB.profile.Pet.Frame
+    if not MilaUI.DB.profile.Unitframes.Pet.Frame.Enabled then return end
+    local Frame = MilaUI.DB.profile.Unitframes.Pet.Frame
     oUF:RegisterStyle("MilaUI_Pet", function(self) MilaUI.CreateUnitFrame(self, "Pet") end)
     oUF:SetActiveStyle("MilaUI_Pet")
     self.PetFrame = oUF:Spawn("pet", "MilaUI_Pet")

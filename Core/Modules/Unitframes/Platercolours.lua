@@ -103,8 +103,8 @@ function MilaUI:UpdateHealthBarColor(health, unit)
                 health:SetStatusBarColor(color.r, color.g, color.b)
                 -- Optionally set backdrop/bg here
                 if health.bg then
-                    local mult = MilaUI.DB.profile.General.BackgroundMultiplier or 0.25
-                    health.bg:SetVertexColor(color.r * mult, color.g * mult, color.b * mult, MilaUI.DB.profile.General.BackgroundColour[4] or 1)
+                    local mult = MilaUI.DB.profile.Unitframes.General.BackgroundMultiplier or 0.25
+                    health.bg:SetVertexColor(color.r * mult, color.g * mult, color.b * mult, MilaUI.DB.profile.Unitframes.General.BackgroundColour[4] or 1)
                 end
                 return
             end
@@ -137,9 +137,9 @@ eventHandler:RegisterEvent("PLAYER_TARGET_CHANGED")
 eventHandler:SetScript("OnEvent", function(self, event, arg1)
     if event == "ADDON_LOADED" then
         self:UnregisterEvent("ADDON_LOADED")
-        reactionColors = MilaUI.DB.profile.General.CustomColours.Reaction
-        statuscolours = MilaUI.DB.profile.General.CustomColours.Status
-        general = MilaUI.DB.profile.General
+        reactionColors = MilaUI.DB.profile.Unitframes.General.CustomColours.Reaction
+        statuscolours = MilaUI.DB.profile.Unitframes.General.CustomColours.Status
+        general = MilaUI.DB.profile.Unitframes.General
     end 
 end)
 

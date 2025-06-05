@@ -1,5 +1,4 @@
 local _, MilaUI = ...
-local L = MilaUI.L -- Assuming L is attached to MilaUI or accessible globally
 local GUI = LibStub("AceGUI-3.0") -- Direct reference to AceGUI
 local LSM = LibStub:GetLibrary("LibSharedMedia-3.0") or LibStub("LibSharedMedia-3.0")
 MilaUI.GUI = GUI
@@ -47,7 +46,7 @@ end
 function MilaUI:DrawUnitframesGeneralTab(parent)
     
     parent:ReleaseChildren()
-    local General = MilaUI.DB.profile.UnitframesGeneral or MilaUI.DB.profile.General -- fallback if not split
+    local General = MilaUI.DB.profile.Unitframes.General
     local LSM = LibStub:GetLibrary("LibSharedMedia-3.0")
     local LSMTextures = LSM and LSM:HashTable(LSM.MediaType.STATUSBAR) or {}
     
@@ -66,7 +65,7 @@ function MilaUI:DrawUnitframesGeneralTab(parent)
         end
     end)
     -- Mouseover Highlight Options
-    local MouseoverHighlight = MilaUI.DB.profile.General.MouseoverHighlight or {Enabled=false, Colour={1,1,1,1}, Style="BORDER"}
+    local MouseoverHighlight = General.MouseoverHighlight or {Enabled=false, Colour={1,1,1,1}, Style="BORDER"}
     
     -- Enable checkbox
     MilaUI:CreateLargeHeading("Mouseover Highlight", mainContainer)
@@ -402,7 +401,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
     local dbUnitName = self:GetUnitDatabaseKey(unitName)
     
     -- Debug output to help troubleshoot
-    if not MilaUI.DB.profile[dbUnitName] then
+    if not MilaUI.DB.profile.Unitframes[dbUnitName] then
         print(pink .. "♥MILA UI ♥: " .. lavender .. "Error: Could not find settings for unit '" .. dbUnitName .. "'")
         return
     end
@@ -410,8 +409,8 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
     --Enable / Disable Unit
     local EnableUnit = GUI:Create("CheckBox")
     EnableUnit:SetLabel("Enable Unit")
-    EnableUnit:SetValue(MilaUI.DB.profile[dbUnitName].Frame.Enabled)
-    EnableUnit:SetCallback("OnValueChanged", function(widget, event, value) MilaUI.DB.profile[dbUnitName].Frame.Enabled = value MilaUI:CreateReloadPrompt() end)
+    EnableUnit:SetValue(MilaUI.DB.profile.Unitframes[dbUnitName].Frame.Enabled)
+    EnableUnit:SetCallback("OnValueChanged", function(widget, event, value) MilaUI.DB.profile.Unitframes[dbUnitName].Frame.Enabled = value MilaUI:CreateReloadPrompt() end)
     EnableUnit:SetRelativeWidth(1)
     container:AddChild(EnableUnit)
     -- Create a tab group using AceGUI's built-in tab system
@@ -452,7 +451,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
         end)
         
         if tabKey == "Healthbar" then
-            local General = MilaUI.DB.profile.UnitframesGeneral or MilaUI.DB.profile.General
+            local General = MilaUI.DB.profile.Unitframes.General
             local LSM = LibStub:GetLibrary("LibSharedMedia-3.0")
             local LSMTextures = LSM and LSM:HashTable(LSM.MediaType.STATUSBAR) or {}
             local LSMFonts = LSM and LSM:HashTable(LSM.MediaType.FONT) or {}
@@ -468,9 +467,9 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
                 ["BOTTOMRIGHT"] = "Bottom Right",
             }
 
-            local Health = MilaUI.DB.profile[dbUnitName].Health
-            local Frame = MilaUI.DB.profile[dbUnitName].Frame
-            local HealthPrediction = MilaUI.DB.profile[dbUnitName].Health.HealthPrediction
+            local Health = MilaUI.DB.profile.Unitframes[dbUnitName].Health
+            local Frame = MilaUI.DB.profile.Unitframes[dbUnitName].Frame
+            local HealthPrediction = MilaUI.DB.profile.Unitframes[dbUnitName].Health.HealthPrediction
 
             -- Texture and Border
             MilaUI:CreateLargeHeading("Texture and Border", contentFrame, 16)
@@ -700,11 +699,11 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
                 end
             end)
         elseif tabKey == "PowerBar" then
-            local General = MilaUI.DB.profile.UnitframesGeneral or MilaUI.DB.profile.General
+            local General = MilaUI.DB.profile.Unitframes.General
             local LSM = LibStub:GetLibrary("LibSharedMedia-3.0")
             local LSMTextures = LSM and LSM:HashTable(LSM.MediaType.STATUSBAR) or {}
             local LSMFonts = LSM and LSM:HashTable(LSM.MediaType.FONT) or {}
-            local PowerBar = MilaUI.DB.profile[dbUnitName].PowerBar
+            local PowerBar = MilaUI.DB.profile.Unitframes[dbUnitName].PowerBar
 
             -- Use the helper function to create a large heading
             MilaUI:CreateLargeHeading("Texture and Border", contentFrame)

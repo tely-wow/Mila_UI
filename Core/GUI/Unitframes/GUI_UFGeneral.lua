@@ -1,5 +1,4 @@
 local _, MilaUI = ...
-local L = MilaUI.L -- Assuming L is attached to MilaUI or accessible globally
 local GUI = LibStub("AceGUI-3.0") -- Direct reference to AceGUI
 local LSM = LibStub:GetLibrary("LibSharedMedia-3.0") or LibStub("LibSharedMedia-3.0")
 
@@ -14,7 +13,7 @@ local unitSettingsContainer = nil
 
 function MilaUI:DrawUnitframesGeneralTab(parent)
     parent:ReleaseChildren()
-    local General = MilaUI.DB.profile.UnitframesGeneral or MilaUI.DB.profile.General -- fallback if not split
+    local General = MilaUI.DB.profile.UnitframesGeneral or MilaUI.DB.profile.Unitframes.General -- fallback if not split
     local LSM = LibStub:GetLibrary("LibSharedMedia-3.0")
     local LSMTextures = LSM and LSM:HashTable(LSM.MediaType.STATUSBAR) or {}
     
@@ -26,7 +25,7 @@ function MilaUI:DrawUnitframesGeneralTab(parent)
     parent:AddChild(mainContainer)
 
     -- Mouseover Highlight Options
-    local MouseoverHighlight = MilaUI.DB.profile.General.MouseoverHighlight or {Enabled=false, Colour={1,1,1,1}, Style="BORDER"}
+    local MouseoverHighlight = MilaUI.DB.profile.Unitframes.General.MouseoverHighlight or {Enabled=false, Colour={1,1,1,1}, Style="BORDER"}
     local MouseoverHighlightOptions = MilaUI:CreateInlineGroup("Mouseover Highlight Options", mainContainer)
     
     -- Enable checkbox

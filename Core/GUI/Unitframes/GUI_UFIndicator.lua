@@ -1,5 +1,4 @@
 local _, MilaUI = ...
-local L = MilaUI.L -- Assuming L is attached to MilaUI or accessible globally
 local GUI = LibStub("AceGUI-3.0") -- Direct reference to AceGUI
 local LSM = LibStub:GetLibrary("LibSharedMedia-3.0") or LibStub("LibSharedMedia-3.0")
 MilaUI.GUI = GUI
@@ -8,10 +7,10 @@ local lavender = "|cFFCBA0E3"
 local unitSettingsContainer = nil
 
 function MilaUI:DrawIndicatorContainer(dbUnitName, MilaUI_GUI_Container)
-    local TargetMarker = MilaUI.DB.profile[dbUnitName].TargetMarker
-    local CombatIndicator = MilaUI.DB.profile[dbUnitName].CombatIndicator
-    local LeaderIndicator = MilaUI.DB.profile[dbUnitName].LeaderIndicator
-    local TargetIndicator = MilaUI.DB.profile[dbUnitName].TargetIndicator
+    local TargetMarker = MilaUI.DB.profile.Unitframes[dbUnitName].TargetMarker
+    local CombatIndicator = MilaUI.DB.profile.Unitframes[dbUnitName].CombatIndicator
+    local LeaderIndicator = MilaUI.DB.profile.Unitframes[dbUnitName].LeaderIndicator
+    local TargetIndicator = MilaUI.DB.profile.Unitframes[dbUnitName].TargetIndicator
     local AnchorPoints = {
         ["TOPLEFT"] = "Top Left",
         ["TOP"] = "Top",

@@ -131,7 +131,7 @@ function MilaUI:DrawUnitFrameTextOptions(container, unitName)
     local dbUnitName = MilaUI:GetUnitDatabaseKey(unitName)
     
     -- Safety check
-    if not dbUnitName or not MilaUI.DB.profile[dbUnitName] then
+    if not dbUnitName or not MilaUI.DB.profile.Unitframes[dbUnitName] then
         local errorText = GUI:Create("Label")
         errorText:SetText("Error: Could not find unit data for " .. (unitName or "unknown"))
         errorText:SetFullWidth(true)
@@ -140,7 +140,7 @@ function MilaUI:DrawUnitFrameTextOptions(container, unitName)
     end
     
     -- Get the text configuration for this unit
-    local unitConfig = MilaUI.DB.profile[dbUnitName]
+    local unitConfig = MilaUI.DB.profile.Unitframes[dbUnitName]
     
     -- Check if the unit has text configuration
     if not unitConfig.Texts then
