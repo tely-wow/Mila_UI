@@ -120,6 +120,68 @@ function MilaUI:UpdateFrames()
     MilaUI:UpdateBossFrames()
 end
 
+function MilaUI:UpdateIndicator()
+    if self.PlayerFrame then
+        MilaUI:UpdateIndicators(self.PlayerFrame)
+    end
+    if self.TargetFrame then
+        MilaUI:UpdateIndicators(self.TargetFrame)
+    end
+    if self.FocusFrame then
+        MilaUI:UpdateIndicators(self.FocusFrame)
+    end
+    if self.FocusTargetFrame then
+        MilaUI:UpdateIndicators(self.FocusTargetFrame)
+    end
+    if self.PetFrame then
+        MilaUI:UpdateIndicators(self.PetFrame)
+    end
+    if self.TargetTargetFrame then
+        MilaUI:UpdateIndicators(self.TargetTargetFrame)
+    else
+        MilaUI:UpdateBossFrames()
+    end
+end
+
+function MilaUI:UpdateFrameScale()
+    if self.PlayerFrame then
+        local Frame = MilaUI.DB.profile.Unitframes.Player.Frame
+        if Frame and Frame.CustomScale and Frame.Scale then
+            MilaUI_Player:SetScale(Frame.Scale)
+        end
+    end
+    if self.TargetFrame then
+        local Frame = MilaUI.DB.profile.Unitframes.Target.Frame
+        if Frame and Frame.CustomScale and Frame.Scale then
+            self.TargetFrame:SetScale(Frame.Scale)
+        end
+    end
+    if self.FocusFrame then
+        local Frame = MilaUI.DB.profile.Unitframes.Focus.Frame
+        if Frame and Frame.CustomScale and Frame.Scale then
+            self.FocusFrame:SetScale(Frame.Scale)
+        end
+    end
+    if self.FocusTargetFrame then
+        local Frame = MilaUI.DB.profile.Unitframes.FocusTarget.Frame
+        if Frame and Frame.CustomScale and Frame.Scale then
+            self.FocusTargetFrame:SetScale(Frame.Scale)
+        end
+    end
+    if self.PetFrame then
+        local Frame = MilaUI.DB.profile.Unitframes.Pet.Frame
+        if Frame and Frame.CustomScale and Frame.Scale then
+            self.PetFrame:SetScale(Frame.Scale)
+        end
+    end
+    if self.TargetTargetFrame then
+        local Frame = MilaUI.DB.profile.Unitframes.TargetTarget.Frame
+        if Frame and Frame.CustomScale and Frame.Scale then
+            self.TargetTargetFrame:SetScale(Frame.Scale)
+        end
+    end
+end
+
 function MilaUI:ReOpenGUI()
     -- Use the public functions instead of trying to access mainFrame directly
     MilaUI_CloseGUIMain()

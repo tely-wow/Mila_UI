@@ -582,7 +582,7 @@ local function CreateIndicators(self, Unit)
     local LeaderIndicator = MilaUI.DB.profile.Unitframes[Unit].LeaderIndicator
     local TargetMarker = MilaUI.DB.profile.Unitframes[Unit].TargetMarker
 
-    if not self.unitIsTargetIndicator and Unit == "Boss" and TargetIndicator.Enabled then
+    if not self.unitIsTargetIndicator and Unit == "Boss" and TargetIndicator and TargetIndicator.Enabled then
         self.unitIsTargetIndicator = CreateFrame("Frame", nil, self, "BackdropTemplate")
         self.unitIsTargetIndicator:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -1)
         self.unitIsTargetIndicator:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -1, 1)
@@ -593,7 +593,7 @@ local function CreateIndicators(self, Unit)
         self.unitIsTargetIndicator:Hide()
     end
     -- Frame Target Marker
-    if TargetMarker.Enabled and not self.unitTargetMarker then
+    if not self.unitTargetMarker and TargetMarker and TargetMarker.Enabled then
         self.unitTargetMarker = self.unitHighLevelFrame:CreateTexture(nil, "OVERLAY")
         self.unitTargetMarker:SetSize(TargetMarker.Size, TargetMarker.Size)
         self.unitTargetMarker:SetPoint(TargetMarker.AnchorFrom, self.unitHighLevelFrame, TargetMarker.AnchorTo, TargetMarker.XOffset, TargetMarker.YOffset)
@@ -601,7 +601,7 @@ local function CreateIndicators(self, Unit)
     end
 
     -- Frame Combat Indicator
-    if not self.unitCombatIndicator and Unit == "Player" and CombatIndicator.Enabled then
+    if not self.unitCombatIndicator and CombatIndicator and CombatIndicator.Enabled and (Unit == "Player" or Unit == "Target" or Unit == "Focus") then
         self.unitCombatIndicator = self.unitHighLevelFrame:CreateTexture(nil, "OVERLAY")
         self.unitCombatIndicator:SetSize(CombatIndicator.Size, CombatIndicator.Size)
         self.unitCombatIndicator:SetPoint(CombatIndicator.AnchorFrom, self.unitHighLevelFrame, CombatIndicator.AnchorTo, CombatIndicator.XOffset, CombatIndicator.YOffset)
@@ -609,7 +609,7 @@ local function CreateIndicators(self, Unit)
     end
 
     -- Frame Leader Indicator
-    if not self.unitLeaderIndicator and Unit == "Player" and LeaderIndicator.Enabled then
+    if LeaderIndicator and LeaderIndicator.Enabled and not self.unitLeaderIndicator and (Unit == "Player" or Unit == "Target" or Unit == "Focus") then
         self.unitLeaderIndicator = self.unitHighLevelFrame:CreateTexture(nil, "OVERLAY")
         self.unitLeaderIndicator:SetSize(LeaderIndicator.Size, LeaderIndicator.Size)
         self.unitLeaderIndicator:SetPoint(LeaderIndicator.AnchorFrom, self.unitHighLevelFrame, LeaderIndicator.AnchorTo, LeaderIndicator.XOffset, LeaderIndicator.YOffset)
@@ -1161,6 +1161,7 @@ local function UpdateBuffs(FrameName)
         FrameName.unitBuffs.num = Buffs.Num
         FrameName.unitBuffs.initialAnchor = Buffs.AnchorFrom
         FrameName.unitBuffs.onlyShowPlayer = Buffs.OnlyShowPlayer
+        FrameName.unitBuffs.onlyShowBoss = Buffs.OnlyShowBoss
         FrameName.unitBuffs["growth-x"] = Buffs.GrowthX
         FrameName.unitBuffs["growth-y"] = Buffs.GrowthY
         FrameName.unitBuffs.filter = "HELPFUL"
@@ -1208,6 +1209,7 @@ local function UpdateDebuffs(FrameName)
         FrameName.unitDebuffs.num = Debuffs.Num
         FrameName.unitDebuffs.initialAnchor = Debuffs.AnchorFrom
         FrameName.unitDebuffs.onlyShowPlayer = Debuffs.OnlyShowPlayer
+        FrameName.unitDebuffs.onlyShowBoss = Debuffs.OnlyShowBoss
         FrameName.unitDebuffs["growth-x"] = Debuffs.GrowthX
         FrameName.unitDebuffs["growth-y"] = Debuffs.GrowthY
         FrameName.unitDebuffs.filter = "HARMFUL"
@@ -1243,7 +1245,7 @@ local function UpdatePortrait(FrameName)
     end
 end
 
-local function UpdateIndicators(FrameName)
+function MilaUI:UpdateIndicators(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
     local TargetIndicator = MilaUI.DB.profile.Unitframes[Unit].TargetIndicator
     local CombatIndicator = MilaUI.DB.profile.Unitframes[Unit].CombatIndicator
@@ -1261,7 +1263,7 @@ local function UpdateIndicators(FrameName)
     end
 
     -- Frame Combat Indicator
-    if FrameName.unitCombatIndicator and Unit == "Player" and CombatIndicator.Enabled then
+    if FrameName.unitCombatIndicator and (Unit == "Player" or Unit == "Target" or Unit == "Focus") and CombatIndicator.Enabled then
         FrameName.unitCombatIndicator:Show()
         if FrameName.unitCombatIndicator.hideTimer then
             FrameName.unitCombatIndicator.hideTimer:Cancel()
@@ -1277,7 +1279,7 @@ local function UpdateIndicators(FrameName)
     end
 
     -- Frame Leader Indicator
-    if FrameName.unitLeaderIndicator and Unit == "Player" and LeaderIndicator.Enabled then
+    if FrameName.unitLeaderIndicator and (Unit == "Player" or Unit == "Target" or Unit == "Focus") and LeaderIndicator.Enabled then
         FrameName.unitLeaderIndicator:ClearAllPoints()
         FrameName.unitLeaderIndicator:SetSize(LeaderIndicator.Size, LeaderIndicator.Size)
         FrameName.unitLeaderIndicator:SetPoint(LeaderIndicator.AnchorFrom, FrameName, LeaderIndicator.AnchorTo, LeaderIndicator.XOffset, LeaderIndicator.YOffset)
@@ -1445,7 +1447,6 @@ local function UpdateCustomBorder(FrameName)
     end
 end
 
-
 function MilaUI:UpdateUnitFrame(FrameName)
     if not FrameName then return end
     if not FrameName.unit then return end
@@ -1458,7 +1459,7 @@ function MilaUI:UpdateUnitFrame(FrameName)
     UpdateBuffs(FrameName)
     UpdateDebuffs(FrameName)
     UpdatePortrait(FrameName)
-    UpdateIndicators(FrameName)
+    MilaUI:UpdateIndicators(FrameName)
     UpdateTextFields(FrameName)
     UpdateMouseoverHighlight(FrameName)
     if MilaUI.DB.profile.TestMode then MilaUI:DisplayBossFrames() end

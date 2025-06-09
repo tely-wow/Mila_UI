@@ -113,6 +113,24 @@ MilaUIAddon.Defaults = {
                     Colour = {1, 1, 1, 1},
                 }
             },
+            AuraFilters = {
+                Buffs = {
+                    Blacklist = {
+                        
+                    },
+                    Whitelist = {
+                        
+                    },
+                },
+                Debuffs = {
+                    Blacklist = {
+                        
+                    },
+                    Whitelist = {
+                        
+                    },
+                },
+            },
             Player = {
                 Frame = {
                     Enabled             = true,
@@ -210,6 +228,11 @@ MilaUIAddon.Defaults = {
                         Colour        = {1, 1, 1, 1},
                     },
                     OnlyShowPlayer     = false,
+                    OnlyShowBoss     = true,
+                    Blacklist = false,
+                    appliedBlacklist = {},
+                    Whitelist = false,
+                    appliedWhitelist = {},
                 },
                 Debuffs = {
                     Enabled             = false,
@@ -232,6 +255,11 @@ MilaUIAddon.Defaults = {
                         Colour        = {1, 1, 1, 1},
                     },
                     OnlyShowPlayer     = false,
+                    OnlyShowBoss     = true,
+                    Blacklist = false,
+                    appliedBlacklist = {},
+                    Whitelist = false,
+                    appliedWhitelist = {},
                 },
                 TargetMarker = {
                     Enabled             = true,
@@ -384,6 +412,11 @@ MilaUIAddon.Defaults = {
                         Colour        = {1, 1, 1, 1},
                     },
                     OnlyShowPlayer     = false,
+                    OnlyShowBoss     = true,
+                    Blacklist = false,
+                    appliedBlacklist = {},
+                    Whitelist = false,
+                    appliedWhitelist = {},
                 },
                 Debuffs = {
                     Enabled             = false,
@@ -406,6 +439,11 @@ MilaUIAddon.Defaults = {
                         Colour        = {1, 1, 1, 1},
                     },
                     OnlyShowPlayer     = true,
+                    OnlyShowBoss     = true,
+                    Blacklist = false,
+                    appliedBlacklist = {},
+                    Whitelist = false,
+                    appliedWhitelist = {},
                 },
                 TargetMarker = {
                     Enabled             = true,
@@ -558,6 +596,11 @@ MilaUIAddon.Defaults = {
                         Colour        = {1, 1, 1, 1},
                     },
                     OnlyShowPlayer     = false,
+                    OnlyShowBoss     = true,
+                    Blacklist = false,
+                    appliedBlacklist = {},
+                    Whitelist = false,
+                    appliedWhitelist = {},
                 },
                 Debuffs = {
                     Enabled             = false,
@@ -580,6 +623,11 @@ MilaUIAddon.Defaults = {
                         Colour        = {1, 1, 1, 1},
                     },
                     OnlyShowPlayer     = false,
+                    OnlyShowBoss     = true,
+                    Blacklist = false,
+                    appliedBlacklist = {},
+                    Whitelist = false,
+                    appliedWhitelist = {},
                 },
                 TargetMarker = {
                     Enabled             = true,
@@ -716,6 +764,11 @@ MilaUIAddon.Defaults = {
                         Colour        = {1, 1, 1, 1},
                     },
                     OnlyShowPlayer     = false,
+                    OnlyShowBoss     = true,
+                    Blacklist = false,
+                    appliedBlacklist = {},
+                    Whitelist = false,
+                    appliedWhitelist = {},
                 },
                 Debuffs = {
                     Enabled             = false,
@@ -738,6 +791,11 @@ MilaUIAddon.Defaults = {
                         Colour        = {1, 1, 1, 1},
                     },
                     OnlyShowPlayer     = true,
+                    OnlyShowBoss     = true,
+                    Blacklist = false,
+                    appliedBlacklist = {},
+                    Whitelist = false,
+                    appliedWhitelist = {},
                 },
                 TargetMarker = {
                     Enabled             = true,
@@ -882,6 +940,11 @@ MilaUIAddon.Defaults = {
                         Colour        = {1, 1, 1, 1},
                     },
                     OnlyShowPlayer     = false,
+                    OnlyShowBoss     = true,
+                    Blacklist = false,
+                    appliedBlacklist = {},
+                    Whitelist = false,
+                    appliedWhitelist = {},
                 },
                 Debuffs = {
                     Enabled             = false,
@@ -904,6 +967,11 @@ MilaUIAddon.Defaults = {
                         Colour        = {1, 1, 1, 1},
                     },
                     OnlyShowPlayer     = true,
+                    OnlyShowBoss     = true,
+                    Blacklist = false,
+                    appliedBlacklist = {},
+                    Whitelist = false,
+                    appliedWhitelist = {},
                 },
                 TargetMarker = {
                     Enabled             = true,
@@ -1042,6 +1110,11 @@ MilaUIAddon.Defaults = {
                         Colour        = {1, 1, 1, 1},
                     },
                     OnlyShowPlayer     = false,
+                    OnlyShowBoss     = true,
+                    Blacklist = false,
+                    appliedBlacklist = {},
+                    Whitelist = false,
+                    appliedWhitelist = {},
                 },
                 Debuffs = {
                     Enabled             = false,
@@ -1064,6 +1137,11 @@ MilaUIAddon.Defaults = {
                         Colour        = {1, 1, 1, 1},
                     },
                     OnlyShowPlayer     = false,
+                    OnlyShowBoss     = true,
+                    Blacklist = false,
+                    appliedBlacklist = {},
+                    Whitelist = false,
+                    appliedWhitelist = {},
                 },
                 TargetMarker = {
                     Enabled             = false,
@@ -1201,7 +1279,12 @@ MilaUIAddon.Defaults = {
                         AnchorTo       = "BOTTOMRIGHT",
                         Colour        = {1, 1, 1, 1},
                     },
-                    OnlyShowPlayer     = false,
+                    OnlyShowPlayer     = true,
+                    OnlyShowBoss     = true,
+                    Blacklist = false,
+                    appliedBlacklist = {},
+                    Whitelist = false,
+                    appliedWhitelist = {},
                 },
                 Debuffs = {
                     Enabled             = false,
@@ -1223,7 +1306,12 @@ MilaUIAddon.Defaults = {
                         AnchorTo       = "BOTTOMRIGHT",
                         Colour        = {1, 1, 1, 1},
                     },
-                    OnlyShowPlayer     = true
+                    OnlyShowPlayer     = true,
+                    OnlyShowBoss     = true,
+                    Blacklist = false,
+                    appliedBlacklist = {},
+                    Whitelist = false,
+                    appliedWhitelist = {},
                 },
                 TargetMarker = {
                     Enabled             = true,
@@ -1346,9 +1434,8 @@ end
 
 function MilaUI:SetupSlashCommands()
     SLASH_MilaUI1 = "/MilaUI"
-    SLASH_MilaUI2 = "/MilaUI"
-    SLASH_MilaUI3 = "/mui"
-    SLASH_MilaUI4 = "/Mila"
+    SLASH_MilaUI2 = "/mui"
+    SLASH_MilaUI3 = "/Mila"
     SlashCmdList["MilaUI"] = function(msg)
         if msg == "" then
             MilaUI_OpenGUIMain()
