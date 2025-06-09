@@ -508,6 +508,7 @@ local function CreateBuffs(self, Unit)
         self.unitBuffs.num = Buffs.Num
         self.unitBuffs.initialAnchor = Buffs.AnchorFrom
         self.unitBuffs.onlyShowPlayer = Buffs.OnlyShowPlayer
+        self.unitBuffs.showStealableBuffs = Buffs.ShowStealableBuffs
         self.unitBuffs["growth-x"] = Buffs.GrowthX
         self.unitBuffs["growth-y"] = Buffs.GrowthY
         self.unitBuffs.filter = "HELPFUL"
