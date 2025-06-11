@@ -857,6 +857,12 @@ function MilaUI:CreateUnitFrame(Unit)
         CreateCustomBorder(self, Unit, "Power")
     end
     
+    -- Create castbar if enabled for this unit
+    if MilaUI.DB.profile.Unitframes[Unit].Castbar and MilaUI.DB.profile.Unitframes[Unit].Castbar.enabled then
+        -- Create castbar using the CreateCastbar function from Castbar.lua
+        MilaUI:CreateCastbar(self, string.lower(Unit))
+    end
+    
     -- Create other elements on the main frame
     CreatePortrait(self, Unit)
     CreateBuffs(self, Unit)
@@ -872,6 +878,38 @@ function MilaUI:CreateUnitFrame(Unit)
     if PowerBar.Enabled then
         self.Power = self.unitPowerBar
     end
+    
+    -- Ensure all FontStrings have fonts set
+    -- This prevents "FontString:SetFormattedText(): Font not set" errors
+    local function ensureFontSet(frame)
+        -- Get the general font settings from database
+        local generalSettings = MilaUI.DB.profile.Unitframes.General.CastbarSettings
+        local fontPath = generalSettings and generalSettings.font or "Fonts\\FRIZQT__.TTF"
+        local fontSize = generalSettings and generalSettings.fontSize or 10
+        local fontFlags = generalSettings and generalSettings.fontFlags or ""
+        
+        -- Check regions (FontStrings, etc)
+        for _, region in pairs({frame:GetRegions()}) do
+            if region:IsObjectType("FontString") then
+                local hasFont = region:GetFont() ~= nil
+                
+                if not hasFont then
+                    -- Set the font from database settings if none is set
+                    region:SetFont(fontPath, fontSize, fontFlags)
+                end
+            end
+        end
+        
+        -- Check child frames recursively
+        for _, child in pairs({frame:GetChildren()}) do
+            if child:IsObjectType("Frame") then
+                ensureFontSet(child)
+            end
+        end
+    end
+    
+    -- Apply font check to the entire frame
+    ensureFontSet(self)
 end
 
 local function UpdateFrame(FrameName)

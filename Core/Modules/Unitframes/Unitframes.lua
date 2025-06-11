@@ -108,4 +108,18 @@ local bossHeader = oUF:SpawnHeader(
     "unitSpacing", 10
 )
 
+-- Load the castbar module
+if not MilaUI.DB.profile.Unitframes.Castbar then
+    -- Initialize castbar settings in the DB if they don't exist yet
+    MilaUI.DB.profile.Unitframes.Castbar = {
+        enabled = true,
+        -- Copy default settings to DB
+        defaults = MilaUI.CastbarDefaults,
+        units = MilaUI.UnitCastbarDefaults
+    }
+end
+
+-- Load castbar module
+loadfile("Interface\\AddOns\\Mila_UI\\Core\\Modules\\Unitframes\\Castbar.lua")()
+
 MilaUI:print("Unitframe module loaded and style registered.")

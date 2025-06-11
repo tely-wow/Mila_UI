@@ -2,5 +2,6 @@
    <Script file="Utility.lua"/>
    <Script file="Tags/Tags.lua"/>
    <Script file="Platercolours.lua"/>
+   <Script file="Castbar.lua"/>
    <Include file="Units/UnitsInit.xml"/>
 </Ui>

@@ -9,26 +9,15 @@ local cursorFrame, cursor
 local config = {}
 
 function CursorMod:OnInitialize()
-    -- Get the configuration from the database
     config = MilaUI.DB.profile.CursorMod
-    
-    -- Initialize default values if missing
     self:InitializeDefaults()
-    
-    -- Create cursor frame and texture
     self:CreateCursorFrame()
-    
-    -- Register events
     self:RegisterEvent("PLAYER_LOGIN", "OnLogin")
     self:RegisterEvent("UI_SCALE_CHANGED", "UpdateAutoScale")
-    
-    -- Set the initial enabled state based on the config
-    -- This will NOT call OnEnable/OnDisable yet, just sets the internal state
     self:SetEnabledState(config.enabled)
 end
 
 function CursorMod:InitializeDefaults()
-    -- Ensure all required config values exist
     local defaults = MilaUIAddon.Defaults.profile.CursorMod
     
     for key, value in pairs(defaults) do
@@ -41,7 +30,6 @@ function CursorMod:InitializeDefaults()
         end
     end
     
-    -- Set default size from CVar if not set
     if config.size == 0 then
         local cursorSizePreferred = tonumber(GetCVar("cursorSizePreferred"))
         if config.sizes[cursorSizePreferred] then
@@ -51,18 +39,14 @@ function CursorMod:InitializeDefaults()
         end
     end
     
-    -- Set default lookStartDelta from CVar if needed
     if not config.lookStartDelta or config.lookStartDelta == 0.001 then
         config.lookStartDelta = tonumber(GetCVar("CursorFreelookStartDelta")) or 0.001
     end
 end
 
 function CursorMod:OnEnable()
-    -- Update the config to match the enabled state
     config.enabled = true
     MilaUI.DB.profile.CursorMod.enabled = true
-    
-    -- Setup cursor settings
     self:UpdateCursorSettings()
     self:SetCombatTracking()
     if self.cursorFrame then
@@ -74,7 +58,6 @@ function CursorMod:OnEnable()
         self.cursorFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
         self.cursorFrame:Hide()
     end
-    -- Hook UI scaling
     hooksecurefunc(UIParent, "SetScale", function() 
         self:UpdateAutoScale() 
     end)
@@ -90,7 +73,6 @@ function CursorMod:OnDisable()
 end
 
 function CursorMod:CreateCursorFrame()
-    -- Create the main cursor frame
     cursorFrame = CreateFrame("FRAME", "MilaUI_CursorFrame", UIParent)
     cursorFrame:SetFrameStrata("TOOLTIP")
     cursorFrame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT")
@@ -100,7 +82,7 @@ function CursorMod:CreateCursorFrame()
     cursor = cursorFrame:CreateTexture(nil, "OVERLAY")
     cursor:SetPoint("CENTER")
     
-    -- Initialize tracking states
+    -- Initialize tracking  states
     cursorFrame[1] = true  -- looking state
     cursorFrame[2] = true  -- turning state
     cursorFrame[3] = false -- combat state
@@ -368,35 +350,7 @@ function CursorMod:GetStatus()
     }
 end
 
--- Slash command
-SLASH_MILACURSOR1 = "/milacursor"
-SLASH_MILACURSOR2 = "/mcursor"
-SlashCmdList["MILACURSOR"] = function(msg)
-    local cmd = string.lower(msg or "")
-    
-    if cmd == "toggle" then
-        CursorMod:ToggleModule()
-        print("MilaUI CursorMod:", config.enabled and "Enabled" or "Disabled")
-    elseif cmd == "status" then
-        local status = CursorMod:GetStatus()
-        print("MilaUI CursorMod Status:")
-        for k, v in pairs(status) do
-            if type(v) == "table" then
-                print(" ", k .. ":", table.concat(v, ", "))
-            else
-                print(" ", k .. ":", tostring(v))
-            end
-        end
-    elseif cmd == "reload" then
-        CursorMod:UpdateCursorSettings()
-        print("MilaUI CursorMod: Settings reloaded")
-    else
-        print("MilaUI CursorMod Commands:")
-        print("  /milacursor toggle - Toggle module on/off")
-        print("  /milacursor status - Show current settings")
-        print("  /milacursor reload - Reload settings")
-    end
-end
+
 
 -- Ensure module is available globally for debugging
 _G.MilaUI_CursorMod = CursorMod

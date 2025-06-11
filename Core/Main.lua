@@ -111,22 +111,33 @@ MilaUIAddon.Defaults = {
                     Enabled = true,
                     Style = "BORDER",
                     Colour = {1, 1, 1, 1},
-                }
+                },
+                CastbarSettings = {
+                    Colors = {
+                        barColor = {1, 0.7, 0, 1},           -- Normal cast
+                        channelColor = {0, 0.7, 1, 1},       -- Channeling
+                        nonInterruptibleColor = {0.7, 0, 0, 1}, -- Non-interruptible cast
+                        failedColor = {1, 0.3, 0.3, 1},      -- Failed cast   
+                    },
+                    font = "Expressway",
+                    fontSize = 10,
+                    fontFlags = "OUTLINE",
+                },
             },
             AuraFilters = {
                 Buffs = {
-                    Blacklist = {
+                    Blacklists = {
                         
                     },
-                    Whitelist = {
+                    Whitelists = {
                         
                     },
                 },
                 Debuffs = {
-                    Blacklist = {
+                    Blacklists = {
                         
                     },
-                    Whitelist = {
+                    Whitelists = {
                         
                     },
                 },
@@ -204,8 +215,45 @@ MilaUIAddon.Defaults = {
                     ColourBackgroundByType  = true,
                     BackgroundMultiplier    = 0.25,
                     Colour                  = {0/255, 0/255, 1/255, 1},
-                    BackgroundColour        = {26 / 255, 26 / 255, 26 / 255, 1},
+                    BackgroundColour        = {26 / 255, 26 / 255, 26 / 26 / 255, 1},
                     Smooth = false,
+                },
+                Castbar = {
+                    enabled = true,
+                    width = 200,
+                    height = 20,
+                    texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
+                    backgroundColor = {0.1, 0.1, 0.1, 0.8},
+                    borderColor = {0, 0, 0, 1},
+                    borderSize = 1,
+                    showShield = true,
+                    showSafeZone = true,
+                    safeZoneColor = {1, 0, 0, 0.6},
+                    timeToHold = 0.5,         -- How long to show failed/interrupted casts
+                    hideTradeSkills = false,  -- Whether to hide profession casts
+                    Icon = {
+                        showIcon = true,
+                        iconSize = 24,
+                        iconPosition = "LEFT",    -- LEFT or RIGHT
+                    },
+                    Spark = {
+                        showSpark = true,
+                        sparkWidth = 10,
+                        sparkHeight = 30,
+                    },
+                    text = {
+                        showText = true,
+                        textJustify = "LEFT",
+                        timeJustify = "RIGHT",
+                        showTime = true,
+                        timeFormat = "%.1f"
+                    }, 
+                    position = {
+                        anchorTo = "BOTTOM",
+                        anchorFrom = "Health", 
+                        xOffset = 0,
+                        yOffset = 5
+                    }
                 },
                 Buffs = {
                     Enabled             = false,
@@ -391,6 +439,40 @@ MilaUIAddon.Defaults = {
                     Colour                  = {0/255, 0/255, 1/255, 1},
                     BackgroundColour        = {26 / 255, 26 / 255, 26 / 255, 1},
                     Smooth = false,
+                },
+                Castbar = {
+                    enabled = true,
+                    width = 200,
+                    height = 20,
+                    texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
+                    backgroundColor = {0.1, 0.1, 0.1, 0.8},
+                    borderColor = {0, 0, 0, 1},
+                    borderSize = 1,
+                    showShield = true,
+                    timeToHold = 0.5,    
+                    Icon = {
+                        showIcon = true,
+                        iconSize = 24,
+                        iconPosition = "LEFT",    
+                    },
+                    Spark = {
+                        showSpark = true,
+                        sparkWidth = 10,
+                        sparkHeight = 30,
+                    },
+                    text = {
+                        showText = true,
+                        textJustify = "LEFT",
+                        timeJustify = "RIGHT",
+                        showTime = true,
+                        timeFormat = "%.1f"
+                    }, 
+                    position = {
+                        anchorTo = "BOTTOM",
+                        anchorFrom = "Health", 
+                        xOffset = 0,
+                        yOffset = 5
+                    }
                 },
                 Buffs = {
                     Enabled             = true,
@@ -745,6 +827,40 @@ MilaUIAddon.Defaults = {
                     Colour                  = {0/255, 0/255, 1/255, 1},
                     BackgroundColour        = {26 / 255, 26 / 255, 26 / 255, 1},
                     Smooth = false,
+                },
+                Castbar = {
+                    enabled = true,
+                    width = 200,
+                    height = 20,
+                    texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
+                    backgroundColor = {0.1, 0.1, 0.1, 0.8},
+                    borderColor = {0, 0, 0, 1},
+                    borderSize = 1,
+                    showShield = true,
+                    timeToHold = 0.5,    
+                    Icon = {
+                        showIcon = true,
+                        iconSize = 24,
+                        iconPosition = "LEFT",    
+                    },
+                    Spark = {
+                        showSpark = true,
+                        sparkWidth = 10,
+                        sparkHeight = 30,
+                    },
+                    text = {
+                        showText = true,
+                        textJustify = "LEFT",
+                        timeJustify = "RIGHT",
+                        showTime = true,
+                        timeFormat = "%.1f"
+                    }, 
+                    position = {
+                        anchorTo = "BOTTOM",
+                        anchorFrom = "Health", 
+                        xOffset = 0,
+                        yOffset = 5
+                    }
                 },
                 Buffs = {
                     Enabled             = false,
@@ -1265,6 +1381,40 @@ MilaUIAddon.Defaults = {
                     BackgroundColour        = {26 / 255, 26 / 255, 26 / 255, 1},
                     Smooth = false,
                 },
+                Castbar = {
+                    enabled = true,
+                    width = 200,
+                    height = 20,
+                    texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
+                    backgroundColor = {0.1, 0.1, 0.1, 0.8},
+                    borderColor = {0, 0, 0, 1},
+                    borderSize = 1,
+                    showShield = true,
+                    timeToHold = 0.5,    
+                    Icon = {
+                        showIcon = true,
+                        iconSize = 24,
+                        iconPosition = "LEFT",    
+                    },
+                    Spark = {
+                        showSpark = true,
+                        sparkWidth = 10,
+                        sparkHeight = 30,
+                    },
+                    text = {
+                        showText = true,
+                        textJustify = "LEFT",
+                        timeJustify = "RIGHT",
+                        showTime = true,
+                        timeFormat = "%.1f"
+                    }, 
+                    position = {
+                        anchorTo = "BOTTOM",
+                        anchorFrom = "Health", 
+                        xOffset = 0,
+                        yOffset = 5
+                    }
+                },
                 Buffs = {
                     Enabled             = true,
                     Size                = 42,
@@ -1476,9 +1626,39 @@ function MilaUI:SetupSlashCommands()
             print("Reaction", k, "->", string.format("r=%.2f g=%.2f b=%.2f", v[1], v[2], v[3]))
         end
     end
+    
+    -- Register cursor slash commands
+    if MilaUIAddon:GetModule("CursorMod", true) then
+        SLASH_MUILACURSOR1 = "/mui cursor"
+        SLASH_MUILACURSOR2 = "/mila cursor"
+        SlashCmdList["MILAUICURSOR"] = function(msg)
+            local cmd = string.lower(msg or "")
+            
+            if cmd == "toggle" then
+                MilaUIAddon:ToggleModule("CursorMod")
+                print("MilaUI CursorMod:", MilaUIAddon:GetModule("CursorMod"):GetStatus().enabled and "Enabled" or "Disabled")
+            elseif cmd == "status" then
+                local status = MilaUIAddon:GetModule("CursorMod"):GetStatus()
+                print("MilaUI CursorMod Status:")
+                for k, v in pairs(status) do
+                    if type(v) == "table" then
+                        print(" ", k .. ":", table.concat(v, ", "))
+                    else
+                        print(" ", k .. ":", tostring(v))
+                    end
+                end
+            elseif cmd == "reload" then
+                MilaUIAddon:GetModule("CursorMod"):UpdateCursorSettings()
+                print("MilaUI CursorMod: Settings reloaded")
+            else
+                print("MilaUI CursorMod Commands:")
+                print("  /mui cursor toggle - Toggle module on/off")
+                print("  /mui cursor status - Show current settings")
+                print("  /mui cursor reload - Reload settings")
+            end
+        end
+    end
 end
-
-
 
 function MilaUIAddon:OnEnable()
     if MilaUI.DB.global.UIScaleEnabled then UIParent:SetScale(MilaUI.DB.global.UIScale) end

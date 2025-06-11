@@ -2,5 +2,4 @@
 ..\FrameXML\UI.xsd">
     <Include file="templates.xml"/>
     <Script file="CursorMod.lua"/>
-    <Include file="Config.lua"/>
 </Ui>
