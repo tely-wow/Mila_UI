@@ -301,4 +301,8 @@ function MilaUI:DrawUnitframesGeneralTab(parent)
         StatusColour:SetRelativeWidth(0.33)
         StatusColours:AddChild(StatusColour)
     end
+    -- Recalculate the scroll frame layout once all widgets are added
+    if parent and parent.DoLayout then
+        parent:DoLayout()
+    end
 end
