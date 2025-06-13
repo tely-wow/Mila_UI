@@ -162,20 +162,7 @@ function MilaUI:UpdateFramePosition(unitName)
         return
     end
     
-    local frameObj = nil
-    if unitName == "Player" then
-        frameObj = self.PlayerFrame
-    elseif unitName == "Target" then
-        frameObj = self.TargetFrame
-    elseif unitName == "Focus" then
-        frameObj = self.FocusFrame
-    elseif unitName == "Pet" then
-        frameObj = self.PetFrame
-    elseif unitName == "TargetTarget" then
-        frameObj = self.TargetTargetFrame
-    elseif unitName == "FocusTarget" then
-        frameObj = self.FocusTargetFrame
-    end
+    local frameObj = MilaUI:GetFrameForUnit(unitName)
     
     if frameObj then
         local Frame = MilaUI.DB.profile.Unitframes[unitName].Frame
@@ -191,20 +178,7 @@ function MilaUI:UpdateHealthBarSize(unitName)
         return
     end
     
-    local frameObj = nil
-    if unitName == "Player" then
-        frameObj = self.PlayerFrame
-    elseif unitName == "Target" then
-        frameObj = self.TargetFrame
-    elseif unitName == "Focus" then
-        frameObj = self.FocusFrame
-    elseif unitName == "Pet" then
-        frameObj = self.PetFrame
-    elseif unitName == "TargetTarget" then
-        frameObj = self.TargetTargetFrame
-    elseif unitName == "FocusTarget" then
-        frameObj = self.FocusTargetFrame
-    end
+    local frameObj = MilaUI:GetFrameForUnit(unitName)
     
     if frameObj and frameObj.unitHealthBar then
         local Health = MilaUI.DB.profile.Unitframes[unitName].Health
@@ -217,17 +191,7 @@ function MilaUI:UpdateCastbarSize(unitName)
         return
     end
 
-    -- Map unit names to frame objects
-    local frameMap = {
-        Player = self.PlayerFrame,
-        Target = self.TargetFrame,
-        Focus = self.FocusFrame,
-        Pet = self.PetFrame,
-        TargetTarget = self.TargetTargetFrame,
-        FocusTarget = self.FocusTargetFrame,
-    }
-
-    local frameObj = frameMap[unitName]
+    local frameObj = MilaUI:GetFrameForUnit(unitName)
     if frameObj and frameObj.Castbar then
         local castbarSettings = MilaUI.DB.profile.Unitframes[unitName].Castbar
         if castbarSettings.width and castbarSettings.height then
@@ -246,20 +210,7 @@ function MilaUI:UpdateCastbarPosition(unitName)
         return
     end
     
-    local frameObj = nil
-    if unitName == "Player" then
-        frameObj = self.PlayerFrame
-    elseif unitName == "Target" then
-        frameObj = self.TargetFrame
-    elseif unitName == "Focus" then
-        frameObj = self.FocusFrame
-    elseif unitName == "Pet" then
-        frameObj = self.PetFrame
-    elseif unitName == "TargetTarget" then
-        frameObj = self.TargetTargetFrame
-    elseif unitName == "FocusTarget" then
-        frameObj = self.FocusTargetFrame
-    end
+    local frameObj = MilaUI:GetFrameForUnit(unitName)
     
     print("frameObj found: " .. (frameObj and "yes" or "no"))
     print("frameObj.Castbar exists: " .. (frameObj and frameObj.Castbar and "yes" or "no"))
@@ -337,20 +288,7 @@ function MilaUI:UpdateCastbarAppearance(unitName)
         return
     end
     
-    local frameObj = nil
-    if unitName == "Player" then
-        frameObj = self.PlayerFrame
-    elseif unitName == "Target" then
-        frameObj = self.TargetFrame
-    elseif unitName == "Focus" then
-        frameObj = self.FocusFrame
-    elseif unitName == "Pet" then
-        frameObj = self.PetFrame
-    elseif unitName == "TargetTarget" then
-        frameObj = self.TargetTargetFrame
-    elseif unitName == "FocusTarget" then
-        frameObj = self.FocusTargetFrame
-    end
+    local frameObj = MilaUI:GetFrameForUnit(unitName)
     
     if frameObj and frameObj.Castbar then
         local castbar = frameObj.Castbar
@@ -424,13 +362,9 @@ function MilaUI:UpdateCastbarAppearance(unitName)
 end
 
 function MilaUI:UpdateAllCastbars()
-    self:UpdateCastbarAppearance("Player")
-    self:UpdateCastbarAppearance("Target")
-    self:UpdateCastbarAppearance("Focus")
-    self:UpdateCastbarAppearance("Pet")
-    self:UpdateCastbarAppearance("TargetTarget")
-    self:UpdateCastbarAppearance("FocusTarget")
-    -- Add boss frames if needed
+    for _, unit in ipairs(MilaUI.UnitList) do
+        self:UpdateCastbarAppearance(unit)
+    end
     for i = 1, MAX_BOSS_FRAMES do
         self:UpdateCastbarAppearance("Boss" .. i)
     end
