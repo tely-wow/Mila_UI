@@ -423,6 +423,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
     tabGroup:SetTabs({
         { text = "Healthbar", value = "Healthbar" },
         { text = "PowerBar", value = "PowerBar" },
+        { text = "Castbar", value = "Castbar" },
         { text = "Buffs", value = "Buffs" },
         { text = "Debuffs", value = "Debuffs" },
         { text = "Indicators", value = "Indicators" },
@@ -481,7 +482,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             local CustomMask = GUI:Create("CheckBox")
             CustomMask:SetLabel("Custom Mask")
             CustomMask:SetValue(Health.CustomMask and Health.CustomMask.Enabled)
-            CustomMask:SetCallback("OnValueChanged", function(widget, event, value) Health.CustomMask.Enabled = value MilaUI:UpdateFrames() end)
+            CustomMask:SetCallback("OnValueChanged", function(widget, event, value) Health.CustomMask.Enabled = value MilaUI:CreateReloadPrompt() end)
             CustomMask:SetRelativeWidth(0.5)
             TextureandBorder:AddChild(CustomMask)
 
@@ -489,7 +490,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             local CustomBorder = GUI:Create("CheckBox")
             CustomBorder:SetLabel("Custom Border")
             CustomBorder:SetValue(Health.CustomBorder and Health.CustomBorder.Enabled)
-            CustomBorder:SetCallback("OnValueChanged", function(widget, event, value) Health.CustomBorder.Enabled = value MilaUI:UpdateFrames() end)
+            CustomBorder:SetCallback("OnValueChanged", function(widget, event, value) Health.CustomBorder.Enabled = value MilaUI:CreateReloadPrompt() end)
             CustomBorder:SetRelativeWidth(0.5)
             TextureandBorder:AddChild(CustomBorder)
             
@@ -501,7 +502,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             HealthTexturePicker:SetRelativeWidth(0.4)
             HealthTexturePicker:SetCallback("OnValueChanged", function(widget, event, value)
                 Health.Texture = value
-                HealthTexturePicker:SetValue(value) -- Immediately update the dropdown value
+                HealthTexturePicker:SetValue(value)
                 MilaUI:UpdateFrames()
             end)
             TextureandBorder:AddChild(HealthTexturePicker)
@@ -626,7 +627,10 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             FrameWidth:SetLabel(lavender .. "Width")
             FrameWidth:SetSliderValues(1, 500, 1)
             FrameWidth:SetValue(Health.Width)
-            FrameWidth:SetCallback("OnMouseUp", function(widget, event, value) Health.Width = value MilaUI:UpdateFrames() end)
+            FrameWidth:SetCallback("OnValueChanged", function(widget, event, value) 
+                Health.Width = value 
+                MilaUI:UpdateHealthBarSize(dbUnitName) 
+            end)
             FrameWidth:SetRelativeWidth(0.5)
             Size:AddChild(FrameWidth)
 
@@ -635,7 +639,10 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             FrameHeight:SetLabel(lavender .. "Height")
             FrameHeight:SetSliderValues(1, 500, 1)
             FrameHeight:SetValue(Health.Height)
-            FrameHeight:SetCallback("OnMouseUp", function(widget, event, value) Health.Height = value MilaUI:UpdateFrames() end)
+            FrameHeight:SetCallback("OnValueChanged", function(widget, event, value) 
+                Health.Height = value 
+                MilaUI:UpdateHealthBarSize(dbUnitName) 
+            end)
             FrameHeight:SetRelativeWidth(0.5)
             Size:AddChild(FrameHeight)
 
@@ -644,7 +651,10 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             FrameXPosition:SetLabel(lavender .. "Frame X Position")
             FrameXPosition:SetSliderValues(-999, 999, 0.1)
             FrameXPosition:SetValue(Frame.XPosition)
-            FrameXPosition:SetCallback("OnValueChanged", function(widget, event, value) Frame.XPosition = value MilaUI:UpdateFrames() end)
+            FrameXPosition:SetCallback("OnValueChanged", function(widget, event, value) 
+                Frame.XPosition = value 
+                MilaUI:UpdateFramePosition(dbUnitName) 
+            end)
             FrameXPosition:SetRelativeWidth(0.5)
             Position:AddChild(FrameXPosition)
             
@@ -653,7 +663,10 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             FrameYPosition:SetLabel(lavender .. "Frame Y Position")
             FrameYPosition:SetSliderValues(-999, 999, 0.1)
             FrameYPosition:SetValue(Frame.YPosition)
-            FrameYPosition:SetCallback("OnValueChanged", function(widget, event, value) Frame.YPosition = value MilaUI:UpdateFrames() end)
+            FrameYPosition:SetCallback("OnValueChanged", function(widget, event, value) 
+                Frame.YPosition = value 
+                MilaUI:UpdateFramePosition(dbUnitName) 
+            end)
             FrameYPosition:SetRelativeWidth(0.5)
             Position:AddChild(FrameYPosition)
             
@@ -936,6 +949,9 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             BackgroundColourMultiplier:SetCallback("OnValueChanged", function(widget, event, value) PowerBar.BackgroundMultiplier = value MilaUI:UpdateFrames() end)
             BackgroundColourMultiplier:SetRelativeWidth(0.5)
             backgroundcolours:AddChild(BackgroundColourMultiplier)
+
+        elseif tabKey == "Castbar" then
+            MilaUI:DrawCastbarContainer(dbUnitName, contentFrame)
 
         elseif tabKey == "Buffs" then
             MilaUI:DrawBuffsContainer(dbUnitName, contentFrame)

@@ -156,6 +156,286 @@ function MilaUI:UpdateFrameScale()
     end
 end
 
+-- This function updates the frame position based on the unit name
+function MilaUI:UpdateFramePosition(unitName)
+    if not unitName or not MilaUI.DB.profile.Unitframes[unitName] then
+        return
+    end
+    
+    local frameObj = nil
+    if unitName == "Player" then
+        frameObj = self.PlayerFrame
+    elseif unitName == "Target" then
+        frameObj = self.TargetFrame
+    elseif unitName == "Focus" then
+        frameObj = self.FocusFrame
+    elseif unitName == "Pet" then
+        frameObj = self.PetFrame
+    elseif unitName == "TargetTarget" then
+        frameObj = self.TargetTargetFrame
+    elseif unitName == "FocusTarget" then
+        frameObj = self.FocusTargetFrame
+    end
+    
+    if frameObj then
+        local Frame = MilaUI.DB.profile.Unitframes[unitName].Frame
+        local AnchorParent = _G[Frame.AnchorParent] or UIParent
+        frameObj:ClearAllPoints()
+        frameObj:SetPoint(Frame.AnchorFrom, AnchorParent, Frame.AnchorTo, Frame.XPosition, Frame.YPosition)
+    end
+end
+
+-- This function updates the health bar size based on the unit name
+function MilaUI:UpdateHealthBarSize(unitName)
+    if not unitName or not MilaUI.DB.profile.Unitframes[unitName] then
+        return
+    end
+    
+    local frameObj = nil
+    if unitName == "Player" then
+        frameObj = self.PlayerFrame
+    elseif unitName == "Target" then
+        frameObj = self.TargetFrame
+    elseif unitName == "Focus" then
+        frameObj = self.FocusFrame
+    elseif unitName == "Pet" then
+        frameObj = self.PetFrame
+    elseif unitName == "TargetTarget" then
+        frameObj = self.TargetTargetFrame
+    elseif unitName == "FocusTarget" then
+        frameObj = self.FocusTargetFrame
+    end
+    
+    if frameObj and frameObj.unitHealthBar then
+        local Health = MilaUI.DB.profile.Unitframes[unitName].Health
+        frameObj.unitHealthBar:SetSize(Health.Width - 2, Health.Height - 2)
+    end
+end
+
+function MilaUI:UpdateCastbarSize(unitName)
+    if not unitName or not MilaUI.DB.profile.Unitframes[unitName] then
+        return
+    end
+
+    -- Map unit names to frame objects
+    local frameMap = {
+        Player = self.PlayerFrame,
+        Target = self.TargetFrame,
+        Focus = self.FocusFrame,
+        Pet = self.PetFrame,
+        TargetTarget = self.TargetTargetFrame,
+        FocusTarget = self.FocusTargetFrame,
+    }
+
+    local frameObj = frameMap[unitName]
+    if frameObj and frameObj.Castbar then
+        local castbarSettings = MilaUI.DB.profile.Unitframes[unitName].Castbar
+        if castbarSettings.width and castbarSettings.height then
+            frameObj.Castbar:SetSize(castbarSettings.width, castbarSettings.height)
+        end
+    end
+end
+
+
+function MilaUI:UpdateCastbarPosition(unitName)
+    -- Debug print
+    print("UpdateCastbarPosition called for unit: " .. (unitName or "nil"))
+    
+    if not unitName or not MilaUI.DB.profile.Unitframes[unitName] then
+        print("Error: Invalid unitName or missing DB entry")
+        return
+    end
+    
+    local frameObj = nil
+    if unitName == "Player" then
+        frameObj = self.PlayerFrame
+    elseif unitName == "Target" then
+        frameObj = self.TargetFrame
+    elseif unitName == "Focus" then
+        frameObj = self.FocusFrame
+    elseif unitName == "Pet" then
+        frameObj = self.PetFrame
+    elseif unitName == "TargetTarget" then
+        frameObj = self.TargetTargetFrame
+    elseif unitName == "FocusTarget" then
+        frameObj = self.FocusTargetFrame
+    end
+    
+    print("frameObj found: " .. (frameObj and "yes" or "no"))
+    print("frameObj.Castbar exists: " .. (frameObj and frameObj.Castbar and "yes" or "no"))
+    
+    if frameObj and frameObj.Castbar then
+        local castbarSettings = MilaUI.DB.profile.Unitframes[unitName].Castbar
+        if castbarSettings.position then
+            local pos = castbarSettings.position
+            
+            print("Position settings:")
+            print("  anchorFrom: " .. (pos.anchorFrom or "nil"))
+            print("  anchorTo: " .. (pos.anchorTo or "nil"))
+            print("  anchorParent: " .. (pos.anchorParent or "nil"))
+            print("  xOffset: " .. (pos.xOffset or "nil"))
+            print("  yOffset: " .. (pos.yOffset or "nil"))
+            
+            -- Improved anchor parent handling
+            local relativeTo = frameObj
+            if pos.anchorParent and type(pos.anchorParent) == "string" then
+                -- Try global frame reference first
+                local frameRef = _G[pos.anchorParent]
+                print("Global frame reference found: " .. (frameRef and "yes" or "no"))
+                if frameRef then
+                    relativeTo = frameRef
+                    print("Using global frame reference: " .. pos.anchorParent)
+                elseif frameObj[pos.anchorParent] then
+                    -- Try as a child of the frame object
+                    relativeTo = frameObj[pos.anchorParent]
+                    print("Using child frame reference: " .. pos.anchorParent)
+                else
+                    print("Could not find frame reference for: " .. pos.anchorParent)
+                end
+            end
+            
+            -- Safety check to ensure we have a valid frame
+            if not relativeTo or type(relativeTo) ~= "table" or not relativeTo.SetPoint then
+                print("WARNING: Invalid relativeTo frame, falling back to frameObj or UIParent")
+                relativeTo = frameObj or UIParent
+            end
+            
+            print("relativeTo type: " .. type(relativeTo))
+            print("relativeTo has SetPoint: " .. (relativeTo.SetPoint and "yes" or "no"))
+            
+            -- Store the current visibility state
+            local wasShown = frameObj.Castbar:IsShown()
+            print("Castbar was shown: " .. (wasShown and "yes" or "no"))
+            
+            -- Show the castbar temporarily to ensure proper positioning
+            if not wasShown then
+                print("Temporarily showing castbar")
+                frameObj.Castbar:Show()
+            end
+            
+            print("Clearing all points")
+            frameObj.Castbar:ClearAllPoints()
+            
+            print("Setting point: " .. pos.anchorFrom .. ", " .. pos.anchorTo .. ", " .. pos.xOffset .. ", " .. pos.yOffset)
+            frameObj.Castbar:SetPoint(pos.anchorFrom, relativeTo, pos.anchorTo, pos.xOffset, pos.yOffset)
+            
+            -- Restore the original visibility state
+            if not wasShown then
+                print("Hiding castbar again")
+                frameObj.Castbar:Hide()
+            end
+        else
+            print("Error: Missing position settings")
+        end
+    else
+        print("Error: Missing frameObj or frameObj.Castbar")
+    end
+end
+
+function MilaUI:UpdateCastbarAppearance(unitName)
+    if not unitName or not MilaUI.DB.profile.Unitframes[unitName] then
+        return
+    end
+    
+    local frameObj = nil
+    if unitName == "Player" then
+        frameObj = self.PlayerFrame
+    elseif unitName == "Target" then
+        frameObj = self.TargetFrame
+    elseif unitName == "Focus" then
+        frameObj = self.FocusFrame
+    elseif unitName == "Pet" then
+        frameObj = self.PetFrame
+    elseif unitName == "TargetTarget" then
+        frameObj = self.TargetTargetFrame
+    elseif unitName == "FocusTarget" then
+        frameObj = self.FocusTargetFrame
+    end
+    
+    if frameObj and frameObj.Castbar then
+        local castbar = frameObj.Castbar
+        local settings = MilaUI.DB.profile.Unitframes[unitName].Castbar
+        local generalSettings = MilaUI.DB.profile.Unitframes.General.CastbarSettings
+        
+        -- Update size
+        castbar:SetSize(settings.width, settings.height)
+        
+        -- Update position
+        self:UpdateCastbarPosition(unitName)
+        
+        -- Update scale if enabled
+        if settings.CustomScale then
+            castbar:SetScale(settings.Scale)
+        else
+            castbar:SetScale(1)
+        end
+        
+        -- Update texture
+        local texturePath = LSM:Fetch("statusbar", settings.texture) or LSM:GetDefault("statusbar")
+        castbar:SetStatusBarTexture(texturePath)
+        if castbar.bg then
+            castbar.bg:SetTexture(texturePath)
+            castbar.bg:SetVertexColor(unpack(settings.backgroundColor))
+        end
+        
+        -- Update colors
+        if castbar.isNonInterruptible then
+            castbar:SetStatusBarColor(unpack(generalSettings.Colors.nonInterruptibleColor))
+            if castbar.Shield then castbar.Shield:Show() end
+        else
+            if castbar.isChanneling then
+                castbar:SetStatusBarColor(unpack(generalSettings.Colors.channelColor))
+            else
+                castbar:SetStatusBarColor(unpack(generalSettings.Colors.barColor))
+            end
+            if castbar.Shield then castbar.Shield:Hide() end
+        end
+        
+        -- Update custom mask if enabled
+        if settings.CustomMask and settings.CustomMask.Enabled and castbar.Mask then
+            castbar.Mask:SetTexture(settings.CustomMask.MaskTexture)
+            castbar.Mask:Show()
+        elseif castbar.Mask then
+            castbar.Mask:Hide()
+        end
+        
+        -- Update custom border if enabled
+        if settings.CustomBorder and settings.CustomBorder.Enabled and castbar.Border then
+            castbar.Border:SetTexture(settings.CustomBorder.BorderTexture)
+            castbar.Border:Show()
+        elseif castbar.Border then
+            castbar.Border:Hide()
+        end
+
+        -- Update font, font size, and font flags for castbar text and time
+        if castbar.Text then
+            local fontPath = LSM:Fetch("font", settings.font or "Expressway") or STANDARD_TEXT_FONT
+            local textsize = settings.text and settings.text.textsize or 12
+            print("[Castbar] Setting main text font size:", textsize)
+            castbar.Text:SetFont(fontPath, textsize, settings.fontFlags or "OUTLINE")
+        end
+        if castbar.Time then
+            local fontPath = LSM:Fetch("font", settings.font or "Expressway") or STANDARD_TEXT_FONT
+            local timesize = settings.text and settings.text.timesize or 12
+            print("[Castbar] Setting time font size:", timesize)
+            castbar.Time:SetFont(fontPath, timesize, settings.fontFlags or "OUTLINE")
+        end
+    end
+end
+
+function MilaUI:UpdateAllCastbars()
+    self:UpdateCastbarAppearance("Player")
+    self:UpdateCastbarAppearance("Target")
+    self:UpdateCastbarAppearance("Focus")
+    self:UpdateCastbarAppearance("Pet")
+    self:UpdateCastbarAppearance("TargetTarget")
+    self:UpdateCastbarAppearance("FocusTarget")
+    -- Add boss frames if needed
+    for i = 1, MAX_BOSS_FRAMES do
+        self:UpdateCastbarAppearance("Boss" .. i)
+    end
+end
+
 function MilaUI:ReOpenGUI()
     -- Use the public functions instead of trying to access mainFrame directly
     MilaUI_CloseGUIMain()
@@ -253,6 +533,20 @@ function MilaUI:UnlockFrame(frame)
     frame:SetScript("OnDragStop", function(self)
           self:StopMovingOrSizing()
     end)
+    
+    -- Also unlock the castbar if it exists
+    if frame.Castbar then
+        local castbar = frame.Castbar
+        castbar:SetMovable(true)
+        castbar:EnableMouse(true)
+        castbar:RegisterForDrag("LeftButton")
+        castbar:SetScript("OnDragStart", function(self)
+            self:StartMoving()
+        end)
+        castbar:SetScript("OnDragStop", function(self)
+            self:StopMovingOrSizing()
+        end)
+    end
  end
  
  function MilaUI:LockFrame(frame)
@@ -279,6 +573,34 @@ function MilaUI:UnlockFrame(frame)
                 else
                     MilaUI.DB.profile.Unitframes[unitType].Frame.AnchorParent = "UIParent"
                 end
+            end
+            
+            -- Also save castbar position if it exists
+            if frame.Castbar and MilaUI.DB.profile.Unitframes[unitType].Castbar then
+                local castbar = frame.Castbar
+                local castPoint, castRelativeTo, castRelativePoint, castXOfs, castYOfs = castbar:GetPoint()
+                if castPoint then
+                    local castSettings = MilaUI.DB.profile.Unitframes[unitType].Castbar
+                    if not castSettings.position then
+                        castSettings.position = {}
+                    end
+                    
+                    castSettings.position.xOffset = castXOfs
+                    castSettings.position.yOffset = castYOfs
+                    castSettings.position.anchorFrom = castPoint
+                    castSettings.position.anchorTo = castRelativePoint
+                    
+                    if castRelativeTo and type(castRelativeTo.GetName) == "function" then
+                        castSettings.position.anchorParent = castRelativeTo:GetName()
+                    else
+                        castSettings.position.anchorParent = "UIParent"
+                    end
+                end
+                
+                -- Lock the castbar
+                castbar:SetMovable(false)
+                castbar:SetScript("OnDragStart", nil)
+                castbar:SetScript("OnDragStop", nil)
             end
         end
     end

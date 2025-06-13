@@ -929,7 +929,7 @@ local function UpdateFrame(FrameName)
 
 end
 
-local function UpdateHealthBar(FrameName)
+function MilaUI:UpdateHealthBar(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
     local General = MilaUI.DB.profile.Unitframes.General
     local Health = MilaUI.DB.profile.Unitframes[Unit].Health
@@ -1007,7 +1007,7 @@ local function UpdateHealthBar(FrameName)
 end
 
 
-local function UpdateAbsorbBar(FrameName)
+function MilaUI:UpdateAbsorbBar(FrameName)
     local Unit = MilaUI.Frames[FrameName.unit] or "Boss"
     local General = MilaUI.DB.profile.Unitframes.General
     local Health = MilaUI.DB.profile.Unitframes[Unit].Health
@@ -1490,9 +1490,9 @@ function MilaUI:UpdateUnitFrame(FrameName)
     if not FrameName then return end
     if not FrameName.unit then return end
     UpdateFrame(FrameName)
-    UpdateHealthBar(FrameName)
+    MilaUI:UpdateHealthBar(FrameName)
     UpdatePowerBar(FrameName)
-    UpdateAbsorbBar(FrameName)
+    MilaUI:UpdateAbsorbBar(FrameName)
     UpdateHealAbsorbBar(FrameName)
     UpdateCustomBorder(FrameName)
     UpdateBuffs(FrameName)

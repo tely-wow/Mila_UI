@@ -111,7 +111,7 @@ local cursorMod = MilaUI.DB.profile.CursorMod
 
   local lockButton = GUI:Create("Button")
   updateLockButtonText(lockButton)
-  lockButton:SetWidth(80)
+  lockButton:SetRelativeWidth(0.15)
   lockButton:SetCallback("OnClick", function(widget)
     Global.FramesLocked = not Global.FramesLocked
     if Global.FramesLocked then
@@ -126,6 +126,31 @@ local cursorMod = MilaUI.DB.profile.CursorMod
   lockButton.frame:SetPoint("TOPLEFT", lockLabel.frame, "BOTTOMLEFT", 0, -2)
   mainFrame:AddChild(lockButton)
 
+  -- Test Castbar Buttons
+  local testCastbarGroup = GUI:Create("SimpleGroup")
+  testCastbarGroup:SetLayout("Flow")
+  testCastbarGroup:SetFullWidth(false)
+  testCastbarGroup:SetRelativeWidth(0.4)
+
+  local showTestCastbarButton = GUI:Create("Button")
+  showTestCastbarButton:SetText(pink .. "Show Test Castbar")
+  showTestCastbarButton:SetRelativeWidth(0.5)
+  showTestCastbarButton:SetCallback("OnClick", function(widget, event, value)
+    -- Default to Player unit for test, or prompt user for unit selection if needed
+    MilaUI:ShowTestCastbar("Player")
+  end)
+  testCastbarGroup:AddChild(showTestCastbarButton)
+
+  local stopTestCastbarButton = GUI:Create("Button")
+  stopTestCastbarButton:SetText(pink .. "Stop All Test Castbars")
+  stopTestCastbarButton:SetRelativeWidth(0.5)
+  stopTestCastbarButton:SetCallback("OnClick", function(widget, event, value)
+    MilaUI:StopAllTestCastbars()
+  end)
+  testCastbarGroup:AddChild(stopTestCastbarButton)
+
+  testCastbarGroup.frame:SetPoint("TOPLEFT", lockButton.frame, "TOPRIGHT", 10, 0)
+  mainFrame:AddChild(testCastbarGroup)
 
   -- Create the main content area with a tree group
   local mainTree = GUI:Create("TreeGroup")

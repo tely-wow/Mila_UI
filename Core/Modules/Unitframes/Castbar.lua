@@ -1,60 +1,399 @@
 local _, MilaUI = ...
+local LSM = LibStub:GetLibrary("LibSharedMedia-3.0") or LibStub("LibSharedMedia-3.0")
 
--- Function to create a castbar for a unit frame
-function MilaUI:CreateCastbar(self, unit)
-    -- Get the unit settings (convert unit to proper case for DB lookup)
-    local unitKey = unit:gsub("^%l", string.upper)
-    
-    -- Skip if the unit doesn't have a castbar or it's disabled
-    if not MilaUI.DB.profile.Unitframes[unitKey] or 
-       not MilaUI.DB.profile.Unitframes[unitKey].Castbar or 
-       not MilaUI.DB.profile.Unitframes[unitKey].Castbar.enabled then 
-        return 
-    end
-    
-    -- Get castbar settings
-    local settings = MilaUI.DB.profile.Unitframes[unitKey].Castbar
-    local generalSettings = MilaUI.DB.profile.Unitframes.General.CastbarSettings
-    
-    -- Create the castbar
-    local castbar = CreateFrame("StatusBar", nil, self)
+-- Helper function to check if castbar is enabled for a unit
+local function IsCastbarEnabled(unitKey)
+    return MilaUI.DB.profile.Unitframes[unitKey] and
+           MilaUI.DB.profile.Unitframes[unitKey].Castbar and
+           MilaUI.DB.profile.Unitframes[unitKey].Castbar.enabled
+end
+
+-- Helper function to create castbar frame and background
+local function CreateCastbarFrame(parent, settings, generalSettings)
+    local castbar = CreateFrame("StatusBar", nil, parent)
     castbar:SetSize(settings.width, settings.height)
     
-    -- Position the castbar
-    if settings.position then
-        local pos = settings.position
-        local relativeTo = pos.anchorFrom and self[pos.anchorFrom] or self
-        castbar:SetPoint(pos.anchorTo, relativeTo, "TOP", pos.xOffset or 0, pos.yOffset or 0)
-    else
-        -- Default position if not specified
-        castbar:SetPoint("BOTTOM", self, "TOP", 0, 5)
+    -- Set the castbar texture using LibSharedMedia
+    local texturePath = LSM:Fetch("statusbar", settings.texture) or LSM:GetDefault("statusbar")
+    castbar:SetStatusBarTexture(texturePath)
+    castbar:SetStatusBarColor(unpack(generalSettings.Colors.barColor))
+    castbar:SetClipsChildren(true)
+    -- Apply mask if supported and enabled
+    if settings.CustomMask and settings.CustomMask.Enabled then
+        -- Try to use mask if available in this WoW version
+        pcall(function()
+            local mask = castbar:CreateMaskTexture()
+            if mask then
+                mask:SetTexture(settings.CustomMask.MaskTexture)
+                mask:SetPoint("TOPLEFT", castbar, "TOPLEFT", 0, 0)
+                mask:SetPoint("BOTTOMRIGHT", castbar, "BOTTOMRIGHT", 0, 0)
+                castbar:GetStatusBarTexture():AddMaskTexture(mask)
+            end
+        end)
     end
     
-    -- Set the castbar texture
-    castbar:SetStatusBarTexture(settings.texture)
-    castbar:SetStatusBarColor(unpack(generalSettings.Colors.barColor))
-    
     -- Create a background
-    local bg = castbar:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints(castbar)
-    bg:SetTexture(settings.texture)
-    bg:SetVertexColor(unpack(settings.backgroundColor))
-    castbar.bg = bg
+    if settings.CustomMask and settings.CustomMask.Enabled then
+        local bg = castbar:CreateTexture(nil, "BACKGROUND")
+        bg:SetAllPoints(castbar)
+        bg:SetTexture(settings.CustomMask.MaskTexture)
+        bg:SetVertexColor(unpack(settings.backgroundColor))
+        bg:SetPoint("TOPLEFT", castbar, "TOPLEFT", 0, 0)
+        bg:SetPoint("BOTTOMRIGHT", castbar, "BOTTOMRIGHT", 0, 0)
+    else
+        local bg = castbar:CreateTexture(nil, "BACKGROUND")
+        bg:SetAllPoints(castbar)
+        bg:SetTexture(texturePath)
+        bg:SetVertexColor(unpack(settings.backgroundColor))
+        bg:SetPoint("TOPLEFT", castbar, "TOPLEFT", 0, 0)
+        bg:SetPoint("BOTTOMRIGHT", castbar, "BOTTOMRIGHT", 0, 0)
+    end
     
-    -- Create a border
-    if settings.borderSize > 0 then
+    castbar.bg = bg
+    return castbar
+end
+
+-- Function to display a test castbar for customization
+function MilaUI:ShowTestCastbar(unitName, persistent)
+    print("ShowTestCastbar called for unit: " .. tostring(unitName) .. (persistent and " (persistent mode)" or ""))
+    if not unitName or not MilaUI.DB.profile.Unitframes[unitName] then
+        print("Invalid unit name for test castbar")
+        return
+    end
+    
+    -- Default to persistent mode if not specified
+    if persistent == nil then
+        persistent = true
+    end
+    
+    local frameObj = nil
+    if unitName == "Player" then
+        frameObj = self.PlayerFrame
+        print("Looking for Player frame: " .. (frameObj and "found" or "not found"))
+    elseif unitName == "Target" then
+        frameObj = self.TargetFrame
+        print("Looking for Target frame: " .. (frameObj and "found" or "not found"))
+    elseif unitName == "Focus" then
+        frameObj = self.FocusFrame
+        print("Looking for Focus frame: " .. (frameObj and "found" or "not found"))
+    elseif unitName == "Pet" then
+        frameObj = self.PetFrame
+        print("Looking for Pet frame: " .. (frameObj and "found" or "not found"))
+    elseif unitName == "TargetTarget" then
+        frameObj = self.TargetTargetFrame
+        print("Looking for TargetTarget frame: " .. (frameObj and "found" or "not found"))
+    elseif unitName == "FocusTarget" then
+        frameObj = self.FocusTargetFrame
+        print("Looking for FocusTarget frame: " .. (frameObj and "found" or "not found"))
+    elseif string.match(unitName, "Boss%d") then
+        local bossIndex = string.match(unitName, "Boss(%d)")
+        print("Looking for Boss frame with index: " .. tostring(bossIndex))
+        if bossIndex and MilaUI.BossFrames and MilaUI.BossFrames[tonumber(bossIndex)] then
+            frameObj = MilaUI.BossFrames[tonumber(bossIndex)]
+            print("Boss frame found: " .. (frameObj and "yes" or "no"))
+        end
+    end
+    
+    if not frameObj then
+        print("Could not find frame object for unit: " .. unitName)
+        return
+    end
+    
+    if not frameObj.Castbar then
+        print("Frame found but no Castbar component for unit: " .. unitName)
+        return
+    end
+    
+    local castbar = frameObj.Castbar
+    print("Castbar found for " .. unitName .. ": " .. tostring(castbar:GetName() or "unnamed"))
+    print("Castbar current visibility: " .. (castbar:IsVisible() and "visible" or "hidden"))
+    -- Store the persistent mode flag
+    castbar.testPersistent = persistent
+    
+    -- Define test spell data
+    local testSpells = {
+        -- Regular casts
+        { name = "Fireball", icon = 135809, duration = 2.5, isChannel = false, isInterruptible = true },
+        { name = "Frostbolt", icon = 135846, duration = 3.0, isChannel = false, isInterruptible = true },
+        { name = "Pyroblast", icon = 135808, duration = 4.5, isChannel = false, isInterruptible = true },
+        -- Channeled spells
+        { name = "Arcane Missiles", icon = 136096, duration = 2.8, isChannel = true, isInterruptible = true },
+        { name = "Mind Flay", icon = 136208, duration = 3.0, isChannel = true, isInterruptible = true },
+        { name = "Drain Soul", icon = 136163, duration = 4.0, isChannel = true, isInterruptible = true },
+        -- Uninterruptible casts
+        { name = "Greater Heal", icon = 135913, duration = 3.0, isChannel = false, isInterruptible = false },
+        { name = "Divine Hymn", icon = 237540, duration = 5.0, isChannel = true, isInterruptible = false },
+    }
+    
+    -- Select a random spell from the list
+    local randomIndex = math.random(1, #testSpells)
+    local selectedSpell = testSpells[randomIndex]
+    
+    local duration = selectedSpell.duration
+    local testSpellName = selectedSpell.name
+    local testSpellIcon = selectedSpell.icon
+    
+    -- Show the castbar
+    castbar:Show()
+    castbar.casting = not selectedSpell.isChannel
+    castbar.channeling = selectedSpell.isChannel
+    castbar.interrupted = false
+    castbar.failed = false
+    castbar.isNonInterruptible = not selectedSpell.isInterruptible
+    
+    -- Set required oUF castbar fields
+    castbar.max = duration
+    castbar.duration = 0  -- Start at 0, oUF will increment this
+    castbar.delay = 0
+    castbar.startTime = GetTime()
+    castbar.endTime = castbar.startTime + duration
+    castbar.spellID = 1
+    castbar.notInterruptible = false
+    
+    -- Set castbar values
+    castbar:SetMinMaxValues(0, duration)
+    castbar:SetValue(0)
+    
+    -- Set spell info
+    if castbar.Text then
+        castbar.Text:SetText(testSpellName)
+    end
+    
+    if castbar.Icon and castbar.Icon.texture then
+        castbar.Icon.texture:SetTexture(testSpellIcon)
+        if MilaUI.DB.profile.Unitframes[unitName].Castbar.Icon.showIcon then
+            castbar.Icon:Show()
+        end
+    end
+    
+    if castbar.Time then
+        castbar.Time:SetText("0.0")
+    end
+    
+    -- Create a timer to update the castbar
+    castbar.testCastTimer = castbar.testCastTimer or {}
+    if castbar.testCastTimer.handle then
+        castbar.testCastTimer.handle:Cancel()
+    end
+    
+    local startTime = GetTime()
+    local endTime = startTime + duration
+    
+    castbar.testCastTimer.handle = C_Timer.NewTicker(0.05, function()
+        local currentTime = GetTime()
+        local elapsed = currentTime - startTime
+        
+        if elapsed >= duration then
+            castbar:SetValue(duration)
+            if castbar.Time then
+                castbar.Time:SetText(format(MilaUI.DB.profile.Unitframes[unitName].Castbar.text.timeFormat, duration))
+            end
+            castbar.testCastTimer.handle:Cancel()
+            castbar.testCastTimer.handle = nil
+            
+            -- If persistent mode is enabled, start a new cast after a short delay
+            if castbar.testPersistent then
+                C_Timer.After(0.8, function()
+                    if castbar.testPersistent then -- Check again in case it was stopped
+                        MilaUI:ShowTestCastbar(unitName, true)
+                    end
+                end)
+            else
+                -- Hide after a short delay if not in persistent mode
+                C_Timer.After(0.5, function()
+                    castbar.casting = false
+                    castbar:Hide()
+                end)
+            end
+            return
+        end
+        
+        castbar:SetValue(elapsed)
+        if castbar.Time then
+            local timeText = format(MilaUI.DB.profile.Unitframes[unitName].Castbar.text.timeFormat, elapsed)
+            castbar.Time:SetText(timeText)
+        end
+    end)
+    
+    -- Create a button to stop the test
+    if not MilaUI.TestCastbarStopButton then
+        local button = CreateFrame("Button", "MilaUI_TestCastbarStop", UIParent, "UIPanelButtonTemplate")
+        button:SetSize(150, 30)
+        button:SetPoint("TOP", UIParent, "TOP", 0, -100)
+        button:SetText("Stop Test Castbars")
+        button:SetFrameStrata("HIGH")
+        button:SetScript("OnClick", function()
+            MilaUI:StopAllTestCastbars()
+            button:Hide()
+        end)
+        MilaUI.TestCastbarStopButton = button
+    end
+    
+    MilaUI.TestCastbarStopButton:Show()
+    print("Showing test castbar for " .. unitName)
+end
+
+-- Function to stop all test castbars
+function MilaUI:StopAllTestCastbars()
+    local unitNames = {"Player", "Target", "Focus", "Pet", "TargetTarget", "FocusTarget"}
+    
+    -- Add boss frames
+    for i = 1, MAX_BOSS_FRAMES do
+        table.insert(unitNames, "Boss" .. i)
+    end
+    
+    for _, unitName in ipairs(unitNames) do
+        local frameObj = nil
+        if unitName == "Player" then
+            frameObj = self.PlayerFrame
+        elseif unitName == "Target" then
+            frameObj = self.TargetFrame
+        elseif unitName == "Focus" then
+            frameObj = self.FocusFrame
+        elseif unitName == "Pet" then
+            frameObj = self.PetFrame
+        elseif unitName == "TargetTarget" then
+            frameObj = self.TargetTargetFrame
+        elseif unitName == "FocusTarget" then
+            frameObj = self.FocusTargetFrame
+        elseif string.match(unitName, "Boss%d") then
+            local bossIndex = string.match(unitName, "Boss(%d)")
+            if bossIndex and MilaUI.BossFrames and MilaUI.BossFrames[tonumber(bossIndex)] then
+                frameObj = MilaUI.BossFrames[tonumber(bossIndex)]
+            end
+        end
+        
+        if frameObj and frameObj.Castbar then
+            local castbar = frameObj.Castbar
+            if castbar.testCastTimer and castbar.testCastTimer.handle then
+                castbar.testCastTimer.handle:Cancel()
+                castbar.testCastTimer.handle = nil
+            end
+            -- Clear all test castbar fields
+            castbar.casting = false
+            castbar.channeling = false
+            castbar.interrupted = false
+            castbar.failed = false
+            castbar.max = nil
+            castbar.duration = nil
+            castbar.delay = nil
+            castbar.startTime = nil
+            castbar.endTime = nil
+            castbar.spellID = nil
+            castbar.notInterruptible = nil
+            castbar.testPersistent = false -- Stop the persistent loop
+            castbar:Hide()
+        end
+    end
+    
+    if MilaUI.TestCastbarStopButton then
+        MilaUI.TestCastbarStopButton:Hide()
+    end
+    
+    print("All test castbars stopped")
+end
+
+-- Helper function to position the castbar
+function MilaUI:PositionCastbar(castbar, parent, settings)
+    -- Default position values
+    local anchorFrom = "BOTTOM"
+    local anchorTo = "TOP"
+    local xOffset = 0
+    local yOffset = 5
+    local relativeTo = parent
+    
+    -- Try to use settings if they exist and are properly formatted
+    if settings.position then
+        local pos = settings.position
+        
+        -- Validate anchor points
+        local validAnchors = {
+            ["TOP"] = true, ["BOTTOM"] = true, ["LEFT"] = true, ["RIGHT"] = true,
+            ["TOPLEFT"] = true, ["TOPRIGHT"] = true, ["BOTTOMLEFT"] = true, ["BOTTOMRIGHT"] = true,
+            ["CENTER"] = true
+        }
+        
+        if pos.anchorFrom and validAnchors[pos.anchorFrom] then
+            anchorFrom = pos.anchorFrom
+        end
+        
+        if pos.anchorTo and validAnchors[pos.anchorTo] then
+            anchorTo = pos.anchorTo
+        end
+        
+        if pos.xOffset and type(pos.xOffset) == "number" then
+            xOffset = pos.xOffset
+        end
+        
+        if pos.yOffset and type(pos.yOffset) == "number" then
+            yOffset = pos.yOffset
+        end
+        
+        -- Handle anchor parent similar to powerbar implementation
+        if pos.anchorParent and type(pos.anchorParent) == "string" then
+            -- Check if it's a direct frame reference
+            local frameRef = _G[pos.anchorParent]
+            if frameRef then
+                relativeTo = frameRef
+            elseif parent and parent[pos.anchorParent] then
+                -- Try to find it as a child of the parent frame
+                relativeTo = parent[pos.anchorParent]
+            elseif parent then
+                -- Default to parent if we can't find the specified frame
+                relativeTo = parent
+            end
+        end
+    end
+    
+    -- Safety check to ensure we have a valid frame before setting point
+    if not relativeTo or type(relativeTo) ~= "table" or not relativeTo.SetPoint then
+        relativeTo = parent or UIParent
+    end
+    
+    castbar:ClearAllPoints()
+    castbar:SetPoint(anchorFrom, relativeTo, anchorTo, xOffset, yOffset)
+end
+
+-- Helper function to add border to castbar
+local function AddCastbarBorder(castbar, settings)
+    if settings.border and settings.border == true then
         local border = CreateFrame("Frame", nil, castbar, "BackdropTemplate")
         border:SetPoint("TOPLEFT", castbar, "TOPLEFT", -settings.borderSize, settings.borderSize)
         border:SetPoint("BOTTOMRIGHT", castbar, "BOTTOMRIGHT", settings.borderSize, -settings.borderSize)
-        border:SetBackdrop({
-            edgeFile = "Interface\\Buttons\\WHITE8X8",
-            edgeSize = settings.borderSize,
+        border:SetBackdrop({ 
+            edgeFile = "Interface\\Buttons\\WHITE8X8", 
+            edgeSize = settings.borderSize
         })
         border:SetBackdropBorderColor(unpack(settings.borderColor))
         castbar.Border = border
     end
-    
-    -- Create a spark
+end
+
+-- Helper function to add custom border to castbar
+local function AddCastbarCustomBorder(castbar, settings)
+    if settings.CustomBorder and settings.CustomBorder.Enabled then
+        local customBorder = castbar:CreateTexture(nil, "OVERLAY")
+        customBorder:SetAllPoints(castbar)
+        customBorder:SetTexture(settings.CustomBorder.BorderTexture)
+        castbar.CustomBorder = customBorder
+    end
+end
+
+-- Helper function to add shield icon for non-interruptible casts
+local function AddCastbarShield(castbar, settings)
+    if settings.showShield then
+        local shield = castbar:CreateTexture(nil, "OVERLAY")
+        shield:SetTexture("Interface\\CastingBar\\UI-CastingBar-Small-Shield")
+        shield:SetSize(settings.height * 1.4, settings.height * 1.4)
+        shield:SetPoint("CENTER", castbar, "LEFT", 0, 0)
+        shield:SetTexCoord(0, 36/256, 0, 1)
+        shield:Hide()
+        castbar.Shield = shield
+    end
+end
+
+-- Helper function to add spark to castbar
+local function AddCastbarSpark(castbar, settings)
     if settings.Spark and settings.Spark.showSpark then
         local spark = castbar:CreateTexture(nil, "OVERLAY")
         spark:SetSize(settings.Spark.sparkWidth, settings.Spark.sparkHeight)
@@ -64,8 +403,10 @@ function MilaUI:CreateCastbar(self, unit)
         spark:SetAlpha(0.8)
         castbar.Spark = spark
     end
-    
-    -- Create spell icon
+end
+
+-- Helper function to add spell icon to castbar
+local function AddCastbarIcon(castbar, settings)
     if settings.Icon and settings.Icon.showIcon then
         local iconSize = settings.Icon.iconSize or settings.height
         local icon = castbar:CreateTexture(nil, "OVERLAY")
@@ -78,56 +419,50 @@ function MilaUI:CreateCastbar(self, unit)
         end
         
         -- Create icon border
-        local iconBorder = CreateFrame("Frame", nil, castbar, "BackdropTemplate")
-        iconBorder:SetPoint("TOPLEFT", icon, "TOPLEFT", -settings.borderSize, settings.borderSize)
-        iconBorder:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", settings.borderSize, -settings.borderSize)
-        iconBorder:SetBackdrop({
-            edgeFile = "Interface\\Buttons\\WHITE8X8",
-            edgeSize = settings.borderSize,
-        })
-        iconBorder:SetBackdropBorderColor(unpack(settings.borderColor))
+        if settings.borderSize > 0 then
+            local iconBorder = CreateFrame("Frame", nil, castbar, "BackdropTemplate")
+            iconBorder:SetPoint("TOPLEFT", icon, "TOPLEFT", -settings.borderSize, settings.borderSize)
+            iconBorder:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", settings.borderSize, -settings.borderSize)
+            iconBorder:SetBackdrop({
+                edgeFile = "Interface\\Buttons\\WHITE8X8",
+                edgeSize = settings.borderSize,
+            })
+            iconBorder:SetBackdropBorderColor(unpack(settings.borderColor))
+            castbar.IconBorder = iconBorder
+        end
         
         castbar.Icon = icon
-        castbar.IconBorder = iconBorder
     end
-    
-    -- Create shield icon for non-interruptible casts
-    if settings.showShield then
-        local shield = castbar:CreateTexture(nil, "OVERLAY")
-        shield:SetSize(settings.height * 1.4, settings.height * 1.4)
-        shield:SetPoint("CENTER", castbar, "LEFT", 0, 0)
-        shield:SetTexture([[Interface\CastingBar\UI-CastingBar-Small-Shield]])
-        shield:SetTexCoord(0, 36/256, 0, 1)
-        shield:Hide()
-        castbar.Shield = shield
-    end
-    
-    -- Create latency indicator (SafeZone)
+end
+
+-- Helper function to add safe zone (latency indicator)
+local function AddCastbarSafeZone(castbar, settings, unit)
     if settings.showSafeZone and unit == "player" then
         local safeZone = castbar:CreateTexture(nil, "OVERLAY")
-        safeZone:SetTexture(settings.texture)
+        local texturePath = LSM:Fetch("statusbar", settings.texture) or LSM:GetDefault("statusbar")
+        safeZone:SetTexture(texturePath)
         safeZone:SetVertexColor(unpack(settings.safeZoneColor or {1, 0, 0, 0.6}))
         safeZone:SetPoint("TOPRIGHT")
         safeZone:SetPoint("BOTTOMRIGHT")
         castbar.SafeZone = safeZone
     end
-    
-    -- Create spell text
+end
+
+-- Helper function to add text to castbar
+local function AddCastbarText(castbar, settings, generalSettings)
+    -- Create spell name text
     if settings.text and settings.text.showText then
-        -- Use the standard oUF approach with a font template
         local text = castbar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         text:SetPoint("LEFT", castbar, "LEFT", 5, 0)
         
-        -- Apply custom font if specified in settings
-        if generalSettings.font then
-            local fontPath = generalSettings.font
-            local fontSize = generalSettings.fontSize or 10
-            local fontFlags = generalSettings.fontFlags or ""
-            text:SetFont(fontPath, fontSize, fontFlags)
-            print("font set for " .. unit .. " castbar text")
-        end
+        -- Apply custom font from LibSharedMedia
+        local fontPath = LSM:Fetch("font", generalSettings.font) or "Fonts\\FRIZQT__.TTF"
+        local fontSize = settings.text.textsize or 12
+        local fontFlags = generalSettings.fontFlags or ""
+        print("[Castbar] Creating main text font size:", fontSize)
+        text:SetFont(fontPath, fontSize, fontFlags)
         
-        text:SetText("") -- Initialize with empty text
+        text:SetText("")
         text:SetJustifyH(settings.text.textJustify or "LEFT")
         text:SetWidth(settings.width * 0.7)
         text:SetHeight(settings.height)
@@ -137,85 +472,39 @@ function MilaUI:CreateCastbar(self, unit)
     
     -- Create time text
     if settings.text and settings.text.showTime then
-        -- Use the standard oUF approach with a font template
         local time = castbar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         time:SetPoint("RIGHT", castbar, "RIGHT", -5, 0)
         
-        -- Apply custom font if specified in settings
-        if generalSettings.font then
-            local fontPath = generalSettings.font
-            local fontSize = generalSettings.fontSize or 10
-            local fontFlags = generalSettings.fontFlags or ""
-            time:SetFont(fontPath, fontSize, fontFlags)
-        end
+        -- Apply custom font from LibSharedMedia
+        local fontPath = LSM:Fetch("font", generalSettings.font) or "Fonts\\FRIZQT__.TTF"
+        local fontSize = settings.text.timesize or 12
+        local fontFlags = generalSettings.fontFlags or ""
+        print("[Castbar] Creating time text font size:", fontSize)
+        time:SetFont(fontPath, fontSize, fontFlags)
         
-        time:SetText("") -- Initialize with empty text
+        time:SetText("")
         time:SetJustifyH(settings.text.timeJustify or "RIGHT")
         castbar.Time = time
     end
-    
-    -- Set castbar options
-    castbar.timeToHold = settings.timeToHold
-    castbar.hideTradeSkills = settings.hideTradeSkills
-    
-    
-    castbar.colors = {
-        casting = generalSettings.Colors.barColor,
-        channeling = generalSettings.Colors.channelColor,
-        nonInterruptible = generalSettings.Colors.nonInterruptibleColor,
-        failed = generalSettings.Colors.failedColor
-    }
-    
-    -- Custom post update function
-    castbar.PostCastStart = function(self, unit)
-        local name, _, _, _, _, _, _, _, notInterruptible = UnitCastingInfo(unit)
-        if not name then
-            name, _, _, _, _, _, notInterruptible = UnitChannelInfo(unit)
-        end
-        
-        -- Handle non-interruptible casts
-        if notInterruptible then
-            self:SetStatusBarColor(unpack(self.colors.nonInterruptible))
-            if self.Shield then self.Shield:Show() end
-        else
-            local isChanneling = UnitChannelInfo(unit) ~= nil
-            if isChanneling then
-                self:SetStatusBarColor(unpack(self.colors.channeling))
-            else
-                self:SetStatusBarColor(unpack(self.colors.casting))
-            end
-            if self.Shield then self.Shield:Hide() end
-        end
-        
-        -- Hide the castbar for tradeskills if configured
-        if self.hideTradeSkills and name and IsTradeSkillSpell(name) then
-            self:Hide()
-        end
-    end
-    
-    castbar.PostCastFailed = function(self)
-        self:SetStatusBarColor(unpack(self.colors.failed))
-    end
-    
-    -- Handle empowered casts (Evoker)
+end
+
+-- Helper function to set up empowered cast stages
+local function SetupEmpoweredCasts(castbar, settings)
     if settings.showEmpowered then
-        local empoweredStages = {}
-        castbar.empoweredStages = empoweredStages
+        castbar.empoweredStages = {}
         
         castbar.PostCastUpdate = function(self, unit)
             local name, text, _, startTime, endTime, _, _, notInterruptible, spellID = UnitCastingInfo(unit)
             if not name then return end
             
-            local isEmpowered = spellID and IsSpellEmpowered(spellID)
+            local isEmpowered = spellID and IsSpellEmpowered and IsSpellEmpowered(spellID)
             if not isEmpowered then return end
             
-            -- Get empowered spell info
-            local numStages = GetSpellEmpowerNumStages(spellID) or 0
+            local numStages = GetSpellEmpowerNumStages and GetSpellEmpowerNumStages(spellID) or 0
             if numStages <= 0 then return end
             
-            -- Calculate stage positions
-            local castDuration = endTime - startTime
             local stageWidth = self:GetWidth() / numStages
+            local empoweredStages = self.empoweredStages
             
             -- Create stage indicators if they don't exist
             if #empoweredStages == 0 then
@@ -228,7 +517,7 @@ function MilaUI:CreateCastbar(self, unit)
                 end
             end
             
-            -- Update stage positions
+            -- Update stage positions and visibility
             for i = 1, numStages do
                 if empoweredStages[i] then
                     empoweredStages[i]:SetPoint("LEFT", self, "LEFT", stageWidth * i, 0)
@@ -236,7 +525,6 @@ function MilaUI:CreateCastbar(self, unit)
                 end
             end
             
-            -- Hide unused stages
             for i = numStages + 1, #empoweredStages do
                 if empoweredStages[i] then
                     empoweredStages[i]:Hide()
@@ -244,59 +532,129 @@ function MilaUI:CreateCastbar(self, unit)
             end
         end
     end
+end
+
+-- Helper function to configure castbar properties
+local function ConfigureCastbarProperties(castbar, settings, generalSettings)
+    castbar.timeToHold = settings.timeToHold
+    castbar.hideTradeSkills = settings.hideTradeSkills
+    castbar.isNonInterruptible = false
+    castbar.isChanneling = false
     
-    -- Custom post update function
-    castbar.PostUpdate = function(self, unit)
-        -- Get cast information
-        local castName, castText, castTexture, castStart, castEnd, castIsTradeSkill, castNotInterruptible, castSpellID = UnitCastingInfo(unit)
-        local isChanneling = false
-        
-        -- If not casting, check if channeling
-        if not castName then
-            castName, castText, castTexture, castStart, castEnd, castIsTradeSkill, castNotInterruptible, castSpellID = UnitChannelInfo(unit)
-            if castName then
-                isChanneling = true
-            end
-        end
-        
-        -- Exit if no cast/channel in progress
-        if not castName then return end
-        
-        -- Debug
-        print("Cast: " .. castName .. ", Interruptible: " .. tostring(not castNotInterruptible))
-        
-        -- Update castbar text
-        if self.Text then
-            self.Text:SetText(castName)
-        end
-        
-        -- Update castbar time
-        if self.Time then
-            local time = castEnd - castStart
-            -- Use string.format instead of format to ensure it's available
-            self.Time:SetText(string.format("%.1f", time/1000))
-        end
-        
-        -- Update castbar color and shield based on interruptibility
-        if castNotInterruptible then
-            -- Non-interruptible cast
+    castbar.colors = {
+        casting = generalSettings.Colors.barColor,
+        channeling = generalSettings.Colors.channelColor,
+        nonInterruptible = generalSettings.Colors.nonInterruptibleColor,
+        failed = generalSettings.Colors.failedColor
+    }
+end
+
+-- Helper function to set up event handlers for the castbar
+local function SetupCastbarEventHandlers(castbar)
+    -- Appearance update method
+    castbar.UpdateCastbarAppearance = function(self)
+        if self.isNonInterruptible then
             self:SetStatusBarColor(unpack(self.colors.nonInterruptible))
             if self.Shield then self.Shield:Show() end
         else
-            -- Interruptible cast
-            if isChanneling then
+            if self.isChanneling then
                 self:SetStatusBarColor(unpack(self.colors.channeling))
             else
                 self:SetStatusBarColor(unpack(self.colors.casting))
             end
             if self.Shield then self.Shield:Hide() end
         end
+    end
+    
+    -- Cast start handler
+    castbar.PostCastStart = function(self, unit)
+        local castName, castText, castTexture, castStart, castEnd, castIsTradeSkill, castID, notInterruptible, spellID = UnitCastingInfo(unit)
+        local isChanneling = false
         
-        -- Update empowered stages
-        if self.empoweredStages then
-            self:PostCastUpdate(unit)
+        if not castName then
+            castName, castText, castTexture, castStart, castEnd, castIsTradeSkill, notInterruptible = UnitChannelInfo(unit)
+            isChanneling = castName ~= nil
+        end
+        
+        if not castName then return end
+        
+        -- Determine if the cast is non-interruptible
+        local isNonInterruptible = (type(notInterruptible) == "boolean" and notInterruptible) or 
+                                  (type(notInterruptible) == "number" and notInterruptible == 1)
+        
+        -- Store the current state
+        self.isNonInterruptible = isNonInterruptible
+        self.isChanneling = isChanneling
+        
+        -- Update appearance
+        self:UpdateCastbarAppearance()
+        
+        -- Hide the castbar for tradeskills if configured
+        if self.hideTradeSkills and castName and IsTradeSkillSpell and IsTradeSkillSpell(castName) then
+            self:Hide()
         end
     end
+    
+    -- Cast stop handler
+    castbar.PostCastStop = function(self, unit)
+        self.isNonInterruptible = false
+        self.isChanneling = false
+        if self.Shield then self.Shield:Hide() end
+    end
+    
+    -- Cast failed handler
+    castbar.PostCastFailed = function(self, unit)
+        self:SetStatusBarColor(unpack(self.colors.failed))
+        self.isNonInterruptible = false
+        self.isChanneling = false
+        if self.Shield then self.Shield:Hide() end
+    end
+    
+    -- Cast interrupted handler
+    castbar.PostCastInterrupted = function(self, unit)
+        self.isNonInterruptible = false
+        self.isChanneling = false
+        if self.Shield then self.Shield:Hide() end
+    end
+end
+
+-- Main function to create a castbar for a unit frame
+function MilaUI:CreateCastbar(self, unit)
+    -- Get the unit settings (convert unit to proper case for DB lookup)
+    local unitKey = unit:gsub("^%l", string.upper)
+    
+    -- Skip if the unit doesn't have a castbar or it's disabled
+    if not IsCastbarEnabled(unitKey) then 
+        return 
+    end
+    
+    -- Get castbar settings
+    local settings = MilaUI.DB.profile.Unitframes[unitKey].Castbar
+    local generalSettings = MilaUI.DB.profile.Unitframes.General.CastbarSettings
+    
+    -- Create the main castbar frame
+    local castbar = CreateCastbarFrame(self, settings, generalSettings)
+    
+    -- Configure basic properties first
+    ConfigureCastbarProperties(castbar, settings, generalSettings)
+    
+    -- Position the castbar
+    MilaUI:PositionCastbar(castbar, self, settings)
+    
+    -- Add all visual elements
+    AddCastbarBorder(castbar, settings)
+    AddCastbarCustomBorder(castbar, settings)
+    AddCastbarShield(castbar, settings)
+    AddCastbarSpark(castbar, settings)
+    AddCastbarIcon(castbar, settings)
+    AddCastbarSafeZone(castbar, settings, unit)
+    AddCastbarText(castbar, settings, generalSettings)
+    
+    -- Set up empowered casts
+    SetupEmpoweredCasts(castbar, settings)
+    
+    -- Set up event handlers (must be after properties are configured)
+    SetupCastbarEventHandlers(castbar)
     
     -- Register with oUF
     self.Castbar = castbar

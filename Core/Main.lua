@@ -220,10 +220,21 @@ MilaUIAddon.Defaults = {
                 },
                 Castbar = {
                     enabled = true,
+                    CustomScale = false,
+                    Scale = 1,
+                    CustomMask = {
+                        Enabled = true,
+                        MaskTexture = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\parallelogram_power_style2.tga",
+                    },
+                    CustomBorder = {
+                        Enabled = true,
+                        BorderTexture = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\power_border_style2.tga",
+                    },
                     width = 200,
                     height = 20,
-                    texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
+                    texture = "Smooth",
                     backgroundColor = {0.1, 0.1, 0.1, 0.8},
+                    border = false,
                     borderColor = {0, 0, 0, 1},
                     borderSize = 1,
                     showShield = true,
@@ -240,19 +251,26 @@ MilaUIAddon.Defaults = {
                         showSpark = true,
                         sparkWidth = 10,
                         sparkHeight = 30,
+                        sparkTexture = "Interface\\Buttons\\WHITE8X8",
+                        sparkColor = {1, 1, 1, 1},
                     },
                     text = {
                         showText = true,
                         textJustify = "LEFT",
                         timeJustify = "RIGHT",
                         showTime = true,
-                        timeFormat = "%.1f"
+                        timeFormat = "%.1f",
+                        textsize = 12,
+                        timesize = 12,
+                        textColor = {1, 1, 1, 1},
+                        timeColor = {1, 1, 1, 1},
                     }, 
                     position = {
+                        anchorParent = "MilaUI_Player",
                         anchorTo = "BOTTOM",
-                        anchorFrom = "Health", 
+                        anchorFrom = "TOP", 
                         xOffset = 0,
-                        yOffset = 5
+                        yOffset = -20
                     }
                 },
                 Buffs = {
@@ -442,9 +460,20 @@ MilaUIAddon.Defaults = {
                 },
                 Castbar = {
                     enabled = true,
+                    CustomScale = false,
+                    Scale = 1,
+                    border = false,
+                    CustomMask = {
+                        Enabled         = true,
+                        MaskTexture     = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\parallelogram_power_style2_mirrored.tga",
+                    },
+                    CustomBorder = {
+                        Enabled         = true,
+                        BorderTexture   = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\power_border_style2_mirrored.tga",
+                    },
                     width = 200,
                     height = 20,
-                    texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
+                    texture = "Smooth",
                     backgroundColor = {0.1, 0.1, 0.1, 0.8},
                     borderColor = {0, 0, 0, 1},
                     borderSize = 1,
@@ -459,19 +488,26 @@ MilaUIAddon.Defaults = {
                         showSpark = true,
                         sparkWidth = 10,
                         sparkHeight = 30,
+                        sparkTexture = "Interface\\Buttons\\WHITE8X8",
+                        sparkColor = {1, 1, 1, 1},
                     },
                     text = {
                         showText = true,
                         textJustify = "LEFT",
                         timeJustify = "RIGHT",
                         showTime = true,
-                        timeFormat = "%.1f"
+                        timeFormat = "%.1f",
+                        textsize = 12,
+                        timesize = 12,
+                        textColor = {1, 1, 1, 1},
+                        timeColor = {1, 1, 1, 1},
                     }, 
                     position = {
                         anchorTo = "BOTTOM",
-                        anchorFrom = "Health", 
+                        anchorFrom = "TOP", 
+                        anchorParent = "MilaUI_Target",
                         xOffset = 0,
-                        yOffset = 5
+                        yOffset = -20
                     }
                 },
                 Buffs = {
@@ -825,14 +861,25 @@ MilaUIAddon.Defaults = {
                     ColourBackgroundByType  = true,
                     BackgroundMultiplier    = 0.25,
                     Colour                  = {0/255, 0/255, 1/255, 1},
-                    BackgroundColour        = {26 / 255, 26 / 255, 26 / 255, 1},
+                    BackgroundColour        = {26 / 255, 26 / 26 / 255, 26 / 255, 1},
                     Smooth = false,
                 },
                 Castbar = {
                     enabled = true,
+                    CustomScale = false,
+                    Scale = 1,
+                    border = false,
+                    CustomMask = {
+                        Enabled         = true,
+                        MaskTexture     = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\parallelogram_power_style2_mirrored.tga",
+                    },
+                    CustomBorder = {
+                        Enabled         = true,
+                        BorderTexture   = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\power_border_style2_mirrored.tga",
+                    },
                     width = 200,
                     height = 20,
-                    texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
+                    texture = "Smooth",
                     backgroundColor = {0.1, 0.1, 0.1, 0.8},
                     borderColor = {0, 0, 0, 1},
                     borderSize = 1,
@@ -847,19 +894,26 @@ MilaUIAddon.Defaults = {
                         showSpark = true,
                         sparkWidth = 10,
                         sparkHeight = 30,
+                        sparkTexture = "Interface\\Buttons\\WHITE8X8",
+                        sparkColor = {1, 1, 1, 1},
                     },
                     text = {
                         showText = true,
                         textJustify = "LEFT",
                         timeJustify = "RIGHT",
                         showTime = true,
-                        timeFormat = "%.1f"
+                        timeFormat = "%.1f",
+                        textsize = 12,
+                        timesize = 12,
+                        textColor = {1, 1, 1, 1},
+                        timeColor = {1, 1, 1, 1},
                     }, 
                     position = {
+                        anchorParent = "MilaUI_Focus",
                         anchorTo = "BOTTOM",
-                        anchorFrom = "Health", 
+                        anchorFrom = "TOP", 
                         xOffset = 0,
-                        yOffset = 5
+                        yOffset = -20
                     }
                 },
                 Buffs = {
@@ -1210,6 +1264,57 @@ MilaUIAddon.Defaults = {
                     BackgroundColour        = {26 / 255, 26 / 255, 26 / 255, 1},
                     Smooth = false,
                 },
+                Castbar = {
+                    border = false,
+                    CustomMask = {
+                        Enabled = true,
+                        MaskTexture = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\parallelogram_power_style2.tga",
+                    },
+                    CustomBorder = {
+                        Enabled = true,
+                        BorderTexture = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\power_border_style2.tga",
+                    },
+                    enabled = true,
+                    width = 200,
+                    height = 20,
+                    texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
+                    backgroundColor = {0.1, 0.1, 0.1, 0.8},
+                    borderColor = {0, 0, 0, 1},
+                    borderSize = 1,
+                    showShield = true,
+                    timeToHold = 0.5,         -- How long to show failed/interrupted casts
+                    hideTradeSkills = false,  -- Whether to hide profession casts
+                    Icon = {
+                        showIcon = true,
+                        iconSize = 24,
+                        iconPosition = "LEFT",    -- LEFT or RIGHT
+                    },
+                    Spark = {
+                        showSpark = true,
+                        sparkWidth = 10,
+                        sparkHeight = 30,
+                        sparkTexture = "Interface\\Buttons\\WHITE8X8",
+                        sparkColor = {1, 1, 1, 1},
+                    },
+                    text = {
+                        showText = true,
+                        textJustify = "LEFT",
+                        timeJustify = "RIGHT",
+                        showTime = true,
+                        timeFormat = "%.1f",
+                        textsize = 12,
+                        timesize = 12,
+                        textColor = {1, 1, 1, 1},
+                        timeColor = {1, 1, 1, 1},
+                    }, 
+                    position = {
+                        anchorParent = "MilaUI_Pet",
+                        anchorTo = "BOTTOM",
+                        anchorFrom = "TOP", 
+                        xOffset = 0,
+                        yOffset = -20
+                    }
+                },
                 Buffs = {
                     Enabled             = false,
                     Size                = 38,
@@ -1378,14 +1483,25 @@ MilaUIAddon.Defaults = {
                     ColourBackgroundByType  = true,
                     BackgroundMultiplier    = 0.25,
                     Colour                  = {0/255, 0/255, 1/255, 1},
-                    BackgroundColour        = {26 / 255, 26 / 255, 26 / 255, 1},
+                    BackgroundColour        = {26 / 255, 26 / 26 / 255, 26 / 255, 1},
                     Smooth = false,
                 },
                 Castbar = {
                     enabled = true,
+                    border = false,
+                    CustomScale = false,
+                    Scale = 1,
+                    CustomMask = {
+                        Enabled         = true,
+                        MaskTexture     = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\parallelogram_power_style2_mirrored.tga",
+                    },
+                    CustomBorder = {
+                        Enabled         = true,
+                        BorderTexture   = "Interface\\Addons\\Mila_UI\\Media\\Borders\\Custom\\power_border_style2_mirrored.tga",
+                    },
                     width = 200,
                     height = 20,
-                    texture = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill",
+                    texture = "Smooth",
                     backgroundColor = {0.1, 0.1, 0.1, 0.8},
                     borderColor = {0, 0, 0, 1},
                     borderSize = 1,
@@ -1400,19 +1516,26 @@ MilaUIAddon.Defaults = {
                         showSpark = true,
                         sparkWidth = 10,
                         sparkHeight = 30,
+                        sparkTexture = "Interface\\Buttons\\WHITE8X8",
+                        sparkColor = {1, 1, 1, 1},
                     },
                     text = {
                         showText = true,
                         textJustify = "LEFT",
                         timeJustify = "RIGHT",
                         showTime = true,
-                        timeFormat = "%.1f"
+                        timeFormat = "%.1f",
+                        textsize = 12,
+                        timesize = 12,
+                        textColor = {1, 1, 1, 1},
+                        timeColor = {1, 1, 1, 1},
                     }, 
                     position = {
+                        anchorParent = "MilaUI_Boss",
                         anchorTo = "BOTTOM",
-                        anchorFrom = "Health", 
+                        anchorFrom = "TOP", 
                         xOffset = 0,
-                        yOffset = 5
+                        yOffset = -20
                     }
                 },
                 Buffs = {
