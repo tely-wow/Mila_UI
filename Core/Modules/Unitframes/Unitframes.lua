@@ -71,18 +71,6 @@ local function SharedStyle(self, unit)
     end
 end
 
--- Function to spawn a unit frame
-function MilaUI.UF:SpawnUnit(unit, name)
-    local frame = oUF:Spawn(unit, name or ("MilaUI_"..unit))
-    if frame then
-        MilaUI:print(string.format("Spawned %s frame.", unit))
-        MilaUI.UF[unit] = frame
-    else
-        MilaUI:print(string.format("Failed to spawn %s frame.", unit))
-    end
-    return frame
-end
-
 -- Register the style with oUF
 oUF:RegisterStyle("MilaUI", SharedStyle)
 
