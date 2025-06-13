@@ -545,13 +545,13 @@ function HandleGeneralTab(parent)
   cursormodapperance:AddChild(cursormodcolorcontainer)
   local cursormodclasscolor = GUI:Create("CheckBox")
   cursormodclasscolor:SetLabel(lavender .. "Class Color")
-  cursormodclasscolor:SetValue(MilaUI.DB.profile.CursorMod.classColor)
+  cursormodclasscolor:SetValue(MilaUI.DB.profile.CursorMod.useClassColor)
   cursormodclasscolor:SetCallback("OnValueChanged", function(_, _, value)
-      MilaUI.DB.profile.CursorMod.classColor = value
+      MilaUI.DB.profile.CursorMod.useClassColor = value
       -- Update the setting if CursorMod is enabled
       local CursorMod = MilaUIAddon:GetModule("CursorMod")
       if CursorMod:IsEnabled() then
-          CursorMod:SetClassColor(value)
+          CursorMod:SetUseClassColor(value)
       end
   end)
   cursormodcolorcontainer:AddChild(cursormodclasscolor)
