@@ -412,6 +412,10 @@ function HandleGeneralTab(parent)
   showOnlyInCombat:SetValue(MilaUI.DB.profile.CursorMod.showOnlyInCombat)
   showOnlyInCombat:SetCallback("OnValueChanged", function(_, _, value)
       MilaUI.DB.profile.CursorMod.showOnlyInCombat = value
+      local CursorMod = MilaUIAddon:GetModule("CursorMod")
+      if CursorMod:IsEnabled() then
+        CursorMod:SetShowOnlyInCombat(value)
+      end
   end)
   CursorModGeneral:AddChild(showOnlyInCombat)
   
