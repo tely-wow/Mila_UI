@@ -11,6 +11,34 @@ MilaUI.Frames = {
     ["targettarget"] = "TargetTarget",
 }
 
+-- Common unit names used across the addon
+MilaUI.UnitList = {"Player", "Target", "Focus", "Pet", "TargetTarget", "FocusTarget"}
+
+-- Helper to resolve a unit name to its frame object
+function MilaUI:GetFrameForUnit(unitName)
+    if not unitName then return nil end
+
+    local map = {
+        Player = self.PlayerFrame,
+        Target = self.TargetFrame,
+        Focus = self.FocusFrame,
+        Pet = self.PetFrame,
+        TargetTarget = self.TargetTargetFrame,
+        FocusTarget = self.FocusTargetFrame,
+    }
+
+    if map[unitName] then
+        return map[unitName]
+    end
+
+    local bossIndex = unitName:match("^Boss(%d+)$")
+    if bossIndex and MilaUI.BossFrames then
+        return MilaUI.BossFrames[tonumber(bossIndex)]
+    end
+
+    return nil
+end
+
 MilaUI.nameBlacklist = {
     ["the"] = true,
     ["of"] = true,
