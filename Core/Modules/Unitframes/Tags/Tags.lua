@@ -402,6 +402,3 @@ local NSMediaTags = {
     ["NSNickName:X"] = {Tag = "[NSNickName:X]", Desc = "Format Name Length where X is the limiting number (1 - 12)."},
 }
 
-function MilaUI:FetchNSMediaTagDescriptions()
-    return NSMediaTags
-end
