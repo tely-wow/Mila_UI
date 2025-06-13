@@ -66,32 +66,9 @@ function MilaUI:ShowTestCastbar(unitName, persistent)
         persistent = true
     end
     
-    local frameObj = nil
-    if unitName == "Player" then
-        frameObj = self.PlayerFrame
-        print("Looking for Player frame: " .. (frameObj and "found" or "not found"))
-    elseif unitName == "Target" then
-        frameObj = self.TargetFrame
-        print("Looking for Target frame: " .. (frameObj and "found" or "not found"))
-    elseif unitName == "Focus" then
-        frameObj = self.FocusFrame
-        print("Looking for Focus frame: " .. (frameObj and "found" or "not found"))
-    elseif unitName == "Pet" then
-        frameObj = self.PetFrame
-        print("Looking for Pet frame: " .. (frameObj and "found" or "not found"))
-    elseif unitName == "TargetTarget" then
-        frameObj = self.TargetTargetFrame
-        print("Looking for TargetTarget frame: " .. (frameObj and "found" or "not found"))
-    elseif unitName == "FocusTarget" then
-        frameObj = self.FocusTargetFrame
-        print("Looking for FocusTarget frame: " .. (frameObj and "found" or "not found"))
-    elseif string.match(unitName, "Boss%d") then
-        local bossIndex = string.match(unitName, "Boss(%d)")
-        print("Looking for Boss frame with index: " .. tostring(bossIndex))
-        if bossIndex and MilaUI.BossFrames and MilaUI.BossFrames[tonumber(bossIndex)] then
-            frameObj = MilaUI.BossFrames[tonumber(bossIndex)]
-            print("Boss frame found: " .. (frameObj and "yes" or "no"))
-        end
+    local frameObj = MilaUI:GetFrameForUnit(unitName)
+    if frameObj then
+        print("Found frame for " .. unitName)
     end
     
     if not frameObj then
@@ -235,7 +212,7 @@ end
 
 -- Function to stop all test castbars
 function MilaUI:StopAllTestCastbars()
-    local unitNames = {"Player", "Target", "Focus", "Pet", "TargetTarget", "FocusTarget"}
+    local unitNames = {unpack(MilaUI.UnitList)}
     
     -- Add boss frames
     for i = 1, MAX_BOSS_FRAMES do
@@ -243,25 +220,7 @@ function MilaUI:StopAllTestCastbars()
     end
     
     for _, unitName in ipairs(unitNames) do
-        local frameObj = nil
-        if unitName == "Player" then
-            frameObj = self.PlayerFrame
-        elseif unitName == "Target" then
-            frameObj = self.TargetFrame
-        elseif unitName == "Focus" then
-            frameObj = self.FocusFrame
-        elseif unitName == "Pet" then
-            frameObj = self.PetFrame
-        elseif unitName == "TargetTarget" then
-            frameObj = self.TargetTargetFrame
-        elseif unitName == "FocusTarget" then
-            frameObj = self.FocusTargetFrame
-        elseif string.match(unitName, "Boss%d") then
-            local bossIndex = string.match(unitName, "Boss(%d)")
-            if bossIndex and MilaUI.BossFrames and MilaUI.BossFrames[tonumber(bossIndex)] then
-                frameObj = MilaUI.BossFrames[tonumber(bossIndex)]
-            end
-        end
+        local frameObj = MilaUI:GetFrameForUnit(unitName)
         
         if frameObj and frameObj.Castbar then
             local castbar = frameObj.Castbar
