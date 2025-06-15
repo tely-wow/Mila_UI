@@ -52,18 +52,43 @@ function MilaUI:DrawCastbarContainer(dbUnitName, contentFrame)
     CustomBorder:SetRelativeWidth(0.3)
     Appearance:AddChild(CustomBorder)
     
-    -- Castbar Texture Picker
-    local CastbarTexturePicker = GUI:Create("LSM30_Statusbar")
-    CastbarTexturePicker:SetLabel(lavender .. "Castbar Texture")
-    CastbarTexturePicker:SetList(LSM:HashTable("statusbar"))
-    CastbarTexturePicker:SetValue(Castbar.texture)
-    CastbarTexturePicker:SetRelativeWidth(0.4)
-    CastbarTexturePicker:SetCallback("OnValueChanged", function(widget, event, value)
-        Castbar.texture = value
-        CastbarTexturePicker:SetValue(value) -- Immediately update the dropdown value
-        MilaUI:UpdateCastbarAppearance()
+    -- Castbar Texture Pickers (per cast type)
+    local CastTexturePicker = GUI:Create("LSM30_Statusbar")
+    CastTexturePicker:SetLabel(lavender .. "Cast Texture")
+    CastTexturePicker:SetList(LSM:HashTable("statusbar"))
+    CastTexturePicker:SetValue(Castbar.textures and Castbar.textures.cast)
+    CastTexturePicker:SetRelativeWidth(0.33)
+    CastTexturePicker:SetCallback("OnValueChanged", function(widget, event, value)
+        Castbar.textures = Castbar.textures or {}
+        Castbar.textures.cast = value
+        MilaUI:UpdateCastbarAppearance(dbUnitName)
     end)
-    Appearance:AddChild(CastbarTexturePicker)
+    Appearance:AddChild(CastTexturePicker)
+
+    local ChannelTexturePicker = GUI:Create("LSM30_Statusbar")
+    ChannelTexturePicker:SetLabel(lavender .. "Channel Texture")
+    ChannelTexturePicker:SetList(LSM:HashTable("statusbar"))
+    ChannelTexturePicker:SetValue(Castbar.textures and Castbar.textures.channel)
+    ChannelTexturePicker:SetRelativeWidth(0.33)
+    ChannelTexturePicker:SetCallback("OnValueChanged", function(widget, event, value)
+        Castbar.textures = Castbar.textures or {}
+        Castbar.textures.channel = value
+        MilaUI:UpdateCastbarAppearance(dbUnitName)
+    end)
+    Appearance:AddChild(ChannelTexturePicker)
+
+    local UninterruptibleTexturePicker = GUI:Create("LSM30_Statusbar")
+    UninterruptibleTexturePicker:SetLabel(lavender .. "Uninterruptible Texture")
+    UninterruptibleTexturePicker:SetList(LSM:HashTable("statusbar"))
+    UninterruptibleTexturePicker:SetValue(Castbar.textures and Castbar.textures.uninterruptible)
+    UninterruptibleTexturePicker:SetRelativeWidth(0.33)
+    UninterruptibleTexturePicker:SetCallback("OnValueChanged", function(widget, event, value)
+        Castbar.textures = Castbar.textures or {}
+        Castbar.textures.uninterruptible = value
+        MilaUI:UpdateCastbarAppearance(dbUnitName)
+    end)
+    Appearance:AddChild(UninterruptibleTexturePicker)
+    MilaUI:CreateVerticalSpacer(10, Appearance)
 
     if dbUnitName == "Boss" then
         local DisplayFrames = GUI:Create("Button")
@@ -127,6 +152,55 @@ function MilaUI:DrawCastbarContainer(dbUnitName, contentFrame)
     end)
     BorderColorPicker:SetRelativeWidth(0.25)
     Colours:AddChild(BorderColorPicker)
+
+    -- Castbar Color Pickers (per cast type)
+    local CastColorPicker = GUI:Create("ColorPicker")
+    CastColorPicker:SetLabel(lavender .. "Cast Color")
+    CastColorPicker:SetHasAlpha(true)
+    CastColorPicker:SetColor(unpack((Castbar.textures and Castbar.textures.castcolor) or {1, 0.7, 0, 1}))
+    CastColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
+        Castbar.textures = Castbar.textures or {}
+        Castbar.textures.castcolor = {r, g, b, a}
+        MilaUI:UpdateCastbarAppearance(dbUnitName)
+    end)
+    CastColorPicker:SetRelativeWidth(0.25)
+    Colours:AddChild(CastColorPicker)
+
+    local ChannelColorPicker = GUI:Create("ColorPicker")
+    ChannelColorPicker:SetLabel(lavender .. "Channel Color")
+    ChannelColorPicker:SetHasAlpha(true)
+    ChannelColorPicker:SetColor(unpack((Castbar.textures and Castbar.textures.channelcolor) or {0, 0.7, 1, 1}))
+    ChannelColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
+        Castbar.textures = Castbar.textures or {}
+        Castbar.textures.channelcolor = {r, g, b, a}
+        MilaUI:UpdateCastbarAppearance(dbUnitName)
+    end)
+    ChannelColorPicker:SetRelativeWidth(0.25)
+    Colours:AddChild(ChannelColorPicker)
+
+    local UninterruptibleColorPicker = GUI:Create("ColorPicker")
+    UninterruptibleColorPicker:SetLabel(lavender .. "Uninterruptible Color")
+    UninterruptibleColorPicker:SetHasAlpha(true)
+    UninterruptibleColorPicker:SetColor(unpack((Castbar.textures and Castbar.textures.uninterruptiblecolor) or {0.7, 0, 0, 1}))
+    UninterruptibleColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
+        Castbar.textures = Castbar.textures or {}
+        Castbar.textures.uninterruptiblecolor = {r, g, b, a}
+        MilaUI:UpdateCastbarAppearance(dbUnitName)
+    end)
+    UninterruptibleColorPicker:SetRelativeWidth(0.25)
+    Colours:AddChild(UninterruptibleColorPicker)
+
+    local FailedColorPicker = GUI:Create("ColorPicker")
+    FailedColorPicker:SetLabel(lavender .. "Failed Color")
+    FailedColorPicker:SetHasAlpha(true)
+    FailedColorPicker:SetColor(unpack((Castbar.textures and Castbar.textures.failedcolor) or {1, 0.3, 0.3, 1}))
+    FailedColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
+        Castbar.textures = Castbar.textures or {}
+        Castbar.textures.failedcolor = {r, g, b, a}
+        MilaUI:UpdateCastbarAppearance(dbUnitName)
+    end)
+    FailedColorPicker:SetRelativeWidth(0.25)
+    Colours:AddChild(FailedColorPicker)
 
     contentFrame:AddChild(Colours)
     MilaUI:CreateVerticalSpacer(10, contentFrame)

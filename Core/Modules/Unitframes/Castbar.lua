@@ -16,7 +16,8 @@ local function CreateCastbarFrame(parent, settings, generalSettings)
     -- Set the castbar texture using LibSharedMedia
     local texturePath = LSM:Fetch("statusbar", settings.texture) or LSM:GetDefault("statusbar")
     castbar:SetStatusBarTexture(texturePath)
-    castbar:SetStatusBarColor(unpack(generalSettings.Colors.barColor))
+    local initialColor = (settings.textures and settings.textures.castcolor) or {1, 0.7, 0, 1}
+    castbar:SetStatusBarColor(unpack(initialColor))
     castbar:SetClipsChildren(true)
     -- Apply mask if supported and enabled
     if settings.CustomMask and settings.CustomMask.Enabled then
@@ -418,7 +419,6 @@ local function AddCastbarText(castbar, settings, generalSettings)
         local fontPath = LSM:Fetch("font", generalSettings.font) or "Fonts\\FRIZQT__.TTF"
         local fontSize = settings.text.textsize or 12
         local fontFlags = generalSettings.fontFlags or ""
-        print("[Castbar] Creating main text font size:", fontSize)
         text:SetFont(fontPath, fontSize, fontFlags)
         
         text:SetText("")
@@ -438,7 +438,6 @@ local function AddCastbarText(castbar, settings, generalSettings)
         local fontPath = LSM:Fetch("font", generalSettings.font) or "Fonts\\FRIZQT__.TTF"
         local fontSize = settings.text.timesize or 12
         local fontFlags = generalSettings.fontFlags or ""
-        print("[Castbar] Creating time text font size:", fontSize)
         time:SetFont(fontPath, fontSize, fontFlags)
         
         time:SetText("")
@@ -499,12 +498,14 @@ local function ConfigureCastbarProperties(castbar, settings, generalSettings)
     castbar.hideTradeSkills = settings.hideTradeSkills
     castbar.isNonInterruptible = false
     castbar.isChanneling = false
-    
+
+    -- Use per-unit settings for initial colors, fallback to defaults
+    local textures = settings.textures or {}
     castbar.colors = {
-        casting = generalSettings.Colors.barColor,
-        channeling = generalSettings.Colors.channelColor,
-        nonInterruptible = generalSettings.Colors.nonInterruptibleColor,
-        failed = generalSettings.Colors.failedColor
+        casting = textures.castcolor or {1, 0.7, 0, 1},
+        channeling = textures.channelcolor or {0, 0.7, 1, 1},
+        nonInterruptible = textures.uninterruptiblecolor or {0.7, 0, 0, 1},
+        failed = textures.failedcolor or {1, 0.3, 0.3, 1}
     }
 end
 
@@ -512,42 +513,68 @@ end
 local function SetupCastbarEventHandlers(castbar)
     -- Appearance update method
     castbar.UpdateCastbarAppearance = function(self)
+        local unitKey = self.unitKey or (self.__owner and self.__owner.unitKey) or (self:GetParent() and self:GetParent().unitKey)
+        local db = MilaUI.DB.profile.Unitframes
+        local config = (unitKey and db[unitKey] and db[unitKey].Castbar) or nil
+        local textures = config and config.textures or {}
+        local LSM = LibStub("LibSharedMedia-3.0")
+
+        -- Fallbacks
+        local defaultTexture = LSM and LSM:Fetch("statusbar", "Smooth") or "Interface\\TargetingFrame\\UI-StatusBar"
+        local castTex = (textures.cast and LSM and LSM:Fetch("statusbar", textures.cast)) or defaultTexture
+        local channelTex = (textures.channel and LSM and LSM:Fetch("statusbar", textures.channel)) or defaultTexture
+        local uninterruptibleTex = (textures.uninterruptible and LSM and LSM:Fetch("statusbar", textures.uninterruptible)) or defaultTexture
+
+        local castColor = textures.castcolor or {1, 0.7, 0, 1}
+        local channelColor = textures.channelcolor or {0, 0.7, 1, 1}
+        local uninterruptibleColor = textures.uninterruptiblecolor or {0.7, 0, 0, 1}
+        local failedColor = textures.failedcolor or {1, 0.3, 0.3, 1}
+
         if self.isNonInterruptible then
-            self:SetStatusBarColor(unpack(self.colors.nonInterruptible))
+            self:SetStatusBarTexture(uninterruptibleTex)
+            self:SetStatusBarColor(unpack(uninterruptibleColor))
             if self.Shield then self.Shield:Show() end
         else
             if self.isChanneling then
-                self:SetStatusBarColor(unpack(self.colors.channeling))
+                self:SetStatusBarTexture(channelTex)
+                self:SetStatusBarColor(unpack(channelColor))
             else
-                self:SetStatusBarColor(unpack(self.colors.casting))
+                self:SetStatusBarTexture(castTex)
+                self:SetStatusBarColor(unpack(castColor))
             end
             if self.Shield then self.Shield:Hide() end
         end
+        self._castbarColors = {
+            cast = castColor,
+            channel = channelColor,
+            uninterruptible = uninterruptibleColor,
+            failed = failedColor
+        }
     end
     
     -- Cast start handler
     castbar.PostCastStart = function(self, unit)
         local castName, castText, castTexture, castStart, castEnd, castIsTradeSkill, castID, notInterruptible, spellID = UnitCastingInfo(unit)
         local isChanneling = false
-        
+
         if not castName then
             castName, castText, castTexture, castStart, castEnd, castIsTradeSkill, notInterruptible = UnitChannelInfo(unit)
             isChanneling = castName ~= nil
         end
-        
+
         if not castName then return end
-        
+
         -- Determine if the cast is non-interruptible
         local isNonInterruptible = (type(notInterruptible) == "boolean" and notInterruptible) or 
                                   (type(notInterruptible) == "number" and notInterruptible == 1)
-        
+
         -- Store the current state
         self.isNonInterruptible = isNonInterruptible
         self.isChanneling = isChanneling
-        
+
         -- Update appearance
         self:UpdateCastbarAppearance()
-        
+
         -- Hide the castbar for tradeskills if configured
         if self.hideTradeSkills and castName and IsTradeSkillSpell and IsTradeSkillSpell(castName) then
             self:Hide()
@@ -563,7 +590,8 @@ local function SetupCastbarEventHandlers(castbar)
     
     -- Cast failed handler
     castbar.PostCastFailed = function(self, unit)
-        self:SetStatusBarColor(unpack(self.colors.failed))
+        local failedColor = (self._castbarColors and self._castbarColors.failed) or {1, 0.3, 0.3, 1}
+        self:SetStatusBarColor(unpack(failedColor))
         self.isNonInterruptible = false
         self.isChanneling = false
         if self.Shield then self.Shield:Hide() end

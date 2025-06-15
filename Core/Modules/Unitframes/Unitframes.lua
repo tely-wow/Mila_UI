@@ -69,19 +69,22 @@ local function SharedStyle(self, unit)
     if MilaUI.UF.UnitSpecificStyle and MilaUI.UF.UnitSpecificStyle[unit] then
         MilaUI.UF.UnitSpecificStyle[unit](self)
     end
+
+
 end
 
 -- Register the style with oUF
 oUF:RegisterStyle("MilaUI", SharedStyle)
-
--- Set the default style for new frames
+print("[Mila_UI] oUF MilaUI style registered.")
 oUF:SetActiveStyle("MilaUI")
+print("[Mila_UI] oUF MilaUI style set active.")
 
 -- Spawn Header for Boss Frames
 local bossHeader = oUF:SpawnHeader(
     "MilaUI_BossHeader", -
     nil, 
     "boss", -
+print("[Mila_UI] Boss header spawned.")
     "showPlayer", false,
     "showBoss", true,
     "showArena", false,

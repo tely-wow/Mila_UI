@@ -3,5 +3,6 @@
    <Script file="Tags/Tags.lua"/>
    <Script file="Platercolours.lua"/>
    <Script file="Castbar.lua"/>
+   <Script file="castbars.lua"/>
    <Include file="Units/UnitsInit.xml"/>
 </Ui>

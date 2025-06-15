@@ -9,4 +9,5 @@
   <Script file="Unitframes/GUI_UFBuffs.lua"/>
   <Script file="Unitframes/GUI_UFIndicator.lua"/>
   <Script file="Unitframes/GUI_Castbar.lua"/>
+  <Script file="Castbars/GUI_CleanCastbar.lua"/>
 </Ui>

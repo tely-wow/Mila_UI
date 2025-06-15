@@ -1,5 +1,9 @@
 local _, MilaUI = ...
 local MilaUIAddon = LibStub("AceAddon-3.0"):NewAddon("MilaUI")
+MilaUI.addon = MilaUIAddon
+MilaUI.NewCastbarSystem = MilaUI.NewCastbarSystem or {}
+MilaUI.modules = MilaUI.modules or {}
+MilaUI.modules.bars = MilaUI.NewCastbarSystem
 local pink = "|cffFF77B5"
 local lavender = "|cFFCBA0E3"
 MilaUIAddon_GUI = MilaUIAddon_GUI or {}
@@ -113,12 +117,6 @@ MilaUIAddon.Defaults = {
                     Colour = {1, 1, 1, 1},
                 },
                 CastbarSettings = {
-                    Colors = {
-                        barColor = {1, 0.7, 0, 1},           -- Normal cast
-                        channelColor = {0, 0.7, 1, 1},       -- Channeling
-                        nonInterruptibleColor = {0.7, 0, 0, 1}, -- Non-interruptible cast
-                        failedColor = {1, 0.3, 0.3, 1},      -- Failed cast   
-                    },
                     font = "Expressway",
                     fontSize = 10,
                     fontFlags = "OUTLINE",
@@ -219,6 +217,7 @@ MilaUIAddon.Defaults = {
                     Smooth = false,
                 },
                 Castbar = {
+                    useCleanCastbar = true,
                     enabled = true,
                     CustomScale = false,
                     Scale = 1,
@@ -242,6 +241,15 @@ MilaUIAddon.Defaults = {
                     safeZoneColor = {1, 0, 0, 0.6},
                     timeToHold = 0.5,         -- How long to show failed/interrupted casts
                     hideTradeSkills = false,  -- Whether to hide profession casts
+                    textures = {
+                        channel = "Smooth",
+                        cast = "Smooth",
+                        uninterruptible = "Smooth",
+                        castcolor = {1, 0.7, 0, 1},
+                        channelcolor = {0, 0.7, 1, 1},
+                        uninterruptiblecolor = {0.7, 0, 0, 1},
+                        failedcolor = {1, 0.3, 0.3, 1},
+                    },
                     Icon = {
                         showIcon = true,
                         iconSize = 24,
@@ -478,7 +486,16 @@ MilaUIAddon.Defaults = {
                     borderColor = {0, 0, 0, 1},
                     borderSize = 1,
                     showShield = true,
-                    timeToHold = 0.5,    
+                    timeToHold = 0.5,
+                    textures = {
+                        channel = "Smooth",
+                        cast = "Smooth",
+                        uninterruptible = "Smooth",
+                        castcolor = {1, 0.7, 0, 1},
+                        channelcolor = {0, 0.7, 1, 1},
+                        uninterruptiblecolor = {0.7, 0, 0, 1},
+                        failedcolor = {1, 0.3, 0.3, 1},
+                    },    
                     Icon = {
                         showIcon = true,
                         iconSize = 24,
@@ -885,6 +902,15 @@ MilaUIAddon.Defaults = {
                     borderSize = 1,
                     showShield = true,
                     timeToHold = 0.5,    
+                    textures = {
+                        channel = "Smooth",
+                        cast = "Smooth",
+                        uninterruptible = "Smooth",
+                        castcolor = {1, 0.7, 0, 1},
+                        channelcolor = {0, 0.7, 1, 1},
+                        uninterruptiblecolor = {0.7, 0, 0, 1},
+                        failedcolor = {1, 0.3, 0.3, 1},
+                    },    
                     Icon = {
                         showIcon = true,
                         iconSize = 24,
@@ -1284,6 +1310,15 @@ MilaUIAddon.Defaults = {
                     showShield = true,
                     timeToHold = 0.5,         -- How long to show failed/interrupted casts
                     hideTradeSkills = false,  -- Whether to hide profession casts
+                    textures = {
+                        channel = "Smooth",
+                        cast = "Smooth",
+                        uninterruptible = "Smooth",
+                        castcolor = {1, 0.7, 0, 1},
+                        channelcolor = {0, 0.7, 1, 1},
+                        uninterruptiblecolor = {0.7, 0, 0, 1},
+                        failedcolor = {1, 0.3, 0.3, 1},
+                    },
                     Icon = {
                         showIcon = true,
                         iconSize = 24,
@@ -1507,6 +1542,15 @@ MilaUIAddon.Defaults = {
                     borderSize = 1,
                     showShield = true,
                     timeToHold = 0.5,    
+                    textures = {
+                        channel = "Smooth",
+                        cast = "Smooth",
+                        uninterruptible = "Smooth",
+                        castcolor = {1, 0.7, 0, 1},
+                        channelcolor = {0, 0.7, 1, 1},
+                        uninterruptiblecolor = {0.7, 0, 0, 1},
+                        failedcolor = {1, 0.3, 0.3, 1},
+                    },    
                     Icon = {
                         showIcon = true,
                         iconSize = 24,
@@ -1635,6 +1679,111 @@ MilaUIAddon.Defaults = {
                 }
             }
         },
+        castBars = {
+            PLAYER_CASTBAR_SHOW_ICON = true,
+            PLAYER_CASTBAR_SHOW_TEXT = true,
+            PLAYER_CASTBAR_SHOW_TIMER = true,
+            PLAYER_CASTBAR_WIDTH = 225,
+            PLAYER_CASTBAR_HEIGHT = 18,
+            PLAYER_CASTBAR_X_OFFSET = 0,
+            PLAYER_CASTBAR_Y_OFFSET = 55,
+           
+             TARGET_CASTBAR_SHOW_ICON = true,
+             TARGET_CASTBAR_SHOW_TEXT = true,
+             TARGET_CASTBAR_SHOW_TIMER = true,
+             TARGET_CASTBAR_WIDTH = 150,
+             TARGET_CASTBAR_HEIGHT = 18,
+             TARGET_CASTBAR_X_OFFSET = 15,
+             TARGET_CASTBAR_Y_OFFSET = -55,
+           
+              FOCUS_CASTBAR_SHOW_ICON = true,
+              FOCUS_CASTBAR_SHOW_TEXT = true,
+              FOCUS_CASTBAR_SHOW_TIMER = true,
+              FOCUS_CASTBAR_WIDTH = 150,
+              FOCUS_CASTBAR_HEIGHT = 18,
+              FOCUS_CASTBAR_X_OFFSET = 15,
+              FOCUS_CASTBAR_Y_OFFSET = -55,
+           
+           
+           -- Player text settings
+           PLAYER_SHOW_HEALTH_TEXT = true,
+           PLAYER_HEALTH_TEXT_SIZE = 11,
+           PLAYER_HEALTH_TEXT_SHOW_PERCENT = true,
+           PLAYER_HEALTH_TEXT_SPLIT = true, -- Set to true for left/right split
+           
+           PLAYER_SHOW_POWER_TEXT = true,
+           PLAYER_POWER_TEXT_SIZE = 9,
+           PLAYER_POWER_TEXT_SHOW_PERCENT = false,
+           
+           PLAYER_SHOW_NAME_TEXT = false, -- Usually don't show player name
+           PLAYER_NAME_TEXT_SIZE = 12,
+           PLAYER_NAME_TEXT_MAX_LENGTH = 20,
+           
+           PLAYER_SHOW_LEVEL_TEXT = false, -- Usually don't show player level
+           PLAYER_LEVEL_TEXT_SIZE = 10,
+           
+           -- Target text settings
+           TARGET_SHOW_HEALTH_TEXT = true,
+           TARGET_HEALTH_TEXT_SIZE = 11,
+           TARGET_HEALTH_TEXT_SHOW_PERCENT = true,
+           TARGET_HEALTH_TEXT_SPLIT = true, -- Enable split positioning for target
+           
+           TARGET_SHOW_POWER_TEXT = true,
+           TARGET_POWER_TEXT_SIZE = 9,
+           TARGET_POWER_TEXT_SHOW_PERCENT = false,
+           
+           TARGET_SHOW_NAME_TEXT = true,
+           TARGET_NAME_TEXT_SIZE = 12,
+           TARGET_NAME_TEXT_MAX_LENGTH = 20,
+           
+           TARGET_SHOW_LEVEL_TEXT = true,
+           TARGET_LEVEL_TEXT_SIZE = 10,
+           
+           -- Focus text settings
+           FOCUS_SHOW_HEALTH_TEXT = true,
+           FOCUS_HEALTH_TEXT_SIZE = 11,
+           FOCUS_HEALTH_TEXT_SHOW_PERCENT = true,
+           FOCUS_HEALTH_TEXT_SPLIT = false, -- Keep focus centered
+           
+           FOCUS_SHOW_POWER_TEXT = true,
+           FOCUS_POWER_TEXT_SIZE = 9,
+           FOCUS_POWER_TEXT_SHOW_PERCENT = false,
+           
+           FOCUS_SHOW_NAME_TEXT = true,
+           FOCUS_NAME_TEXT_SIZE = 12,
+           FOCUS_NAME_TEXT_MAX_LENGTH = 20,
+           
+           FOCUS_SHOW_LEVEL_TEXT = true,
+           FOCUS_LEVEL_TEXT_SIZE = 10,
+           bars = {
+                       -- Player Cast Bar
+                       PLAYER_CASTBAR_ENABLED = true,
+                       PLAYER_CASTBAR_WIDTH = 125,
+                       PLAYER_CASTBAR_HEIGHT = 18,
+                       PLAYER_CASTBAR_SCALE = 1.0,
+                       PLAYER_CASTBAR_X_OFFSET = 0,
+                       PLAYER_CASTBAR_Y_OFFSET = -20,
+                       PLAYER_CASTBAR_SHOW_ICON = true,
+                       PLAYER_CASTBAR_SHOW_TEXT = true,
+                       PLAYER_CASTBAR_SHOW_TIMER = true,
+                       PLAYER_CASTBAR_MASK_TEXTURE = "Interface\\AddOns\\rnxmUI\\Textures\\UIUnitFramePlayerHealthMask2x.tga",
+                       
+                       -- Cast Type Textures
+                       PLAYER_CAST_TEXTURE = "g1",
+                       PLAYER_CHANNEL_TEXTURE = "g1",
+                       PLAYER_UNINTERRUPTIBLE_TEXTURE = "g1",
+                       PLAYER_INTERRUPT_TEXTURE = "g1",
+                       
+                       -- Cast Type Colors (RGBA)
+                       PLAYER_CAST_COLOR = {0, 1, 1, 1},
+                       PLAYER_CHANNEL_COLOR = {0.5, 0.3, 0.9, 1},
+                       PLAYER_UNINTERRUPTIBLE_COLOR = {0.8, 0.8, 0.8, 1},
+                       PLAYER_INTERRUPT_COLOR = {1, 0.2, 0.2, 1},
+                       
+                       -- Copy same structure for TARGET_ and FOCUS_ with appropriate prefixes
+                       -- ... rest of cast bar defaults
+            },     
+        }
     }
 }
 

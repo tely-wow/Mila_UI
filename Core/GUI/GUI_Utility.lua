@@ -317,17 +317,30 @@ function MilaUI:UpdateCastbarAppearance(unitName)
         end
         
         -- Update colors
+        local textures = settings.textures or {}
+        local castColor = textures.castcolor or {1, 0.7, 0, 1}
+        local channelColor = textures.channelcolor or {0, 0.7, 1, 1}
+        local uninterruptibleColor = textures.uninterruptiblecolor or {0.7, 0, 0, 1}
+        local failedColor = textures.failedcolor or {1, 0.3, 0.3, 1}
+
         if castbar.isNonInterruptible then
-            castbar:SetStatusBarColor(unpack(generalSettings.Colors.nonInterruptibleColor))
+            castbar:SetStatusBarColor(unpack(uninterruptibleColor))
             if castbar.Shield then castbar.Shield:Show() end
         else
             if castbar.isChanneling then
-                castbar:SetStatusBarColor(unpack(generalSettings.Colors.channelColor))
+                castbar:SetStatusBarColor(unpack(channelColor))
             else
-                castbar:SetStatusBarColor(unpack(generalSettings.Colors.barColor))
+                castbar:SetStatusBarColor(unpack(castColor))
             end
             if castbar.Shield then castbar.Shield:Hide() end
         end
+        -- Optionally store for failed/interrupted appearance
+        castbar._castbarColors = {
+            cast = castColor,
+            channel = channelColor,
+            uninterruptible = uninterruptibleColor,
+            failed = failedColor
+        }
         
         -- Update custom mask if enabled
         if settings.CustomMask and settings.CustomMask.Enabled and castbar.Mask then
