@@ -30,7 +30,7 @@ end
 
 -- Helper function to create unit tabs
 local function CreateUnitTab(parent, unitName, isSelected)
-    local tab = AF.CreateButton(parent, unitName, isSelected and "accent" or "accent_transparent", 80, 25)
+    local tab = AF.CreateButton(parent, unitName, isSelected and "pink" or "pink_transparent", 80, 25)
     return tab
 end
 
@@ -97,6 +97,18 @@ function MilaUI:CreateCleanCastbarGUI()
     AF.SetPoint(focusContent, "TOPLEFT", 0, 0)
     AF.SetPoint(focusContent, "BOTTOMRIGHT", 0, 0)
     focusContent:Hide()
+    
+    -- Set scrollbar thumb colors to pink for all scroll frames
+    local function SetScrollThumbToPink(scrollFrame)
+        if scrollFrame.scrollThumb then
+            scrollFrame.scrollThumb:SetBackdropColor(unpack(AF.GetColorTable("pink", 0.7)))
+            scrollFrame.scrollThumb.r, scrollFrame.scrollThumb.g, scrollFrame.scrollThumb.b = AF.GetColorRGB("pink")
+        end
+    end
+    
+    SetScrollThumbToPink(playerContent)
+    SetScrollThumbToPink(targetContent)
+    SetScrollThumbToPink(focusContent)
     
     -- Tab switching functionality
     AF.CreateButtonGroup({playerTab, targetTab, focusTab}, function(id)
@@ -359,7 +371,7 @@ function MilaUI:CreateCleanCastbarGUI()
     end
     
     -- Add reload UI button
-    local reloadButton = AF.CreateButton(cleanCastbarGUI, "Reload UI", "accent", 100, 25)
+    local reloadButton = AF.CreateButton(cleanCastbarGUI, "Reload UI", "pink", 100, 25)
     AF.SetPoint(reloadButton, "BOTTOMRIGHT", -10, 10)
     reloadButton:SetScript("OnClick", function()
         ReloadUI()
