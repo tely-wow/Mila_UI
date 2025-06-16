@@ -225,21 +225,37 @@ function module.CreateCleanCastBar(parent, unit, options)
     if not parent or not unit then return end
     
     options = options or {}
-    local width = options.width or parent:GetWidth()
-    local height = options.height or 18
-    local xOffset = options.xOffset or 0
-    local yOffset = options.yOffset or -20
-    local showIcon = options.showIcon ~= false
-    local showText = options.showText ~= false
-    local showTimer = options.showTimer ~= false
+    local width = (options.size and options.size.width) or parent:GetWidth()
+    local height = (options.size and options.size.height) or 18
+    local xOffset = (options.position and options.position.xOffset) or 0
+    local yOffset = (options.position and options.position.yOffset) or -20
+    -- Get display sub-sections
+    local icon = options.display and options.display.icon or {}
+    local text = options.display and options.display.text or {}
+    local timer = options.display and options.display.timer or {}
+    
+    local showIcon = icon.show ~= false
+    local showText = text.show ~= false
+    local showTimer = timer.show ~= false
     
     -- Create main cast bar frame (no template!)
     local castBar = CreateFrame("StatusBar", nil, parent)
     castBar:SetSize(width, height)
-    castBar:SetPoint("CENTER", parent, "CENTER", xOffset, yOffset)
+    
+    -- Get anchor settings from config
+    local anchorPoint = (options.position and options.position.anchorPoint) or "CENTER"
+    local anchorTo = (options.position and options.position.anchorTo) or "CENTER"
+    local anchorFrame = (options.position and options.position.anchorFrame) or parent
+    
+    -- Convert string frame name to actual frame if needed
+    if type(anchorFrame) == "string" then
+        anchorFrame = _G[anchorFrame] or parent
+    end
+    
+    castBar:SetPoint(anchorPoint, anchorFrame, anchorTo, xOffset, yOffset)
     
     -- Get texture from LSM with fallback
-    local mainTexture = GetTexture("statusbar", options.texture, "Interface\\Buttons\\WHITE8X8")
+    local mainTexture = GetTexture("statusbar", (options.textures and options.textures.main), "Interface\\Buttons\\WHITE8X8")
     castBar:SetStatusBarTexture(mainTexture)
     castBar:SetStatusBarColor(0, 1, 1, 1) -- Default cyan
     castBar:SetMinMaxValues(0, 1)
@@ -283,38 +299,40 @@ function module.CreateCleanCastBar(parent, unit, options)
     
     -- Create icon
     if showIcon then
-        local icon = castBar:CreateTexture(nil, "ARTWORK")
-        icon:SetSize(height + 4, height + 4)
+        local iconFrame = castBar:CreateTexture(nil, "ARTWORK")
+        iconFrame:SetSize(icon.size or (height + 4), icon.size or (height + 4))
         if unit == "player" then
-            icon:SetPoint("LEFT", castBar, "RIGHT", 4, 0)
+            iconFrame:SetPoint("LEFT", castBar, "RIGHT", icon.xOffset or 4, icon.yOffset or 0)
         else
-            icon:SetPoint("RIGHT", castBar, "LEFT", -4, 0)
+            iconFrame:SetPoint("RIGHT", castBar, "LEFT", -(icon.xOffset or 4), icon.yOffset or 0)
         end
-        castBar.icon = icon
+        castBar.icon = iconFrame
     end
     
     -- Create text
     if showText then
-        local text = castBar:CreateFontString(nil, "OVERLAY")
-        text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-        text:SetPoint("BOTTOM", castBar, "TOP", 0, 2)
-        text:SetTextColor(1, 1, 1, 1)
-        castBar.text = text
+        local textFrame = castBar:CreateFontString(nil, "OVERLAY")
+        local fontPath = LSM:Fetch("font", text.font or "Expressway") or "Fonts\\FRIZQT__.TTF"
+        textFrame:SetFont(fontPath, text.size or 12, text.fontFlags or "OUTLINE")
+        textFrame:SetPoint("BOTTOM", castBar, "TOP", text.xOffset or 0, text.yOffset or 2)
+        textFrame:SetTextColor(unpack(text.fontColor or {1, 1, 1, 1}))
+        castBar.text = textFrame
     end
     
     -- Create timer
     if showTimer then
-        local timer = castBar:CreateFontString(nil, "OVERLAY")
-        timer:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
-        timer:SetPoint("RIGHT", castBar, "RIGHT", -5, 0)
-        timer:SetTextColor(1, 1, 1, 1)
-        castBar.timer = timer
+        local timerFrame = castBar:CreateFontString(nil, "OVERLAY")
+        local fontPath = LSM:Fetch("font", timer.font or "Expressway") or "Fonts\\FRIZQT__.TTF"
+        timerFrame:SetFont(fontPath, timer.size or 10, timer.fontFlags or "OUTLINE")
+        timerFrame:SetPoint("RIGHT", castBar, "RIGHT", timer.xOffset or -5, timer.yOffset or 0)
+        timerFrame:SetTextColor(unpack(timer.fontColor or {1, 1, 1, 1}))
+        castBar.timer = timerFrame
     end
 
     -- CREATE HOLDER FRAME SYSTEM - Separate holders for each type
     local holderFrame = CreateFrame("StatusBar", nil, parent)
     holderFrame:SetSize(width, height)
-    holderFrame:SetPoint("BOTTOM", parent, "BOTTOM", xOffset, yOffset)
+    holderFrame:SetPoint(anchorPoint, anchorFrame, anchorTo, xOffset, yOffset)
     holderFrame:SetStatusBarTexture("Interface\\AddOns\\Mila_UI\\Textures\\statusbar\\HPRedHD.tga")
     --holderFrame:SetStatusBarColor(1, 0, 0, 1.0) -- Red for interrupts
     holderFrame:SetMinMaxValues(0, 1)
@@ -325,7 +343,7 @@ function module.CreateCleanCastBar(parent, unit, options)
     -- CREATE CAST COMPLETION HOLDER
     local castCompletionHolder = CreateFrame("StatusBar", nil, parent)
     castCompletionHolder:SetSize(width, height)
-    castCompletionHolder:SetPoint("BOTTOM", parent, "BOTTOM", xOffset, yOffset)
+    castCompletionHolder:SetPoint(anchorPoint, anchorFrame, anchorTo, xOffset, yOffset)
     castCompletionHolder:SetStatusBarTexture("Interface\\AddOns\\Mila_UI\\Textures\\g1.tga")
     --castCompletionHolder:SetStatusBarColor(0.2, 1.0, 1.0, 1.0) -- Bright cyan for cast completion
     castCompletionHolder:SetMinMaxValues(0, 1)
@@ -336,7 +354,7 @@ function module.CreateCleanCastBar(parent, unit, options)
     -- CREATE CHANNEL COMPLETION HOLDER  
     local channelCompletionHolder = CreateFrame("StatusBar", nil, parent)
     channelCompletionHolder:SetSize(width, height)
-    channelCompletionHolder:SetPoint("BOTTOM", parent, "BOTTOM", xOffset, yOffset)
+    channelCompletionHolder:SetPoint(anchorPoint, anchorFrame, anchorTo, xOffset, yOffset)
     channelCompletionHolder:SetStatusBarTexture("Interface\\AddOns\\Mila_UI\\Textures\\g1.tga")
     channelCompletionHolder:SetStatusBarColor(1.0, 0.4, 1.0, 1.0) -- Bright purple for channel completion
     channelCompletionHolder:SetMinMaxValues(0, 1)
@@ -347,7 +365,7 @@ function module.CreateCleanCastBar(parent, unit, options)
     -- CREATE UNINTERRUPTIBLE COMPLETION HOLDER
     local uninterruptibleHolder = CreateFrame("StatusBar", nil, parent)
     uninterruptibleHolder:SetSize(width, height)
-    uninterruptibleHolder:SetPoint("BOTTOM", parent, "BOTTOM", xOffset, yOffset)
+    uninterruptibleHolder:SetPoint(anchorPoint, anchorFrame, anchorTo, xOffset, yOffset)
     uninterruptibleHolder:SetStatusBarTexture("Interface\\AddOns\\Mila_UI\\Textures\\g1.tga")
     uninterruptibleHolder:SetStatusBarColor(0.8, 0.8, 0.8, 1.0) -- Grey/white for uninterruptible
     uninterruptibleHolder:SetMinMaxValues(0, 1)
@@ -369,10 +387,10 @@ local holderConfigs = {
 		sparkHeight = 32, 
         hasGlow = true,
         hasFlash = false,
-        statusBarTexture = "Interface\\AddOns\\Mila_UI\\Textures\statusbar\\HPRedHD2.tga" -- Add this
+        statusBarTexture = "Interface\\AddOns\\Mila_UI\\Textures\\statusbar\\HPRedHD2.tga" -- Add this
     },
     cast = {
-        flashColor = {0.2, 1.0, 1.0, 0.9},
+        flashColor = {0.2, 0.8, 0.2, 1.0},
         flashTexture = "Interface\\AddOns\\Mila_UI\\Textures\\cflash.tga", 
         sparkTexture = "Interface\\AddOns\\Mila_UI\\Textures\\absorbsparkcastbar.tga",
         sparkColor = {1, 1, 1, 0.2},
@@ -1214,8 +1232,8 @@ function module.UpdateCastBarDimensions(unit)
     local castBar = module:GetCastBarForUnit(unit)
     if not castBar then return end
     
-    local width = settings.width or 125
-    local height = settings.height or 18
+    local width = (settings.size and settings.size.width) or 125
+    local height = (settings.size and settings.size.height) or 18
     
     castBar:SetSize(width, height)
     
@@ -1242,7 +1260,7 @@ function module.UpdateCastBarScale(unit)
     local castBar = module:GetCastBarForUnit(unit)
     if not castBar then return end
     
-    local scale = settings.scale or 1.0
+    local scale = (settings.size and settings.size.scale) or 1.0
     
     castBar:SetScale(scale)
     
@@ -1269,15 +1287,17 @@ function module.UpdateCastBarPosition(unit)
     local castBar = module:GetCastBarForUnit(unit)
     if not castBar then return end
     
-    local xOffset = settings.xOffset or 0
-    local yOffset = settings.yOffset or -20
+    local anchorPoint = (settings.position and settings.position.anchorPoint) or "CENTER"
+    local anchorTo = (settings.position and settings.position.anchorTo) or "CENTER"
+    local xOffset = (settings.position and settings.position.xOffset) or 0
+    local yOffset = (settings.position and settings.position.yOffset) or -20
     
     -- Get parent frame (health bar)
     local parent = castBar:GetParent()
     if not parent then return end
     
     castBar:ClearAllPoints()
-    castBar:SetPoint("BOTTOM", parent, "BOTTOM", xOffset, yOffset)
+    castBar:SetPoint(anchorPoint, parent, anchorTo, xOffset, yOffset)
     
     -- Update all holder frames
     local holders = {
@@ -1290,7 +1310,7 @@ function module.UpdateCastBarPosition(unit)
     for _, holder in pairs(holders) do
         if holder then
             holder:ClearAllPoints()
-            holder:SetPoint("BOTTOM", parent, "BOTTOM", xOffset, yOffset)
+            holder:SetPoint(anchorPoint, parent, anchorTo, xOffset, yOffset)
         end
     end
 end
@@ -1303,9 +1323,14 @@ function module.UpdateCastBarDisplay(unit)
     local castBar = module:GetCastBarForUnit(unit)
     if not castBar then return end
     
-    local showIcon = settings.showIcon ~= false
-    local showText = settings.showText ~= false
-    local showTimer = settings.showTimer ~= false
+    -- Get display sub-sections
+    local icon = settings.display and settings.display.icon or {}
+    local text = settings.display and settings.display.text or {}
+    local timer = settings.display and settings.display.timer or {}
+    
+    local showIcon = icon.show ~= false
+    local showText = text.show ~= false
+    local showTimer = timer.show ~= false
     
     -- Update main cast bar elements
     if castBar.icon then
@@ -1369,11 +1394,11 @@ function module.UpdateCastBarColors(unit)
     local castBar = module:GetCastBarForUnit(unit)
     if not castBar then return end
     
-    local mainCastColor = settings.castColor or {0, 1, 1, 1}
-    local castCompletionColor = settings.castCompletionColor or {0.2, 1.0, 1.0, 1.0}
-    local channelCompletionColor = settings.channelColor or {1.0, 0.4, 1.0, 1.0}
-    local uninterruptibleColor = settings.uninterruptibleColor or {0.8, 0.8, 0.8, 1.0}
-    local interruptColor = settings.interruptColor or {1, 0.2, 0.2, 1}
+    local mainCastColor = (settings.colors and settings.colors.cast) or {0, 1, 1, 1}
+    local castCompletionColor = (settings.colors and settings.colors.completion) or {0.2, 1.0, 1.0, 1.0}
+    local channelCompletionColor = (settings.colors and settings.colors.channel) or {1.0, 0.4, 1.0, 1.0}
+    local uninterruptibleColor = (settings.colors and settings.colors.uninterruptible) or {0.8, 0.8, 0.8, 1.0}
+    local interruptColor = (settings.colors and settings.colors.interrupt) or {1, 0.2, 0.2, 1}
     
     -- Update individual holder frame colors
     if castBar.holderFrame then

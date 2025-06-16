@@ -1682,28 +1682,60 @@ MilaUIAddon.Defaults = {
         castBars = {
             player = {
                 enabled = true,
-                width = 200,
-                height = 18,
-                scale = 1.0,
-                xOffset = 0,
-                yOffset = -20,
-                showIcon = true,
-                showText = true,
-                showTimer = true,
-                -- LSM Statusbar Textures
-                texture = "g1",
-                castTexture = "HPYellowHD",
-                channelTexture = "shield-fill",
-                uninterruptibleTexture = "ArmorCastBar", 
-                interruptTexture = "HPredHD2",
-                backgroundTexture = "MirroredFrameSingleBG",
-                -- Colors
-                castColor = {0, 1, 1, 1},
-                channelColor = {0.5, 0.3, 0.9, 1},
-                uninterruptibleColor = {0.8, 0.8, 0.8, 1},
-                interruptColor = {1, 0.2, 0.2, 1},
-                castCompletionColor = {0.2, 1.0, 1.0, 1.0},
-                sparkTexture = "Interface\\Buttons\\WHITE8X8"
+                size = {
+                    width = 200,
+                    height = 18,
+                    scale = 1.0
+                },
+                position = {
+                    anchorPoint = "CENTER",
+                    anchorTo = "CENTER", 
+                    xOffset = 0,
+                    yOffset = -200,
+                    anchorFrame = "UIParent"
+                },
+                display = {
+                    icon = {
+                        show = true,
+                        size = 24,
+                        xOffset = 4,
+                        yOffset = 0
+                    },
+                    text = {
+                        show = true,
+                        size = 12,
+                        xOffset = 0,
+                        yOffset = 2,
+                        font = "Expressway",
+                        fontFlags = "OUTLINE",
+                        fontColor = {1, 1, 1, 1}
+                    },
+                    timer = {
+                        show = true,
+                        size = 10,
+                        xOffset = -5,
+                        yOffset = 0,
+                        font = "Expressway",
+                        fontFlags = "OUTLINE",
+                        fontColor = {1, 1, 1, 1}
+                    }
+                },
+                textures = {
+                    main = "g1",
+                    cast = "HPYellowHD",
+                    channel = "shield-fill",
+                    uninterruptible = "ArmorCastBar",
+                    interrupt = "HPredHD2",
+                    background = "MirroredFrameSingleBG",
+                    spark = "Interface\\Buttons\\WHITE8X8"
+                },
+                colors = {
+                    cast = {0, 1, 1, 1},
+                    channel = {0.5, 0.3, 0.9, 1},
+                    uninterruptible = {0.8, 0.8, 0.8, 1},
+                    interrupt = {1, 0.2, 0.2, 1},
+                    completion = {0.2, 1.0, 1.0, 1.0}
+                }
             },
             PLAYER_CASTBAR_SHOW_ICON = true,
             PLAYER_CASTBAR_SHOW_TEXT = true,
