@@ -18,9 +18,8 @@ function MilaUI:SpawnPlayerFrame()
     end
 
     -- Mila_UI: Dual castbar system integration
-    local castbarSettings = MilaUI.DB.profile.Unitframes.Player.Castbar
-    print("[Mila_UI] Player Castbar Settings:", castbarSettings and (castbarSettings.useCleanCastbar and "useCleanCastbar=TRUE" or "useCleanCastbar=FALSE") or "nil")
-    if castbarSettings and castbarSettings.useCleanCastbar then
+    local castbarSettings = MilaUI.DB.profile.castBars and MilaUI.DB.profile.castBars.player
+    if castbarSettings and castbarSettings.enabled then
         print("[Mila_UI] Spawning new castbar for player frame.")
         if MilaUI.NewCastbarSystem and MilaUI.NewCastbarSystem.CreateCleanCastBar then
             local result = MilaUI.NewCastbarSystem.CreateCleanCastBar(self.PlayerFrame, "player", castbarSettings)

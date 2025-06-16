@@ -1,7 +1,22 @@
-print("[Mila_UI] castbars.lua loaded! (module should now be available as MilaUI.NewCastbarSystem)")
 local _, ns = ...
 local addon = ns.addon
 local module = ns.modules.bars
+local LSM = LibStub("LibSharedMedia-3.0")
+
+-- Helper function to safely get textures from LSM with fallbacks
+local function GetTexture(mediaType, textureName, fallback)
+    if not textureName then
+        return fallback or LSM:Fetch(mediaType, "Smooth")
+    end
+    
+    local success, texture = pcall(LSM.Fetch, LSM, mediaType, textureName)
+    if success and texture then
+        return texture
+    end
+    
+    -- Fallback to default if texture not found
+    return fallback or LSM:Fetch(mediaType, "Smooth")
+end
 
 -- CLEAN CAST BAR SYSTEM - No Blizzard template bullshit
 
@@ -207,8 +222,6 @@ end
 
 
 function module.CreateCleanCastBar(parent, unit, options)
-    print("[Mila_UI] CreateCleanCastBar called for unit:", unit, "parent:", parent and tostring(parent:GetName() or parent) or "nil", "options:", options)
-
     if not parent or not unit then return end
     
     options = options or {}
@@ -224,27 +237,15 @@ function module.CreateCleanCastBar(parent, unit, options)
     local castBar = CreateFrame("StatusBar", nil, parent)
     castBar:SetSize(width, height)
     castBar:SetPoint("CENTER", parent, "CENTER", xOffset, yOffset)
-    print("[Mila_UI] Main cast bar frame created and positioned relative to parent with offset", xOffset, yOffset)
-    print("[Mila_UI] Main cast bar frame created and positioned at UI center.")
-    local tex = castBar:SetStatusBarTexture("Interface\\AddOns\\Mila_UI\\Textures\\g1.tga")
-    print("[Mila_UI] SetStatusBarTexture returned:", tex)
+    
+    -- Get texture from LSM with fallback
+    local mainTexture = GetTexture("statusbar", options.texture, "Interface\\Buttons\\WHITE8X8")
+    castBar:SetStatusBarTexture(mainTexture)
     castBar:SetStatusBarColor(0, 1, 1, 1) -- Default cyan
     castBar:SetMinMaxValues(0, 1)
     castBar:SetValue(0.5)
     castBar:SetAlpha(1)
     castBar:Show()
-    local actualTex = castBar:GetStatusBarTexture()
-    print("[Mila_UI] GetStatusBarTexture:", actualTex, actualTex and actualTex:GetTexture() or "nil")
-    if not actualTex then
-        print("[Mila_UI] ERROR: StatusBarTexture is nil! Forcing fallback texture.")
-        local fallback = castBar:CreateTexture(nil, "ARTWORK")
-        fallback:SetAllPoints()
-        fallback:SetColorTexture(0,1,1,1)
-        castBar:SetStatusBarTexture(fallback)
-        castBar:SetAlpha(1)
-        castBar:Show()
-    end
-    print("[Mila_UI] Main cast bar frame initialized and forced visible for debugging.")
     
     module.SetCastBarMask(castBar, "Interface\\AddOns\\Mila_UI\\Textures\\UIUnitFramePlayerHealthMask2x.tga")
     
@@ -1207,14 +1208,14 @@ end
 
 -- Update cast bar dimensions
 function module.UpdateCastBarDimensions(unit)
-    local config = ns.castBarConfig() or {}
-    local unitUpper = unit:upper()
-    local castBar = module:GetCastBarForUnit(unit)
+    local settings = addon.DB and addon.DB.profile and addon.DB.profile.castBars and addon.DB.profile.castBars[unit]
+    if not settings then return end
     
+    local castBar = module:GetCastBarForUnit(unit)
     if not castBar then return end
     
-    local width = config[unitUpper .. "_CASTBAR_WIDTH"] or 125
-    local height = config[unitUpper .. "_CASTBAR_HEIGHT"] or 18
+    local width = settings.width or 125
+    local height = settings.height or 18
     
     castBar:SetSize(width, height)
     
@@ -1231,19 +1232,17 @@ function module.UpdateCastBarDimensions(unit)
             holder:SetSize(width, height)
         end
     end
-    
-   -- print("Updated cast bar dimensions for " .. unit .. " to " .. width .. "x" .. height)
 end
 
 -- Update cast bar scale
 function module.UpdateCastBarScale(unit)
-    local config = ns.castBarConfig() or {}
-    local unitUpper = unit:upper()
-    local castBar = module:GetCastBarForUnit(unit)
+    local settings = addon.DB and addon.DB.profile and addon.DB.profile.castBars and addon.DB.profile.castBars[unit]
+    if not settings then return end
     
+    local castBar = module:GetCastBarForUnit(unit)
     if not castBar then return end
     
-    local scale = config[unitUpper .. "_CASTBAR_SCALE"] or 1.0
+    local scale = settings.scale or 1.0
     
     castBar:SetScale(scale)
     
@@ -1260,20 +1259,18 @@ function module.UpdateCastBarScale(unit)
             holder:SetScale(scale)
         end
     end
-    
-   -- print("Updated cast bar scale for " .. unit .. " to " .. scale)
 end
 
 -- Update cast bar position
 function module.UpdateCastBarPosition(unit)
-    local config = ns.castBarConfig() or {}
-    local unitUpper = unit:upper()
-    local castBar = module:GetCastBarForUnit(unit)
+    local settings = addon.DB and addon.DB.profile and addon.DB.profile.castBars and addon.DB.profile.castBars[unit]
+    if not settings then return end
     
+    local castBar = module:GetCastBarForUnit(unit)
     if not castBar then return end
     
-    local xOffset = config[unitUpper .. "_CASTBAR_X_OFFSET"] or 0
-    local yOffset = config[unitUpper .. "_CASTBAR_Y_OFFSET"] or -20
+    local xOffset = settings.xOffset or 0
+    local yOffset = settings.yOffset or -20
     
     -- Get parent frame (health bar)
     local parent = castBar:GetParent()
@@ -1296,21 +1293,19 @@ function module.UpdateCastBarPosition(unit)
             holder:SetPoint("BOTTOM", parent, "BOTTOM", xOffset, yOffset)
         end
     end
-    
-  --  print("Updated cast bar position for " .. unit .. " to " .. xOffset .. ", " .. yOffset)
 end
 
 -- Update cast bar display options (icon, text, timer)
 function module.UpdateCastBarDisplay(unit)
-    local config = ns.castBarConfig() or {}
-    local unitUpper = unit:upper()
-    local castBar = module:GetCastBarForUnit(unit)
+    local settings = addon.DB and addon.DB.profile and addon.DB.profile.castBars and addon.DB.profile.castBars[unit]
+    if not settings then return end
     
+    local castBar = module:GetCastBarForUnit(unit)
     if not castBar then return end
     
-    local showIcon = config[unitUpper .. "_CASTBAR_SHOW_ICON"] ~= false
-    local showText = config[unitUpper .. "_CASTBAR_SHOW_TEXT"] ~= false
-    local showTimer = config[unitUpper .. "_CASTBAR_SHOW_TIMER"] ~= false
+    local showIcon = settings.showIcon ~= false
+    local showText = settings.showText ~= false
+    local showTimer = settings.showTimer ~= false
     
     -- Update main cast bar elements
     if castBar.icon then
@@ -1364,23 +1359,21 @@ function module.UpdateCastBarDisplay(unit)
             end
         end
     end
-    
- --   print("Updated cast bar display for " .. unit)
 end
 
 -- Update cast bar colors (applies to individual holders and main bar)
 function module.UpdateCastBarColors(unit)
-    local config = ns.castBarConfig() or {}
-    local unitUpper = unit:upper()
-    local castBar = module:GetCastBarForUnit(unit)
+    local settings = addon.DB and addon.DB.profile and addon.DB.profile.castBars and addon.DB.profile.castBars[unit]
+    if not settings then return end
     
+    local castBar = module:GetCastBarForUnit(unit)
     if not castBar then return end
     
-    local mainCastColor = config[unitUpper .. "_MAIN_CAST_COLOR"] or {0, 1, 1, 1}
-    local castCompletionColor = config[unitUpper .. "_CAST_COMPLETION_COLOR"] or {0.2, 1.0, 1.0, 1.0}
-    local channelCompletionColor = config[unitUpper .. "_CHANNEL_COMPLETION_COLOR"] or {1.0, 0.4, 1.0, 1.0}
-    local uninterruptibleColor = config[unitUpper .. "_UNINTERRUPTIBLE_COLOR"] or {0.8, 0.8, 0.8, 1.0}
-    local interruptColor = config[unitUpper .. "_INTERRUPT_COLOR"] or {1, 0.2, 0.2, 1}
+    local mainCastColor = settings.castColor or {0, 1, 1, 1}
+    local castCompletionColor = settings.castCompletionColor or {0.2, 1.0, 1.0, 1.0}
+    local channelCompletionColor = settings.channelColor or {1.0, 0.4, 1.0, 1.0}
+    local uninterruptibleColor = settings.uninterruptibleColor or {0.8, 0.8, 0.8, 1.0}
+    local interruptColor = settings.interruptColor or {1, 0.2, 0.2, 1}
     
     -- Update individual holder frame colors
     if castBar.holderFrame then
@@ -1403,39 +1396,27 @@ function module.UpdateCastBarColors(unit)
         castBar.uninterruptibleHolder:SetStatusBarColor(unpack(uninterruptibleColor))
     end
     
-    -- Update the main cast bar's UpdateAppearance function to use config colors
-    if castBar.UpdateAppearance then
-        castBar.UpdateAppearance = function(self, castType, isInterruptible)
-            if castType == "cast" then
-                if isInterruptible then
-                    self:SetStatusBarColor(unpack(mainCastColor))
-                else
-                    self:SetStatusBarColor(unpack(uninterruptibleColor))
-                end
-            elseif castType == "channel" then
-                if isInterruptible then
-                    self:SetStatusBarColor(unpack(mainCastColor))
-                else
-                    self:SetStatusBarColor(unpack(uninterruptibleColor))
-                end
-            elseif castType == "interrupt" then
-                self:SetStatusBarColor(unpack(interruptColor))
-            end
-        end
+    -- Store color config in castbar for UpdateAppearance to use
+    if castBar then
+        castBar.colorConfig = {
+            mainCastColor = mainCastColor,
+            castCompletionColor = castCompletionColor,
+            channelCompletionColor = channelCompletionColor,
+            uninterruptibleColor = uninterruptibleColor,
+            interruptColor = interruptColor
+        }
     end
-    
-  --  print("Updated individual cast bar colors for " .. unit)
 end
 
 -- Update cast bar visibility
 function module.UpdateCastBarVisibility(unit)
-    local config = ns.castBarConfig() or {}
-    local unitUpper = unit:upper()
-    local castBar = module:GetCastBarForUnit(unit)
+    local settings = addon.DB and addon.DB.profile and addon.DB.profile.castBars and addon.DB.profile.castBars[unit]
+    if not settings then return end
     
+    local castBar = module:GetCastBarForUnit(unit)
     if not castBar then return end
     
-    local enabled = config[unitUpper .. "_CASTBAR_ENABLED"] ~= false
+    local enabled = settings.enabled ~= false
     
     if enabled then
         -- Don't force show, let the cast bar show when there's actual casting
@@ -1448,8 +1429,6 @@ function module.UpdateCastBarVisibility(unit)
         castBar:SetScript("OnEvent", nil)
         castBar:SetScript("OnUpdate", nil)
     end
-    
- --   print("Updated cast bar visibility for " .. unit .. " (enabled: " .. tostring(enabled) .. ")")
 end
 
 -- Apply all cast bar settings for a unit
@@ -1460,8 +1439,6 @@ function module.UpdateCastBarSettings(unit)
     module.UpdateCastBarDisplay(unit)
     module.UpdateCastBarColors(unit)
     module.UpdateCastBarVisibility(unit)
-    
-  --  print("Applied all cast bar settings for " .. unit)
 end
 
 -- Helper function to get cast bar for a unit

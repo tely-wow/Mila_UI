@@ -1680,6 +1680,31 @@ MilaUIAddon.Defaults = {
             }
         },
         castBars = {
+            player = {
+                enabled = true,
+                width = 200,
+                height = 18,
+                scale = 1.0,
+                xOffset = 0,
+                yOffset = -20,
+                showIcon = true,
+                showText = true,
+                showTimer = true,
+                -- LSM Statusbar Textures
+                texture = "g1",
+                castTexture = "HPYellowHD",
+                channelTexture = "shield-fill",
+                uninterruptibleTexture = "ArmorCastBar", 
+                interruptTexture = "HPredHD2",
+                backgroundTexture = "MirroredFrameSingleBG",
+                -- Colors
+                castColor = {0, 1, 1, 1},
+                channelColor = {0.5, 0.3, 0.9, 1},
+                uninterruptibleColor = {0.8, 0.8, 0.8, 1},
+                interruptColor = {1, 0.2, 0.2, 1},
+                castCompletionColor = {0.2, 1.0, 1.0, 1.0},
+                sparkTexture = "Interface\\Buttons\\WHITE8X8"
+            },
             PLAYER_CASTBAR_SHOW_ICON = true,
             PLAYER_CASTBAR_SHOW_TEXT = true,
             PLAYER_CASTBAR_SHOW_TIMER = true,
