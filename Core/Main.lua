@@ -1683,8 +1683,8 @@ MilaUIAddon.Defaults = {
             player = {
                 enabled = true,
                 size = {
-                    width = 200,
-                    height = 18,
+                    width = 400,
+                    height = 30,
                     scale = 1.0
                 },
                 position = {
@@ -1737,14 +1737,6 @@ MilaUIAddon.Defaults = {
                     completion = {0.2, 1.0, 1.0, 1.0}
                 }
             },
-            PLAYER_CASTBAR_SHOW_ICON = true,
-            PLAYER_CASTBAR_SHOW_TEXT = true,
-            PLAYER_CASTBAR_SHOW_TIMER = true,
-            PLAYER_CASTBAR_WIDTH = 225,
-            PLAYER_CASTBAR_HEIGHT = 18,
-            PLAYER_CASTBAR_X_OFFSET = 0,
-            PLAYER_CASTBAR_Y_OFFSET = 55,
-           
              TARGET_CASTBAR_SHOW_ICON = true,
              TARGET_CASTBAR_SHOW_TEXT = true,
              TARGET_CASTBAR_SHOW_TIMER = true,

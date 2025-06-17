@@ -64,9 +64,35 @@ end
 
 local function CreateColorPicker(parent, label, getValue, setValue)
     local value = getValue()
-    local colorPicker = AF.CreateColorPicker(parent, label, value, function(r, g, b, a)
+    
+    local colorPicker = AF.CreateColorPicker(parent, label, true, function(r, g, b, a)
+        setValue({r, g, b, a})
+    end, function(r, g, b, a)
         setValue({r, g, b, a})
     end)
+    
+    -- Hook the OnClick to reparent the color picker dialog
+    local originalOnClick = colorPicker:GetScript("OnClick")
+    colorPicker:SetScript("OnClick", function(self, ...)
+        if originalOnClick then
+            originalOnClick(self, ...)
+        end
+        -- Reparent the color picker dialog to main GUI frame after it's created
+        C_Timer.After(0.01, function()
+            local colorPickerFrame = _G.AFColorPicker
+            if colorPickerFrame and colorPickerFrame:IsVisible() then
+                colorPickerFrame:SetParent(cleanCastbarGUI or AF.UIParent)
+                colorPickerFrame:SetFrameStrata("DIALOG")
+                colorPickerFrame:SetToplevel(true)
+            end
+        end)
+    end)
+    
+    -- Set the initial color after creating the picker
+    if value then
+        colorPicker:SetColor(value)
+    end
+    
     return colorPicker
 end
 
@@ -181,18 +207,204 @@ local function PopulateGeneralSettings(parent)
 end
 
 local function PopulateColorSettings(parent)
+    local castbarSettings = GetCastbarSettings(currentUnit)
+    if not castbarSettings then return end
+    
+    
+    -- Color Settings Section
+    local colorSection = CreateBorderedSection(parent, "Color Settings", 160)
+    
+    -- Cast Color
+    local castColorPicker = CreateColorPicker(colorSection, "Cast Color",
+        function() return castbarSettings.colors and castbarSettings.colors.cast or {0, 1, 1, 1} end,
+        function(value) UpdateCastbarSetting(currentUnit, {"colors", "cast"}, value) end)
+    AddWidgetToSection(colorSection, castColorPicker, 10, -25)
+    
+    -- Channel Color
+    local channelColorPicker = CreateColorPicker(colorSection, "Channel Color",
+        function() return castbarSettings.colors and castbarSettings.colors.channel or {0.5, 0.3, 0.9, 1} end,
+        function(value) UpdateCastbarSetting(currentUnit, {"colors", "channel"}, value) end)
+    AddWidgetToSection(colorSection, channelColorPicker, 180, -25)
+    
+    -- Uninterruptible Color
+    local uninterruptibleColorPicker = CreateColorPicker(colorSection, "Uninterruptible Color",
+        function() return castbarSettings.colors and castbarSettings.colors.uninterruptible or {0.8, 0.8, 0.8, 1} end,
+        function(value) UpdateCastbarSetting(currentUnit, {"colors", "uninterruptible"}, value) end)
+    AddWidgetToSection(colorSection, uninterruptibleColorPicker, 10, -75)
+    
+    -- Interrupt Color
+    local interruptColorPicker = CreateColorPicker(colorSection, "Interrupt Color",
+        function() return castbarSettings.colors and castbarSettings.colors.interrupt or {1, 0.2, 0.2, 1} end,
+        function(value) UpdateCastbarSetting(currentUnit, {"colors", "interrupt"}, value) end)
+    AddWidgetToSection(colorSection, interruptColorPicker, 180, -75)
+    
+    -- Completion Color
+    local completionColorPicker = CreateColorPicker(colorSection, "Completion Color",
+        function() return castbarSettings.colors and castbarSettings.colors.completion or {0.2, 1.0, 1.0, 1.0} end,
+        function(value) UpdateCastbarSetting(currentUnit, {"colors", "completion"}, value) end)
+    AddWidgetToSection(colorSection, completionColorPicker, 10, -125)
 end
 
 local function PopulateIconSettings(parent)
+    local castbarSettings = GetCastbarSettings(currentUnit)
+    if not castbarSettings then return end
+    
+    -- Icon Settings Section
+    local iconSection = CreateBorderedSection(parent, "Icon Settings", 120)
+    
+    local iconEnabledCB = CreateCheckbox(iconSection, "Enable Icon",
+        function() return castbarSettings.display and castbarSettings.display.icon and castbarSettings.display.icon.show end,
+        function(value) UpdateCastbarSetting(currentUnit, {"display", "icon", "show"}, value) end)
+    AddWidgetToSection(iconSection, iconEnabledCB, 10, -25)
+    
+    local iconSizeSlider = CreateSlider(iconSection, "Icon Size", 10, 100,
+        function() return castbarSettings.display and castbarSettings.display.icon and castbarSettings.display.icon.size or 24 end,
+        function(value) UpdateCastbarSetting(currentUnit, {"display", "icon", "size"}, value) end, 1)
+    AddWidgetToSection(iconSection, iconSizeSlider, 10, -50)
+    
+    local iconXOffsetSlider = CreateSlider(iconSection, "Icon X Offset", -50, 50,
+        function() return castbarSettings.display and castbarSettings.display.icon and castbarSettings.display.icon.xOffset or 4 end,
+        function(value) UpdateCastbarSetting(currentUnit, {"display", "icon", "xOffset"}, value) end, 1)
+    AddWidgetToSection(iconSection, iconXOffsetSlider, 180, -25)
+    
+    local iconYOffsetSlider = CreateSlider(iconSection, "Icon Y Offset", -50, 50,
+        function() return castbarSettings.display and castbarSettings.display.icon and castbarSettings.display.icon.yOffset or 0 end,
+        function(value) UpdateCastbarSetting(currentUnit, {"display", "icon", "yOffset"}, value) end, 1)
+    AddWidgetToSection(iconSection, iconYOffsetSlider, 180, -50)
 end
 
 local function PopulateTextSettings(parent)
+    local castbarSettings = GetCastbarSettings(currentUnit)
+    if not castbarSettings then return end
+    
+    -- Text Settings Section
+    local textSection = CreateBorderedSection(parent, "Text Settings", 200)
+    
+    local textEnabledCB = CreateCheckbox(textSection, "Enable Text",
+        function() return castbarSettings.display and castbarSettings.display.text and castbarSettings.display.text.show end,
+        function(value) UpdateCastbarSetting(currentUnit, {"display", "text", "show"}, value) end)
+    AddWidgetToSection(textSection, textEnabledCB, 10, -25)
+    
+    local timeEnabledCB = CreateCheckbox(textSection, "Show Timer",
+        function() return castbarSettings.display and castbarSettings.display.timer and castbarSettings.display.timer.show end,
+        function(value) UpdateCastbarSetting(currentUnit, {"display", "timer", "show"}, value) end)
+    AddWidgetToSection(textSection, timeEnabledCB, 180, -25)
+    
+    local textSizeSlider = CreateSlider(textSection, "Text Size", 6, 32,
+        function() return castbarSettings.display and castbarSettings.display.text and castbarSettings.display.text.size or 12 end,
+        function(value) UpdateCastbarSetting(currentUnit, {"display", "text", "size"}, value) end, 1)
+    AddWidgetToSection(textSection, textSizeSlider, 10, -50)
+    
+    local timeSizeSlider = CreateSlider(textSection, "Timer Size", 6, 32,
+        function() return castbarSettings.display and castbarSettings.display.timer and castbarSettings.display.timer.size or 10 end,
+        function(value) UpdateCastbarSetting(currentUnit, {"display", "timer", "size"}, value) end, 1)
+    AddWidgetToSection(textSection, timeSizeSlider, 180, -50)
+    
+    local fontFlagOptions = {
+        {text = "None", value = "NONE"},
+        {text = "Outline", value = "OUTLINE"},
+        {text = "Thick Outline", value = "THICKOUTLINE"},
+        {text = "Monochrome", value = "MONOCHROME"}
+    }
+    
+    local textFontFlagsDD = CreateDropdown(textSection, "Text Font Flags", fontFlagOptions,
+        function() return castbarSettings.display and castbarSettings.display.text and castbarSettings.display.text.fontFlags or "OUTLINE" end,
+        function(value) UpdateCastbarSetting(currentUnit, {"display", "text", "fontFlags"}, value) end)
+    AddWidgetToSection(textSection, textFontFlagsDD, 10, -100)
+    
+    local timerFontFlagsDD = CreateDropdown(textSection, "Timer Font Flags", fontFlagOptions,
+        function() return castbarSettings.display and castbarSettings.display.timer and castbarSettings.display.timer.fontFlags or "OUTLINE" end,
+        function(value) UpdateCastbarSetting(currentUnit, {"display", "timer", "fontFlags"}, value) end)
+    AddWidgetToSection(textSection, timerFontFlagsDD, 180, -100)
+    
+    local textColorPicker = CreateColorPicker(textSection, "Text Color",
+        function() return castbarSettings.display and castbarSettings.display.text and castbarSettings.display.text.fontColor or {1, 1, 1, 1} end,
+        function(value) UpdateCastbarSetting(currentUnit, {"display", "text", "fontColor"}, value) end)
+    AddWidgetToSection(textSection, textColorPicker, 10, -150)
+    
+    local timerColorPicker = CreateColorPicker(textSection, "Timer Color",
+        function() return castbarSettings.display and castbarSettings.display.timer and castbarSettings.display.timer.fontColor or {1, 1, 1, 1} end,
+        function(value) UpdateCastbarSetting(currentUnit, {"display", "timer", "fontColor"}, value) end)
+    AddWidgetToSection(textSection, timerColorPicker, 180, -150)
 end
 
 local function PopulateSparkSettings(parent)
+    local castbarSettings = GetCastbarSettings(currentUnit)
+    if not castbarSettings then return end
+    
+    -- Spark Settings Section
+    local sparkSection = CreateBorderedSection(parent, "Spark Settings", 140)
+    
+    local sparkEnabledCB = CreateCheckbox(sparkSection, "Enable Spark",
+        function() return castbarSettings.spark and castbarSettings.spark.enabled or true end,
+        function(value) UpdateCastbarSetting(currentUnit, {"spark", "enabled"}, value) end)
+    AddWidgetToSection(sparkSection, sparkEnabledCB, 10, -25)
+    
+    local sparkWidthSlider = CreateSlider(sparkSection, "Spark Width", 1, 50,
+        function() return castbarSettings.spark and castbarSettings.spark.width or 10 end,
+        function(value) UpdateCastbarSetting(currentUnit, {"spark", "width"}, value) end, 1)
+    AddWidgetToSection(sparkSection, sparkWidthSlider, 10, -50)
+    
+    local sparkHeightSlider = CreateSlider(sparkSection, "Spark Height", 1, 100,
+        function() return castbarSettings.spark and castbarSettings.spark.height or 30 end,
+        function(value) UpdateCastbarSetting(currentUnit, {"spark", "height"}, value) end, 1)
+    AddWidgetToSection(sparkSection, sparkHeightSlider, 180, -50)
+    
+    local sparkColorPicker = CreateColorPicker(sparkSection, "Spark Color",
+        function() return castbarSettings.spark and castbarSettings.spark.color or {1, 1, 1, 1} end,
+        function(value) UpdateCastbarSetting(currentUnit, {"spark", "color"}, value) end)
+    AddWidgetToSection(sparkSection, sparkColorPicker, 10, -100)
+    
+    local sparkTextureInput = CreateTextInput(sparkSection, "Spark Texture",
+        function() return castbarSettings.textures and castbarSettings.textures.spark or "Interface\\Buttons\\WHITE8X8" end,
+        function(value) UpdateCastbarSetting(currentUnit, {"textures", "spark"}, value) end)
+    AddWidgetToSection(sparkSection, sparkTextureInput, 180, -100)
 end
 
-local function PopulatePositionSettings(parent)
+local function PopulateAdvancedSettings(parent)
+    local castbarSettings = GetCastbarSettings(currentUnit)
+    if not castbarSettings then return end
+    
+    -- Advanced Settings Section
+    local advancedSection = CreateBorderedSection(parent, "Advanced Settings", 160)
+    
+    local hideTradeSkillsCB = CreateCheckbox(advancedSection, "Hide Trade Skills",
+        function() return castbarSettings.hideTradeSkills end,
+        function(value) UpdateCastbarSetting(currentUnit, "hideTradeSkills", value) end)
+    AddWidgetToSection(advancedSection, hideTradeSkillsCB, 10, -25)
+    
+    local showBorderCB = CreateCheckbox(advancedSection, "Show Border",
+        function() return castbarSettings.border ~= false end,
+        function(value) UpdateCastbarSetting(currentUnit, "border", value) end)
+    AddWidgetToSection(advancedSection, showBorderCB, 180, -25)
+    
+    local borderSizeSlider = CreateSlider(advancedSection, "Border Size", 0, 10,
+        function() return castbarSettings.borderSize or 1 end,
+        function(value) UpdateCastbarSetting(currentUnit, "borderSize", value) end, 0.1)
+    AddWidgetToSection(advancedSection, borderSizeSlider, 10, -50)
+    
+    local holdTimeSlider = CreateSlider(advancedSection, "Hold Time", 0, 5,
+        function() return castbarSettings.holdTime or 0.5 end,
+        function(value) UpdateCastbarSetting(currentUnit, "holdTime", value) end, 0.05)
+    AddWidgetToSection(advancedSection, holdTimeSlider, 180, -50)
+    
+    -- Player-specific settings
+    if currentUnit == "player" then
+        local showSafeZoneCB = CreateCheckbox(advancedSection, "Show Safe Zone (Latency)",
+            function() return castbarSettings.showSafeZone end,
+            function(value) UpdateCastbarSetting(currentUnit, "showSafeZone", value) end)
+        AddWidgetToSection(advancedSection, showSafeZoneCB, 10, -100)
+        
+        local safeZoneColorPicker = CreateColorPicker(advancedSection, "Safe Zone Color",
+            function() return castbarSettings.safeZoneColor or {1, 0, 0, 0.6} end,
+            function(value) UpdateCastbarSetting(currentUnit, "safeZoneColor", value) end)
+        AddWidgetToSection(advancedSection, safeZoneColorPicker, 180, -100)
+    end
+    
+    local showShieldCB = CreateCheckbox(advancedSection, "Show Shield (Non-Interruptible)",
+        function() return castbarSettings.showShield end,
+        function(value) UpdateCastbarSetting(currentUnit, "showShield", value) end)
+    AddWidgetToSection(advancedSection, showShieldCB, 10, -125)
 end
 
 local function CreateUnitTabs(parent)
@@ -234,8 +446,13 @@ local function CreateTabContent(parent)
     AF.SetPoint(testLabel, "TOPLEFT", 10, -10)
     
     PopulateGeneralSettings(content.scrollContent)
+    PopulateColorSettings(content.scrollContent)
+    PopulateIconSettings(content.scrollContent)
+    PopulateTextSettings(content.scrollContent)
+    PopulateSparkSettings(content.scrollContent)
+    PopulateAdvancedSettings(content.scrollContent)
     
-    content:SetContentHeight(450)  -- Increased for better spacing
+    content:SetContentHeight(1200)  -- Increased for all sections
     
     return content
 end
