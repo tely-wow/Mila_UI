@@ -167,6 +167,26 @@ MilaUIAddon.Defaults = {
                     Direction           = "LR",
                     Texture             = "Smooth",
                     BackgroundTexture   = "Smooth",
+                    Colors = {
+                        ColorByStaticColor                = false,
+                        StaticColor                       = {1, 1, 1},
+                        ColourByClass                     = true,
+                        ColourByReaction                  = true,
+                        ColourIfDisconnected              = true,
+                        ColourIfTapped                    = true,
+                        ColorBackgroundByStaticColor      = false,
+                        BackgroundStaticColor             = {1, 1, 1},
+                        ColourBackgroundByForeground      = false,
+                        ColourBackgroundByClass           = false,
+                        ColourBackgroundIfDead            = false,
+                        BackgroundMultiplier              = 0.25,
+                        Status = {
+                            [1] = {255/255, 64/255, 64/255},           -- Dead
+                            [2] = {153/255, 153/255, 153/255}, -- Tapped 
+                            [3] = {0.6, 0.6, 0.6}, -- Disconnected
+                        }
+                        
+                    },
                     CustomMask = {
                         Enabled = true,
                         MaskTexture = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\parallelogram_style2.tga",
@@ -200,6 +220,7 @@ MilaUIAddon.Defaults = {
                     Direction               = "LR",
                     Texture                 = "Smooth",
                     BackgroundTexture       = "Smooth",
+                    
                     CustomMask = {
                         Enabled = true,
                         MaskTexture = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\parallelogram_power_style2.tga",
@@ -417,6 +438,26 @@ MilaUIAddon.Defaults = {
                     Direction           = "LR",
                     Texture             = "Smooth",
                     BackgroundTexture   = "Smooth",
+                    Colors = {
+                        ColorByStaticColor                = false,
+                        StaticColor                       = {1, 1, 1},
+                        ColourByClass                     = true,
+                        ColourByReaction                  = true,
+                        ColourIfDisconnected              = true,
+                        ColourIfTapped                    = true,
+                        ColorBackgroundByStaticColor      = false,
+                        BackgroundStaticColor             = {1, 1, 1},
+                        ColourBackgroundByForeground      = false,
+                        ColourBackgroundByClass           = false,
+                        ColourBackgroundIfDead            = false,
+                        BackgroundMultiplier              = 0.25,
+                        Status = {
+                            [1] = {255/255, 64/255, 64/255},           -- Dead
+                            [2] = {153/255, 153/255, 153/255}, -- Tapped 
+                            [3] = {0.6, 0.6, 0.6}, -- Disconnected
+                        }
+                        
+                    },
                     CustomMask = {
                         Enabled = true,
                         MaskTexture = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\parallelogram_style2_mirrored.tga",
@@ -663,6 +704,26 @@ MilaUIAddon.Defaults = {
                     Direction           = "LR",
                     Texture             = "Smooth",
                     BackgroundTexture   = "Smooth",
+                    Colors = {
+                        ColorByStaticColor                = false,
+                        StaticColor                       = {1, 1, 1},
+                        ColourByClass                     = true,
+                        ColourByReaction                  = true,
+                        ColourIfDisconnected              = true,
+                        ColourIfTapped                    = true,
+                        ColorBackgroundByStaticColor      = false,
+                        BackgroundStaticColor             = {1, 1, 1},
+                        ColourBackgroundByForeground      = false,
+                        ColourBackgroundByClass           = false,
+                        ColourBackgroundIfDead            = false,
+                        BackgroundMultiplier              = 0.25,
+                        Status = {
+                            [1] = {255/255, 64/255, 64/255},           -- Dead
+                            [2] = {153/255, 153/255, 153/255}, -- Tapped 
+                            [3] = {0.6, 0.6, 0.6}, -- Disconnected
+                        }
+                        
+                    },
                     CustomMask = {
                         Enabled         = true,
                         MaskTexture     = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\parallelogram_style2_mirrored.tga",
@@ -832,6 +893,24 @@ MilaUIAddon.Defaults = {
                     Direction           = "LR",
                     Texture             = "Smooth",
                     BackgroundTexture   = "Smooth",
+                    Colors = {
+                        ColourByClass                     = true,
+                        ColourByReaction                  = true,
+                        ColourIfDisconnected              = true,
+                        ColourIfTapped                    = true,
+                        ColorBackgroundByStaticColor      = false,
+                        BackgroundStaticColor             = {1, 1, 1},
+                        ColourBackgroundByForeground      = false,
+                        ColourBackgroundByClass           = false,
+                        ColourBackgroundIfDead            = false,
+                        BackgroundMultiplier              = 0.25,
+                        Status = {
+                            [1] = {255/255, 64/255, 64/255},           -- Dead
+                            [2] = {153/255, 153/255, 153/255}, -- Tapped 
+                            [3] = {0.6, 0.6, 0.6}, -- Disconnected
+                        }
+                        
+                    },
                     CustomMask = {
                         Enabled         = true,
                         MaskTexture     = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\parallelogram_style2_mirrored.tga",
@@ -1070,6 +1149,26 @@ MilaUIAddon.Defaults = {
                     Direction           = "LR",
                     Texture             = "Smooth",
                     BackgroundTexture   = "Smooth",
+                    Colors = {
+                        ColorByStaticColor                = false,
+                        StaticColor                       = {1, 1, 1},
+                        ColourByClass                     = true,
+                        ColourByReaction                  = true,
+                        ColourIfDisconnected              = true,
+                        ColourIfTapped                    = true,
+                        ColorBackgroundByStaticColor      = false,
+                        BackgroundStaticColor             = {0.17, 0.09, 0.09},
+                        ColourBackgroundByForeground      = false,
+                        ColourBackgroundByClass           = false,
+                        ColourBackgroundIfDead            = false,
+                        BackgroundMultiplier              = 0.25,
+                        Status = {
+                            [1] = {255/255, 64/255, 64/255},           -- Dead
+                            [2] = {153/255, 153/255, 153/255}, -- Tapped 
+                            [3] = {0.6, 0.6, 0.6}, -- Disconnected
+                        }
+                        
+                    },
                     CustomMask = {
                         Enabled         = true,
                         MaskTexture     = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\parallelogram_style2_mirrored.tga",
@@ -1239,6 +1338,26 @@ MilaUIAddon.Defaults = {
                     Direction           = "LR",
                     Texture             = "Smooth",
                     BackgroundTexture   = "Smooth",
+                    Colors = {
+                        ColorByStaticColor                = false,
+                        StaticColor                       = {1, 1, 1},
+                        ColourByClass                     = true,
+                        ColourByReaction                  = true,
+                        ColourIfDisconnected              = true,
+                        ColourIfTapped                    = true,
+                        ColorBackgroundByStaticColor      = false,
+                        BackgroundStaticColor             = {1, 1, 1},
+                        ColourBackgroundByForeground      = false,
+                        ColourBackgroundByClass           = false,
+                        ColourBackgroundIfDead            = false,
+                        BackgroundMultiplier              = 0.25,
+                        Status = {
+                            [1] = {255/255, 64/255, 64/255},           -- Dead
+                            [2] = {153/255, 153/255, 153/255}, -- Tapped 
+                            [3] = {0.6, 0.6, 0.6}, -- Disconnected
+                        }
+                        
+                    },
                     CustomMask = {
                         Enabled         = true,
                         MaskTexture     = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\Parallelogram.tga",
@@ -1472,6 +1591,26 @@ MilaUIAddon.Defaults = {
                     Direction           = "LR",
                     Texture             = "Smooth",
                     BackgroundTexture   = "Smooth",
+                    Colors = {
+                        ColorByStaticColor                = false,
+                        StaticColor                       = {1, 1, 1},
+                        ColourByClass                     = true,
+                        ColourByReaction                  = true,
+                        ColourIfDisconnected              = true,
+                        ColourIfTapped                    = true,
+                        ColorBackgroundByStaticColor      = false,
+                        BackgroundStaticColor             = {1, 1, 1},
+                        ColourBackgroundByForeground      = false,
+                        ColourBackgroundByClass           = false,
+                        ColourBackgroundIfDead            = false,
+                        BackgroundMultiplier              = 0.25,
+                        Status = {
+                            [1] = {255/255, 64/255, 64/255},           -- Dead
+                            [2] = {153/255, 153/255, 153/255}, -- Tapped 
+                            [3] = {0.6, 0.6, 0.6}, -- Disconnected
+                        }
+                        
+                    },
                     CustomMask = {
                         Enabled         = true,
                         MaskTexture     = "Interface\\Addons\\Mila_UI\\Media\\Statusbars\\Masks\\parallelogram_style2_mirrored.tga",

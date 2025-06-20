@@ -71,28 +71,7 @@ end
 
 
 
-function MilaUI:UpdateFrames()
-    MilaUI:LoadCustomColours()
-    if self.PlayerFrame then
-        MilaUI:UpdateUnitFrame(self.PlayerFrame)
-    end
-    if self.TargetFrame then
-        MilaUI:UpdateUnitFrame(self.TargetFrame)
-    end
-    if self.FocusFrame then
-        MilaUI:UpdateUnitFrame(self.FocusFrame)
-    end
-    if self.FocusTargetFrame then
-        MilaUI:UpdateUnitFrame(self.FocusTargetFrame)
-    end
-    if self.PetFrame then
-        MilaUI:UpdateUnitFrame(self.PetFrame)
-    end
-    if self.TargetTargetFrame then
-        MilaUI:UpdateUnitFrame(self.TargetTargetFrame)
-    end
-    MilaUI:UpdateBossFrames()
-end
+-- UpdateFrames function has been moved to GUI_AF_Utility.lua
 
 function MilaUI:UpdateIndicator()
     if self.PlayerFrame then

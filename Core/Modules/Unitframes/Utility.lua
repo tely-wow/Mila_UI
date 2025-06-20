@@ -122,35 +122,43 @@ local function PostUpdateButton(_, button, Unit, AuraType)
     end
 end
 
-local function ColourBackgroundByUnitStatus(self)
+local function ColourBackgroundByUnitStatus(self, Unit)
     local General = MilaUI.DB.profile.Unitframes.General
-    local CustomColour = General.CustomColours
     local unit = self.unit
     local bar = self.Health
     if not unit or not bar or not bar.bg or not UnitExists(unit) then return end
 
+    -- Get unit-specific health color settings
+    local Health = Unit and MilaUI.DB.profile.Unitframes[Unit] and MilaUI.DB.profile.Unitframes[Unit].Health
+    if not Health or not Health.Colors then return end
+    
+    local Colors = Health.Colors
     local bg = bar.bg
 
     if UnitIsDead(unit) then
-        if General.ColourBackgroundIfDead then
-            -- Use custom dead color
-            local r, g, b = unpack(CustomColour.Status[1])
+        if Colors.ColourBackgroundIfDead and Colors.Status and Colors.Status[1] then
+            -- Use custom dead background color from Status[1]
+            local r, g, b = unpack(Colors.Status[1])
             bg:SetVertexColor(r, g, b, General.BackgroundColour[4])
-        elseif General.ColourBackgroundByReaction then
+        elseif Colors.ColourBackgroundByForeground then
             -- Use fallback multiplier on foreground
-            local a = General.BackgroundMultiplier
+            local a = Colors.BackgroundMultiplier or General.BackgroundMultiplier or 0.25
             local fr, fg, fb = bar:GetStatusBarColor()
             bg:SetVertexColor(fr * a, fg * a, fb * a, General.BackgroundColour[4])
+        elseif Colors.ColorBackgroundByStaticColor and Colors.BackgroundStaticColor then
+            -- Use static background color
+            local r, g, b = unpack(Colors.BackgroundStaticColor)
+            bg:SetVertexColor(r, g, b, General.BackgroundColour[4])
         else
-            -- Static fallback color
+            -- Default fallback color
             bg:SetVertexColor(unpack(General.BackgroundColour))
         end
     else
-        if General.ColourBackgroundByForeground then
-            local a = General.BackgroundMultiplier
+        if Colors.ColourBackgroundByForeground then
+            local a = Colors.BackgroundMultiplier or General.BackgroundMultiplier or 0.25
             local r, g, b = bar:GetStatusBarColor()
             bg:SetVertexColor(r * a, g * a, b * a, General.BackgroundColour[4])
-        elseif General.ColourBackgroundByClass then
+        elseif Colors.ColourBackgroundByClass then
             local r, g, b
             if UnitIsPlayer(unit) then
                 local class = select(2, UnitClass(unit))
@@ -168,6 +176,10 @@ local function ColourBackgroundByUnitStatus(self)
             else
                 bg:SetVertexColor(unpack(General.BackgroundColour))
             end
+        elseif Colors.ColorBackgroundByStaticColor and Colors.BackgroundStaticColor then
+            -- Use static background color
+            local r, g, b = unpack(Colors.BackgroundStaticColor)
+            bg:SetVertexColor(r, g, b, General.BackgroundColour[4])
         else
             -- Default static color
             bg:SetVertexColor(unpack(General.BackgroundColour))
@@ -288,12 +300,20 @@ local function CreateHealthBar(self, Unit)
 
         health.bg = bg
 
-        -- Color logic
-        health.colorClass        = General.ColourByClass
-        health.colorReaction     = General.ColourByClass
-        health.colorDisconnected = General.ColourIfDisconnected
-        health.colorTapping      = General.ColourIfTapped
-        health.colorHealth       = true
+        -- Color logic - use per-unit settings
+        health.colorClass        = Health.Colors.ColourByClass
+        health.colorReaction     = Health.Colors.ColourByReaction
+        health.colorDisconnected = Health.Colors.ColourIfDisconnected
+        health.colorTapping      = Health.Colors.ColourIfTapped
+        health.colorHealth       = Health.Colors.ColorByStaticColor
+        
+        -- Apply static color if enabled
+        if Health.Colors.ColorByStaticColor and Health.Colors.StaticColor then
+            health.colorClass = false
+            health.colorReaction = false
+            health.colorHealth = false
+            health:SetStatusBarColor(Health.Colors.StaticColor[1], Health.Colors.StaticColor[2], Health.Colors.StaticColor[3])
+        end
 
         if Unit == "Pet" then
             local ColourByPlayerClass = MilaUI.DB.profile.Unitframes.Pet.Health.ColourByPlayerClass
@@ -314,9 +334,9 @@ local function CreateHealthBar(self, Unit)
         health.PostUpdateColor = function(bar, unit, r, g, b)
             local parent = bar.__owner or bar:GetParent()
             if parent and parent.ColourBackgroundByUnitStatus then
-                parent:ColourBackgroundByUnitStatus()
+                parent:ColourBackgroundByUnitStatus(Unit)
             elseif ColourBackgroundByUnitStatus then
-                ColourBackgroundByUnitStatus(parent or bar)
+                ColourBackgroundByUnitStatus(parent or bar, Unit)
             end
             -- NPC: Custom color via Plater
             if MilaUI.DB.profile.Unitframes.General.ColourByPlaterNameplates then
@@ -982,13 +1002,21 @@ function MilaUI:UpdateHealthBar(FrameName)
             tex:SetMask(Health.CustomMask.MaskTexture)
         end
 
-        -- Update oUF color logic flags
-        bar.colorClass        = General.ColourByClass
-        bar.colorReaction     = General.ColourByClass
-        bar.colorDisconnected = General.ColourIfDisconnected
-        bar.colorTapping      = General.ColourIfTapped
-        bar.colorHealth       = true
+        -- Update oUF color logic flags - use per-unit settings
+        bar.colorClass        = Health.Colors.ColourByClass
+        bar.colorReaction     = Health.Colors.ColourByReaction
+        bar.colorDisconnected = Health.Colors.ColourIfDisconnected
+        bar.colorTapping      = Health.Colors.ColourIfTapped
+        bar.colorHealth       = Health.Colors.ColorByStaticColor
         bar:SetAlpha(General.ForegroundColour[4])
+        
+        -- Apply static color if enabled
+        if Health.Colors.ColorByStaticColor and Health.Colors.StaticColor then
+            bar.colorClass = false
+            bar.colorReaction = false
+            bar.colorHealth = false
+            bar:SetStatusBarColor(Health.Colors.StaticColor[1], Health.Colors.StaticColor[2], Health.Colors.StaticColor[3])
+        end
 
         -- Special color override for pet
         if Unit == "Pet" then
@@ -1639,8 +1667,11 @@ function MilaUI:DisplayBossFrames()
         if BossFrame.unitHealthBar then
             local BF = BossFrame.unitHealthBar
             local PlayerClassColour = RAID_CLASS_COLORS[select(2, UnitClass("player"))]
-            if General.ColourByClass then
+            local BossHealth = MilaUI.DB.profile.Unitframes.Boss.Health
+            if BossHealth.Colors.ColourByClass then
                 BF:SetStatusBarColor(PlayerClassColour.r, PlayerClassColour.g, PlayerClassColour.b)
+            elseif BossHealth.Colors.ColorByStaticColor and BossHealth.Colors.StaticColor then
+                BF:SetStatusBarColor(BossHealth.Colors.StaticColor[1], BossHealth.Colors.StaticColor[2], BossHealth.Colors.StaticColor[3])
             else 
                 BF:SetStatusBarColor(unpack(General.ForegroundColour))
             end
@@ -1651,7 +1682,7 @@ function MilaUI:DisplayBossFrames()
                 BossFrame.unitHealthBarBackground:SetPoint("TOPLEFT", BossFrame, "TOPLEFT", 1, -1)
                 BossFrame.unitHealthBarBackground:SetTexture(General.BackgroundTexture)
                 BossFrame.unitHealthBarBackground:SetAlpha(General.BackgroundColour[4])
-                if General.ColourBackgroundByReaction then
+                if BossHealth.Colors.ColourBackgroundByForeground then
                     BossFrame.unitHealthBarBackground:SetVertexColor(PlayerClassColour.r * General.BackgroundMultiplier, PlayerClassColour.g * General.BackgroundMultiplier, PlayerClassColour.b * General.BackgroundMultiplier)
                 else
                     BossFrame.unitHealthBarBackground:SetVertexColor(unpack(General.BackgroundColour))
