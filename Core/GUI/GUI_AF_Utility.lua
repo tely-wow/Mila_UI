@@ -105,6 +105,33 @@ local function CreateTextInput(parent, label, getValue, setValue)
     return editbox
 end
 
+local function CreateTextureDropdown(parent, label, getValue, setValue)
+    local dropdown = AF.CreateDropdown(parent, 150, 10, "texture")
+    dropdown:SetLabel(label)
+    
+    -- Get texture list from LibSharedMedia
+    if LSM then
+        local textureOptions = {}
+        local textures, textureNames = LSM:HashTable("statusbar"), LSM:List("statusbar")
+        for _, name in ipairs(textureNames) do
+            tinsert(textureOptions, {
+                text = name,
+                texture = textures[name]
+            })
+        end
+        dropdown:SetItems(textureOptions)
+    end
+    
+    -- Set current value and callback
+    dropdown:SetSelectedValue(getValue() or "Interface\\TargetingFrame\\UI-StatusBar")
+    dropdown:SetOnClick(function(value)
+        setValue(value)
+    end)
+    
+    dropdown.accentColor = "pink"
+    return dropdown
+end
+
 local function CreateBorderedSection(parent, title, height, width)
     local section = AF.CreateBorderedFrame(parent, nil, width or 350, height or 120, nil, "pink")
     section:SetLabel(title, "pink")
@@ -142,6 +169,7 @@ MilaUI.AF.CreateSlider = CreateSlider
 MilaUI.AF.CreateColorPicker = CreateColorPicker
 MilaUI.AF.CreateDropdown = CreateDropdown
 MilaUI.AF.CreateTextInput = CreateTextInput
+MilaUI.AF.CreateTextureDropdown = CreateTextureDropdown
 MilaUI.AF.CreateBorderedSection = CreateBorderedSection
 MilaUI.AF.AddWidgetToSection = AddWidgetToSection
 

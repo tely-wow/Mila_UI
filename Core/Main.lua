@@ -238,7 +238,6 @@ MilaUIAddon.Defaults = {
                     Smooth = false,
                 },
                 Castbar = {
-                    useCleanCastbar = true,
                     enabled = true,
                     CustomScale = false,
                     Scale = 1,
@@ -1832,6 +1831,234 @@ MilaUIAddon.Defaults = {
                     xOffset = 0,
                     yOffset = -200,
                     anchorFrame = "UIParent"
+                },
+                display = {
+                    icon = {
+                        show = true,
+                        size = 24,
+                        xOffset = 4,
+                        yOffset = 0
+                    },
+                    text = {
+                        show = true,
+                        size = 12,
+                        xOffset = 0,
+                        yOffset = 2,
+                        font = "Expressway",
+                        fontFlags = "OUTLINE",
+                        fontColor = {1, 1, 1, 1}
+                    },
+                    timer = {
+                        show = true,
+                        size = 10,
+                        xOffset = -5,
+                        yOffset = 0,
+                        font = "Expressway",
+                        fontFlags = "OUTLINE",
+                        fontColor = {1, 1, 1, 1}
+                    }
+                },
+                textures = {
+                    main = "g1",
+                    cast = "HPYellowHD",
+                    channel = "shield-fill",
+                    uninterruptible = "ArmorCastBar",
+                    interrupt = "HPredHD2",
+                    background = "MirroredFrameSingleBG",
+                    spark = "Interface\\Buttons\\WHITE8X8"
+                },
+                colors = {
+                    cast = {0, 1, 1, 1},
+                    channel = {0.5, 0.3, 0.9, 1},
+                    uninterruptible = {0.8, 0.8, 0.8, 1},
+                    interrupt = {1, 0.2, 0.2, 1},
+                    completion = {0.2, 1.0, 1.0, 1.0}
+                }
+            },
+            target = {
+                enabled = false,
+                size = {
+                    width = 200,
+                    height = 20,
+                    scale = 1.0
+                },
+                position = {
+                    anchorPoint = "BOTTOM",
+                    anchorTo = "TOP",
+                    xOffset = 0,
+                    yOffset = -20,
+                    anchorFrame = "MilaUI_Target"
+                },
+                display = {
+                    icon = {
+                        show = true,
+                        size = 24,
+                        xOffset = 4,
+                        yOffset = 0
+                    },
+                    text = {
+                        show = true,
+                        size = 12,
+                        xOffset = 0,
+                        yOffset = 2,
+                        font = "Expressway",
+                        fontFlags = "OUTLINE",
+                        fontColor = {1, 1, 1, 1}
+                    },
+                    timer = {
+                        show = true,
+                        size = 10,
+                        xOffset = -5,
+                        yOffset = 0,
+                        font = "Expressway",
+                        fontFlags = "OUTLINE",
+                        fontColor = {1, 1, 1, 1}
+                    }
+                },
+                textures = {
+                    main = "g1",
+                    cast = "HPYellowHD",
+                    channel = "shield-fill",
+                    uninterruptible = "ArmorCastBar",
+                    interrupt = "HPredHD2",
+                    background = "MirroredFrameSingleBG",
+                    spark = "Interface\\Buttons\\WHITE8X8"
+                },
+                colors = {
+                    cast = {0, 1, 1, 1},
+                    channel = {0.5, 0.3, 0.9, 1},
+                    uninterruptible = {0.8, 0.8, 0.8, 1},
+                    interrupt = {1, 0.2, 0.2, 1},
+                    completion = {0.2, 1.0, 1.0, 1.0}
+                }
+            },
+            focus = {
+                enabled = false,
+                size = {
+                    width = 200,
+                    height = 20,
+                    scale = 1.0
+                },
+                position = {
+                    anchorPoint = "BOTTOM",
+                    anchorTo = "TOP",
+                    xOffset = 0,
+                    yOffset = -20,
+                    anchorFrame = "MilaUI_Focus"
+                },
+                display = {
+                    icon = {
+                        show = true,
+                        size = 24,
+                        xOffset = 4,
+                        yOffset = 0
+                    },
+                    text = {
+                        show = true,
+                        size = 12,
+                        xOffset = 0,
+                        yOffset = 2,
+                        font = "Expressway",
+                        fontFlags = "OUTLINE",
+                        fontColor = {1, 1, 1, 1}
+                    },
+                    timer = {
+                        show = true,
+                        size = 10,
+                        xOffset = -5,
+                        yOffset = 0,
+                        font = "Expressway",
+                        fontFlags = "OUTLINE",
+                        fontColor = {1, 1, 1, 1}
+                    }
+                },
+                textures = {
+                    main = "g1",
+                    cast = "HPYellowHD",
+                    channel = "shield-fill",
+                    uninterruptible = "ArmorCastBar",
+                    interrupt = "HPredHD2",
+                    background = "MirroredFrameSingleBG",
+                    spark = "Interface\\Buttons\\WHITE8X8"
+                },
+                colors = {
+                    cast = {0, 1, 1, 1},
+                    channel = {0.5, 0.3, 0.9, 1},
+                    uninterruptible = {0.8, 0.8, 0.8, 1},
+                    interrupt = {1, 0.2, 0.2, 1},
+                    completion = {0.2, 1.0, 1.0, 1.0}
+                }
+            },
+            boss = {
+                enabled = false,
+                size = {
+                    width = 200,
+                    height = 20,
+                    scale = 1.0
+                },
+                position = {
+                    anchorPoint = "BOTTOM",
+                    anchorTo = "TOP",
+                    xOffset = 0,
+                    yOffset = -20,
+                    anchorFrame = "MilaUI_Boss"
+                },
+                display = {
+                    icon = {
+                        show = true,
+                        size = 24,
+                        xOffset = 4,
+                        yOffset = 0
+                    },
+                    text = {
+                        show = true,
+                        size = 12,
+                        xOffset = 0,
+                        yOffset = 2,
+                        font = "Expressway",
+                        fontFlags = "OUTLINE",
+                        fontColor = {1, 1, 1, 1}
+                    },
+                    timer = {
+                        show = true,
+                        size = 10,
+                        xOffset = -5,
+                        yOffset = 0,
+                        font = "Expressway",
+                        fontFlags = "OUTLINE",
+                        fontColor = {1, 1, 1, 1}
+                    }
+                },
+                textures = {
+                    main = "g1",
+                    cast = "HPYellowHD",
+                    channel = "shield-fill",
+                    uninterruptible = "ArmorCastBar",
+                    interrupt = "HPredHD2",
+                    background = "MirroredFrameSingleBG",
+                    spark = "Interface\\Buttons\\WHITE8X8"
+                },
+                colors = {
+                    cast = {0, 1, 1, 1},
+                    channel = {0.5, 0.3, 0.9, 1},
+                    uninterruptible = {0.8, 0.8, 0.8, 1},
+                    interrupt = {1, 0.2, 0.2, 1},
+                    completion = {0.2, 1.0, 1.0, 1.0}
+                }
+            },
+            pet = {
+                enabled = false,
+                size = {
+                    width = 200,
+                    height = 20,
+                    scale = 1.0
+                },
+                position = {
+                    anchorPoint = "BOTTOM",
+                    anchorTo = "TOP",
+                    xOffset = 0,
+                    yOffset = -20,
+                    anchorFrame = "MilaUI_Pet"
                 },
                 display = {
                     icon = {

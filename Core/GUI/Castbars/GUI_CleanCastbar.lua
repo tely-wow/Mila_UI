@@ -39,7 +39,47 @@ local function UpdateCastbarSetting(unit, setting, value)
         else
             castbarSettings[setting] = value
         end
+        
+        -- Apply specific updates based on setting type
+        if type(setting) == "table" and setting[1] == "colors" then
+            -- Color settings changed, update colors immediately
+            if MilaUI.NewCastbarSystem and MilaUI.NewCastbarSystem.UpdateCastBarColors then
+                MilaUI.NewCastbarSystem.UpdateCastBarColors(unit)
+            end
+        end
+        
+        -- Show castbar temporarily for preview when changing non-color visual settings
+        if type(setting) == "table" and (setting[1] == "textures" or setting[1] == "display" or setting[1] == "spark") then
+            ShowCastbarPreview(unit)
+        end
+        
         MilaUI:RefreshCastbars()
+    end
+end
+
+local function ShowCastbarPreview(unit)
+    local frame = nil
+    if unit == "player" then
+        frame = MilaUI.PlayerFrame
+    elseif unit == "target" then
+        frame = MilaUI.TargetFrame
+    elseif unit == "focus" then
+        frame = MilaUI.FocusFrame
+    elseif unit == "pet" then
+        frame = MilaUI.PetFrame
+    elseif unit == "boss" then
+        frame = MilaUI.BossFrames and MilaUI.BossFrames[1]
+    end
+    
+    if frame and frame.castBar then
+        frame.castBar:SetValue(0.6)
+        frame.castBar:Show()
+        -- Hide after 3 seconds
+        C_Timer.After(3, function()
+            if frame.castBar and not frame.castBar.casting then
+                frame.castBar:Hide()
+            end
+        end)
     end
 end
 
@@ -67,8 +107,18 @@ local function CreateColorPicker(parent, label, getValue, setValue)
     
     local colorPicker = AF.CreateColorPicker(parent, label, true, function(r, g, b, a)
         setValue({r, g, b, a})
+        -- Update colors immediately and show preview
+        if MilaUI.NewCastbarSystem and MilaUI.NewCastbarSystem.UpdateCastBarColors then
+            MilaUI.NewCastbarSystem.UpdateCastBarColors(currentUnit)
+        end
+        ShowCastbarPreview(currentUnit)
     end, function(r, g, b, a)
         setValue({r, g, b, a})
+        -- Update colors immediately and show preview
+        if MilaUI.NewCastbarSystem and MilaUI.NewCastbarSystem.UpdateCastBarColors then
+            MilaUI.NewCastbarSystem.UpdateCastBarColors(currentUnit)
+        end
+        ShowCastbarPreview(currentUnit)
     end)
     
     -- Hook the OnClick to reparent the color picker dialog
@@ -109,6 +159,44 @@ local function CreateDropdown(parent, label, options, getValue, setValue)
         dropdown:SetSelectedValue(currentValue)
     end
     dropdown.accentColor = "pink"  -- Set dropdown accent color to pink
+    return dropdown
+end
+
+local function CreateTexturePicker(parent, label, getValue, setValue)
+    -- Get available textures from LSM
+    local textureList = LSM:List("statusbar")
+    local textureOptions = {}
+    
+    -- Build options table with texture preview
+    for i, textureName in ipairs(textureList) do
+        local texturePath = LSM:Fetch("statusbar", textureName)
+        textureOptions[i] = {
+            text = textureName, 
+            value = textureName,
+            -- Add texture preview to the dropdown item
+            icon = texturePath,
+            iconCoords = {0, 1, 0, 1},
+            iconHeight = 16,
+            iconWidth = 60
+        }
+    end
+    
+    -- Create the dropdown with texture previews
+    local dropdown = AF.CreateDropdown(parent, 150)
+    dropdown:SetLabel(label)
+    dropdown:SetItems(textureOptions)
+    dropdown:SetOnClick(function(selectedValue)
+        setValue(selectedValue)
+        MilaUI.modules.bars.UpdateCastBarSettings(currentUnit)
+    end)
+    
+    -- Set the current value
+    local currentValue = getValue()
+    if currentValue then
+        dropdown:SetSelectedValue(currentValue)
+    end
+    
+    dropdown.accentColor = "pink"
     return dropdown
 end
 
@@ -328,6 +416,61 @@ local function PopulateTextSettings(parent)
     AddWidgetToSection(textSection, timerColorPicker, 180, -150)
 end
 
+local function PopulateTextureSettings(parent)
+    local castbarSettings = GetCastbarSettings(currentUnit)
+    if not castbarSettings then return end
+    
+    -- Texture Settings Section
+    local textureSection = CreateBorderedSection(parent, "Texture Settings", 250)
+    
+    -- Main texture
+    local mainTexturePicker = CreateTexturePicker(textureSection, "Main Texture",
+        function() return castbarSettings.textures and castbarSettings.textures.main or "Smooth" end,
+        function(value) UpdateCastbarSetting(currentUnit, {"textures", "main"}, value) end)
+    AddWidgetToSection(textureSection, mainTexturePicker, 10, -25)
+    
+    -- Cast texture
+    local castTexturePicker = CreateTexturePicker(textureSection, "Cast Texture",
+        function() return castbarSettings.textures and castbarSettings.textures.cast or "Smooth" end,
+        function(value) UpdateCastbarSetting(currentUnit, {"textures", "cast"}, value) end)
+    AddWidgetToSection(textureSection, castTexturePicker, 180, -25)
+    
+    -- Channel texture
+    local channelTexturePicker = CreateTexturePicker(textureSection, "Channel Texture",
+        function() return castbarSettings.textures and castbarSettings.textures.channel or "Smooth" end,
+        function(value) UpdateCastbarSetting(currentUnit, {"textures", "channel"}, value) end)
+    AddWidgetToSection(textureSection, channelTexturePicker, 10, -75)
+    
+    -- Uninterruptible texture
+    local uninterruptibleTexturePicker = CreateTexturePicker(textureSection, "Uninterruptible Texture",
+        function() return castbarSettings.textures and castbarSettings.textures.uninterruptible or "Smooth" end,
+        function(value) UpdateCastbarSetting(currentUnit, {"textures", "uninterruptible"}, value) end)
+    AddWidgetToSection(textureSection, uninterruptibleTexturePicker, 180, -75)
+    
+    -- Interrupt texture
+    local interruptTexturePicker = CreateTexturePicker(textureSection, "Interrupt Texture",
+        function() return castbarSettings.textures and castbarSettings.textures.interrupt or "Smooth" end,
+        function(value) UpdateCastbarSetting(currentUnit, {"textures", "interrupt"}, value) end)
+    AddWidgetToSection(textureSection, interruptTexturePicker, 10, -125)
+    
+    -- Cast completion texture
+    local castCompletionTexturePicker = CreateTexturePicker(textureSection, "Cast Completion Texture",
+        function() return castbarSettings.textures and castbarSettings.textures.castCompletion or "Smooth" end,
+        function(value) UpdateCastbarSetting(currentUnit, {"textures", "castCompletion"}, value) end)
+    AddWidgetToSection(textureSection, castCompletionTexturePicker, 180, -125)
+    
+    -- Channel completion texture
+    local channelCompletionTexturePicker = CreateTexturePicker(textureSection, "Channel Completion Texture",
+        function() return castbarSettings.textures and castbarSettings.textures.channelCompletion or "Smooth" end,
+        function(value) UpdateCastbarSetting(currentUnit, {"textures", "channelCompletion"}, value) end)
+    AddWidgetToSection(textureSection, channelCompletionTexturePicker, 10, -175)
+    
+    -- Info label
+    local infoLabel = AF.CreateFontString(textureSection, "Note: Flash textures remain hardcoded for visual consistency", "gray")
+    AF.SetFont(infoLabel, nil, 10)
+    AddWidgetToSection(textureSection, infoLabel, 10, -225)
+end
+
 local function PopulateSparkSettings(parent)
     local castbarSettings = GetCastbarSettings(currentUnit)
     if not castbarSettings then return end
@@ -447,12 +590,13 @@ local function CreateTabContent(parent)
     
     PopulateGeneralSettings(content.scrollContent)
     PopulateColorSettings(content.scrollContent)
+    PopulateTextureSettings(content.scrollContent)
     PopulateIconSettings(content.scrollContent)
     PopulateTextSettings(content.scrollContent)
     PopulateSparkSettings(content.scrollContent)
     PopulateAdvancedSettings(content.scrollContent)
     
-    content:SetContentHeight(1200)  -- Increased for all sections
+    content:SetContentHeight(1500)  -- Increased for all sections including textures
     
     return content
 end
@@ -563,7 +707,6 @@ function MilaUI:RefreshCastbars()
             
             -- Create new castbar with updated settings
             local result = MilaUI.NewCastbarSystem.CreateCleanCastBar(frame, currentUnit, castbarSettings)
-            print(lavender .. "MilaUI:" .. pink .. " " .. currentUnit:upper() .. " castbar updated with new settings.")
         end
     else
         print(lavender .. "MilaUI:" .. pink .. " Castbar settings saved. Type '/reload' to apply all changes.")

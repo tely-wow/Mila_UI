@@ -822,9 +822,298 @@ function MilaUI:CreateUnitFrameHealthbarTabContent(parent, unitType)
 end
 
 function MilaUI:CreateUnitFramePowerBarTabContent(parent, unitType)
-    local section = MilaUI.AF.CreateBorderedSection(parent, "Power Bar Settings", 200)
-    local label = AF.CreateFontString(section, "Power Bar settings for " .. unitType .. " - Coming Soon", "white")
-    MilaUI.AF.AddWidgetToSection(section, label, 10, -30)
+    local dbUnitName = self:GetUnitDatabaseKey(unitType)
+    local powerData = MilaUI.DB.profile.Unitframes[dbUnitName].PowerBar
+    
+    -- Enable/Disable Power Bar (top level, no border, moved up)
+    local enableCheckbox = MilaUI.AF.CreateCheckbox(parent, "Enable Power Bar",
+        function() return powerData.Enabled end,
+        function(value)
+            powerData.Enabled = value
+            MilaUI:UpdateFrames(unitType)
+        end)
+    AF.SetPoint(enableCheckbox, "TOPLEFT", parent, "TOPLEFT", 10, -MilaUI.AF.currentY + 15)
+    MilaUI.AF.currentY = MilaUI.AF.currentY -15
+    
+    -- Size Box (left side)
+    local sizeSection = MilaUI.AF.CreateBorderedSection(parent, "Size", 280, 170)
+    AF.SetPoint(sizeSection, "TOPLEFT", enableCheckbox, "TOPLEFT", 10, -40)
+    
+    -- Store the Y position for the Texture box
+    local currentRowY = MilaUI.AF.currentY
+    
+    -- Width and Height sliders
+    local widthSlider = MilaUI.AF.CreateSlider(sizeSection, "Width", 50, 500,
+        function() return powerData.Width or 200 end,
+        function(value)
+            powerData.Width = value
+            MilaUI:UpdateFrames(unitType)
+        end, 1, 140)
+    MilaUI.AF.AddWidgetToSection(sizeSection, widthSlider, 10, -30)
+    
+    local heightSlider = MilaUI.AF.CreateSlider(sizeSection, "Height", 5, 50,
+        function() return powerData.Height or 20 end,
+        function(value)
+            powerData.Height = value
+            MilaUI:UpdateFrames(unitType)
+        end, 1, 140)
+    MilaUI.AF.AddWidgetToSection(sizeSection, heightSlider, 10, -70)
+    
+    -- Fill Direction dropdown
+    local directionOptions = {
+        {text = "Left to Right", value = "LR"},
+        {text = "Right to Left", value = "RL"}
+    }
+    local directionDropdown = MilaUI.AF.CreateDropdown(sizeSection, "Fill Direction", directionOptions,
+        function() return powerData.Direction or "LR" end,
+        function(value)
+            powerData.Direction = value
+            MilaUI:UpdateFrames(unitType)
+        end)
+    MilaUI.AF.AddWidgetToSection(sizeSection, directionDropdown, 10, -110)
+    
+    -- Texture Box (right side)
+    local textureSection = MilaUI.AF.CreateBorderedSection(parent, "Texture", 280, 200)
+    AF.SetPoint(textureSection, "TOPLEFT", sizeSection, "TOPRIGHT", 10, 0)
+    
+    -- Foreground Texture Picker
+    local textureDropdown = MilaUI.AF.CreateTextureDropdown(textureSection, "Foreground Texture",
+        function() return powerData.Texture or "Smooth" end,
+        function(value)
+            powerData.Texture = value
+            MilaUI:UpdateFrames(unitType)
+        end)
+    MilaUI.AF.AddWidgetToSection(textureSection, textureDropdown, 10, -30)
+    
+    -- Background Texture Picker
+    local bgTextureDropdown = MilaUI.AF.CreateTextureDropdown(textureSection, "Background Texture",
+        function() return powerData.BackgroundTexture or "Smooth" end,
+        function(value)
+            powerData.BackgroundTexture = value
+            MilaUI:UpdateFrames(unitType)
+        end)
+    MilaUI.AF.AddWidgetToSection(textureSection, bgTextureDropdown, 10, -70)
+    
+    -- Smooth Statusbar checkbox
+    local smoothCheckbox = MilaUI.AF.CreateCheckbox(textureSection, "Smooth Statusbar",
+        function() return powerData.Smooth end,
+        function(value)
+            powerData.Smooth = value
+            MilaUI:UpdateFrames(unitType)
+        end)
+    MilaUI.AF.AddWidgetToSection(textureSection, smoothCheckbox, 10, -110)
+    
+    -- Custom Mask checkbox
+    local customMaskData = powerData.CustomMask or {}
+    local maskEnabledCheckbox = MilaUI.AF.CreateCheckbox(textureSection, "Enable Custom Mask",
+        function() return customMaskData.Enabled end,
+        function(value)
+            if not powerData.CustomMask then powerData.CustomMask = {} end
+            powerData.CustomMask.Enabled = value
+            MilaUI:UpdateFrames(unitType)
+        end)
+    MilaUI.AF.AddWidgetToSection(textureSection, maskEnabledCheckbox, 10, -150)
+    
+    -- Custom Border checkbox
+    local customBorderData = powerData.CustomBorder or {}
+    local borderEnabledCheckbox = MilaUI.AF.CreateCheckbox(textureSection, "Enable Custom Border",
+        function() return customBorderData.Enabled end,
+        function(value)
+            if not powerData.CustomBorder then powerData.CustomBorder = {} end
+            powerData.CustomBorder.Enabled = value
+            MilaUI:UpdateFrames(unitType)
+        end)
+    MilaUI.AF.AddWidgetToSection(textureSection, borderEnabledCheckbox, 10, -190)
+    
+    -- Colors Box (below Size box)
+    local colorsSection = MilaUI.AF.CreateBorderedSection(parent, "Colors", 300, 250)
+    AF.SetPoint(colorsSection, "TOPLEFT", sizeSection, "BOTTOMLEFT", 0, -20)
+    
+    -- First column - Foreground colors
+    local fgLabel = AF.CreateFontString(colorsSection, AF.GetGradientText("Foreground", "pink", "hotpink"))
+    AF.SetPoint(fgLabel, "CENTER", colorsSection, "TOP", 0, -25)
+    
+    -- Color by Power Type checkbox
+    local colorByTypeCheckbox = MilaUI.AF.CreateCheckbox(colorsSection, "Color by Power Type",
+        function() return powerData.ColourByType end,
+        function(value)
+            powerData.ColourByType = value
+            MilaUI:UpdateFrames(unitType)
+        end)
+    MilaUI.AF.AddWidgetToSection(colorsSection, colorByTypeCheckbox, 35, -50)
+    
+    -- Pre-declare foreground color picker
+    local foregroundColorPicker
+    
+    -- Use Static Color checkbox
+    local useStaticColorCheckbox = MilaUI.AF.CreateCheckbox(colorsSection, "Use Static Color",
+        function() return not powerData.ColourByType end,
+        function(value)
+            powerData.ColourByType = not value
+            if foregroundColorPicker then
+                foregroundColorPicker:SetEnabled(value)
+            end
+            MilaUI:UpdateFrames(unitType)
+        end)
+    MilaUI.AF.AddWidgetToSection(colorsSection, useStaticColorCheckbox, 35, -80)
+    
+    -- Foreground Color picker
+    foregroundColorPicker = MilaUI.AF.CreateColorPicker(colorsSection, "Static Color",
+        function() return powerData.Colour or {0, 0, 1, 1} end,
+        function(color)
+            powerData.Colour = color
+            MilaUI:UpdateFrames(unitType)
+        end)
+    MilaUI.AF.AddWidgetToSection(colorsSection, foregroundColorPicker, 220, -80)
+    
+    -- Set initial enabled state based on checkbox
+    foregroundColorPicker:SetEnabled(not (powerData.ColourByType == true))
+    
+    -- Second column - Background colors
+    local colorsBGSection = MilaUI.AF.CreateBorderedSection(parent, " ", 300, 250)
+    AF.SetPoint(colorsBGSection, "TOPLEFT", colorsSection, "TOPRIGHT", 0, 0)
+    
+    local bgLabel = AF.CreateFontString(colorsSection, AF.GetGradientText("Background", "pink", "hotpink"))
+    AF.SetPoint(bgLabel, "CENTER", colorsBGSection, "TOP", 0, -25)
+    
+    -- Background by Power Type checkbox
+    local bgByTypeCheckbox = MilaUI.AF.CreateCheckbox(colorsSection, "Color by Power Type",
+        function() return powerData.ColourBackgroundByType end,
+        function(value)
+            powerData.ColourBackgroundByType = value
+            MilaUI:UpdateFrames(unitType)
+        end)
+    MilaUI.AF.AddWidgetToSection(colorsBGSection, bgByTypeCheckbox, 35, -50)
+    
+    -- Pre-declare background multiplier slider
+    local backgroundMultiplierSlider
+    
+    -- Background by Foreground checkbox
+    local bgByForegroundCheckbox = MilaUI.AF.CreateCheckbox(colorsSection, "Color by Foreground",
+        function() return powerData.ColourBackgroundByType end,
+        function(value)
+            powerData.ColourBackgroundByType = value
+            if backgroundMultiplierSlider then
+                backgroundMultiplierSlider:SetEnabled(value)
+            end
+            MilaUI:UpdateFrames(unitType)
+        end)
+    MilaUI.AF.AddWidgetToSection(colorsBGSection, bgByForegroundCheckbox, 35, -80)
+    
+    -- Background Multiplier slider
+    backgroundMultiplierSlider = MilaUI.AF.CreateSlider(colorsSection, "Multiplier", 0.1, 1.0,
+        function() return powerData.BackgroundMultiplier or 0.25 end,
+        function(value)
+            powerData.BackgroundMultiplier = value
+            MilaUI:UpdateFrames(unitType)
+        end, 0.01, 80)
+    MilaUI.AF.AddWidgetToSection(colorsBGSection, backgroundMultiplierSlider, 200, -80)
+    
+    -- Set initial enabled state based on checkbox
+    backgroundMultiplierSlider:SetEnabled(powerData.ColourBackgroundByType == true)
+    
+    -- Pre-declare background static color picker
+    local backgroundStaticColorPicker
+    
+    -- Background by Static Color checkbox
+    local bgByStaticColorCheckbox = MilaUI.AF.CreateCheckbox(colorsSection, "Use Static Color",
+        function() return not powerData.ColourBackgroundByType end,
+        function(value)
+            powerData.ColourBackgroundByType = not value
+            if backgroundStaticColorPicker then
+                backgroundStaticColorPicker:SetEnabled(value)
+            end
+            MilaUI:UpdateFrames(unitType)
+        end)
+    MilaUI.AF.AddWidgetToSection(colorsBGSection, bgByStaticColorCheckbox, 35, -110)
+    
+    -- Background Static Color picker
+    backgroundStaticColorPicker = MilaUI.AF.CreateColorPicker(colorsSection, "Static Background",
+        function() return powerData.BackgroundColour or {0.1, 0.1, 0.1, 1} end,
+        function(color)
+            powerData.BackgroundColour = color
+            MilaUI:UpdateFrames(unitType)
+        end)
+    MilaUI.AF.AddWidgetToSection(colorsBGSection, backgroundStaticColorPicker, 200, -110)
+    
+    -- Set initial enabled state based on checkbox
+    backgroundStaticColorPicker:SetEnabled(not (powerData.ColourBackgroundByType == true))
+    
+    -- Update Y position based on Colors box placement
+    MilaUI.AF.currentY = MilaUI.AF.currentY + 490  -- Size/Texture height (max 200) + gap (20) + Colors height (250)
+    
+    -- Position Section (contains all position-related settings)
+    local positionSection = MilaUI.AF.CreateBorderedSection(parent, "Position", 360, 170)
+    
+    -- X and Y Position sliders (left column)
+    local xPosSlider = MilaUI.AF.CreateSlider(positionSection, "X Position", -999, 999,
+        function() return powerData.XPosition or 0 end,
+        function(value)
+            powerData.XPosition = value
+            MilaUI:UpdateFrames(unitType)
+        end, 0.1, 140)
+    MilaUI.AF.AddWidgetToSection(positionSection, xPosSlider, 10, -30)
+    
+    local yPosSlider = MilaUI.AF.CreateSlider(positionSection, "Y Position", -999, 999,
+        function() return powerData.YPosition or 0 end,
+        function(value)
+            powerData.YPosition = value
+            MilaUI:UpdateFrames(unitType)
+        end, 0.1, 140)
+    MilaUI.AF.AddWidgetToSection(positionSection, yPosSlider, 10, -90)
+    
+    -- Anchoring settings (right column)
+    local anchorOptions = {
+        {text = "Top Left", value = "TOPLEFT"},
+        {text = "Top", value = "TOP"},
+        {text = "Top Right", value = "TOPRIGHT"},
+        {text = "Left", value = "LEFT"},
+        {text = "Center", value = "CENTER"},
+        {text = "Right", value = "RIGHT"},
+        {text = "Bottom Left", value = "BOTTOMLEFT"},
+        {text = "Bottom", value = "BOTTOM"},
+        {text = "Bottom Right", value = "BOTTOMRIGHT"}
+    }
+    
+    local anchorFromDropdown = MilaUI.AF.CreateDropdown(positionSection, "Anchor From", anchorOptions,
+        function() return powerData.AnchorFrom or "CENTER" end,
+        function(value)
+            powerData.AnchorFrom = value
+            MilaUI:UpdateFrames(unitType)
+        end)
+    MilaUI.AF.AddWidgetToSection(positionSection, anchorFromDropdown, 190, -30)
+    
+    local anchorToDropdown = MilaUI.AF.CreateDropdown(positionSection, "Anchor To", anchorOptions,
+        function() return powerData.AnchorTo or "CENTER" end,
+        function(value)
+            powerData.AnchorTo = value
+            MilaUI:UpdateFrames(unitType)
+        end)
+    MilaUI.AF.AddWidgetToSection(positionSection, anchorToDropdown, 190, -90)
+    
+    -- Anchor Parent Input
+    local anchorParentInput = MilaUI.AF.CreateTextInput(positionSection, "Anchor Parent",
+        function() return powerData.AnchorParent or "" end,
+        function(value)
+            powerData.AnchorParent = value
+            MilaUI:UpdateFrames(unitType)
+        end)
+    MilaUI.AF.AddWidgetToSection(positionSection, anchorParentInput, 10, -140)
+    
+    -- Force parent scroll frame to update after all content is created
+    C_Timer.After(0.01, function()
+        local scrollFrame = parent
+        while scrollFrame and not scrollFrame.SetContentHeight do
+            scrollFrame = scrollFrame:GetParent()
+        end
+        if scrollFrame and scrollFrame.SetContentHeight then
+            local contentHeight = MilaUI.AF.currentY + 50
+            scrollFrame:SetContentHeight(contentHeight)
+            if scrollFrame.UpdateScrollChildRect then
+                scrollFrame:UpdateScrollChildRect()
+            end
+        end
+    end)
 end
 
 function MilaUI:CreateUnitFrameCastbarTabContent(parent, unitType)

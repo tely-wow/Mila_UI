@@ -257,11 +257,11 @@ function module.CreateCleanCastBar(parent, unit, options)
     -- Get texture from LSM with fallback
     local mainTexture = GetTexture("statusbar", (options.textures and options.textures.main), "Interface\\Buttons\\WHITE8X8")
     castBar:SetStatusBarTexture(mainTexture)
-    castBar:SetStatusBarColor(0, 1, 1, 1) -- Default cyan
+    -- Don't set hardcoded color here - let UpdateAppearance handle it
     castBar:SetMinMaxValues(0, 1)
-    castBar:SetValue(0.5)
+    castBar:SetValue(0)
     castBar:SetAlpha(1)
-    castBar:Show()
+    castBar:Hide()
     
     module.SetCastBarMask(castBar, "Interface\\AddOns\\Mila_UI\\Textures\\UIUnitFramePlayerHealthMask2x.tga")
     
@@ -269,6 +269,24 @@ function module.CreateCleanCastBar(parent, unit, options)
     castBar.unit = unit
     castBar.options = options
     parent.castBar = castBar
+    
+    -- Initialize color configuration from options
+    if options.colors then
+        castBar.colorConfig = {
+            cast = options.colors.cast or {0, 1, 1, 1},
+            completion = options.colors.completion or {0.2, 1.0, 1.0, 1.0},
+            channel = options.colors.channel or {1.0, 0.4, 1.0, 1.0},
+            uninterruptible = options.colors.uninterruptible or {0.8, 0.8, 0.8, 1.0},
+            interrupt = options.colors.interrupt or {1, 0.2, 0.2, 1}
+        }
+        
+        -- Apply initial cast color
+        local initialColor = castBar.colorConfig.cast
+        castBar:SetStatusBarColor(unpack(initialColor))
+    else
+        -- Apply default color if no color config
+        castBar:SetStatusBarColor(0, 1, 1, 1)
+    end
     
     -- Create background
     local bg = castBar:CreateTexture(nil, "BACKGROUND")
@@ -333,7 +351,8 @@ function module.CreateCleanCastBar(parent, unit, options)
     local holderFrame = CreateFrame("StatusBar", nil, parent)
     holderFrame:SetSize(width, height)
     holderFrame:SetPoint(anchorPoint, anchorFrame, anchorTo, xOffset, yOffset)
-    holderFrame:SetStatusBarTexture("Interface\\AddOns\\Mila_UI\\Textures\\statusbar\\HPRedHD.tga")
+    local interruptTexture = GetTexture("statusbar", (options.textures and options.textures.interrupt), "Interface\\AddOns\\Mila_UI\\Textures\\statusbar\\HPRedHD.tga")
+    holderFrame:SetStatusBarTexture(interruptTexture)
     --holderFrame:SetStatusBarColor(1, 0, 0, 1.0) -- Red for interrupts
     holderFrame:SetMinMaxValues(0, 1)
     holderFrame:SetValue(0)
@@ -344,7 +363,8 @@ function module.CreateCleanCastBar(parent, unit, options)
     local castCompletionHolder = CreateFrame("StatusBar", nil, parent)
     castCompletionHolder:SetSize(width, height)
     castCompletionHolder:SetPoint(anchorPoint, anchorFrame, anchorTo, xOffset, yOffset)
-    castCompletionHolder:SetStatusBarTexture("Interface\\AddOns\\Mila_UI\\Textures\\g1.tga")
+    local castCompletionTexture = GetTexture("statusbar", (options.textures and options.textures.castCompletion), "Interface\\AddOns\\Mila_UI\\Textures\\g1.tga")
+    castCompletionHolder:SetStatusBarTexture(castCompletionTexture)
     --castCompletionHolder:SetStatusBarColor(0.2, 1.0, 1.0, 1.0) -- Bright cyan for cast completion
     castCompletionHolder:SetMinMaxValues(0, 1)
     castCompletionHolder:SetValue(0)
@@ -355,8 +375,9 @@ function module.CreateCleanCastBar(parent, unit, options)
     local channelCompletionHolder = CreateFrame("StatusBar", nil, parent)
     channelCompletionHolder:SetSize(width, height)
     channelCompletionHolder:SetPoint(anchorPoint, anchorFrame, anchorTo, xOffset, yOffset)
-    channelCompletionHolder:SetStatusBarTexture("Interface\\AddOns\\Mila_UI\\Textures\\g1.tga")
-    channelCompletionHolder:SetStatusBarColor(1.0, 0.4, 1.0, 1.0) -- Bright purple for channel completion
+    local channelCompletionTexture = GetTexture("statusbar", (options.textures and options.textures.channelCompletion), "Interface\\AddOns\\Mila_UI\\Textures\\g1.tga")
+    channelCompletionHolder:SetStatusBarTexture(channelCompletionTexture)
+    -- Color will be set by UpdateCastBarColors
     channelCompletionHolder:SetMinMaxValues(0, 1)
     channelCompletionHolder:SetValue(0)
     channelCompletionHolder:Hide()
@@ -366,8 +387,9 @@ function module.CreateCleanCastBar(parent, unit, options)
     local uninterruptibleHolder = CreateFrame("StatusBar", nil, parent)
     uninterruptibleHolder:SetSize(width, height)
     uninterruptibleHolder:SetPoint(anchorPoint, anchorFrame, anchorTo, xOffset, yOffset)
-    uninterruptibleHolder:SetStatusBarTexture("Interface\\AddOns\\Mila_UI\\Textures\\g1.tga")
-    uninterruptibleHolder:SetStatusBarColor(0.8, 0.8, 0.8, 1.0) -- Grey/white for uninterruptible
+    local uninterruptibleTexture = GetTexture("statusbar", (options.textures and options.textures.uninterruptible), "Interface\\AddOns\\Mila_UI\\Textures\\g1.tga")
+    uninterruptibleHolder:SetStatusBarTexture(uninterruptibleTexture)
+    -- Color will be set by UpdateCastBarColors
     uninterruptibleHolder:SetMinMaxValues(0, 1)
     uninterruptibleHolder:SetValue(0)
     uninterruptibleHolder:Hide()
@@ -386,8 +408,7 @@ local holderConfigs = {
 		sparkWidth = 20,
 		sparkHeight = 32, 
         hasGlow = true,
-        hasFlash = false,
-        statusBarTexture = "Interface\\AddOns\\Mila_UI\\Textures\\statusbar\\HPRedHD2.tga" -- Add this
+        hasFlash = false
     },
     cast = {
         flashColor = {0.2, 0.8, 0.2, 1.0},
@@ -396,8 +417,7 @@ local holderConfigs = {
         sparkColor = {1, 1, 1, 0.2},
 		--sparkWidth = 20,
         hasGlow = false,
-        hasFlash = true,
-        statusBarTexture = "Interface\\AddOns\\Mila_UI\\Textures\\HPYellowHD.tga" -- Add this
+        hasFlash = true
     },
     channel = {
         flashColor = {1.0, 0.4, 1.0, 0.9},
@@ -408,8 +428,7 @@ local holderConfigs = {
 		sparkHeight = 32,
 		sparkWidth = 20,
         hasGlow = false,
-        hasFlash = true,
-        statusBarTexture = "Interface\\AddOns\\Mila_UI\\Textures\\statusbar\\HPredHD2.tga" -- Add this
+        hasFlash = true
     },
     uninterruptible = {
         flashColor = {0.8, 0.8, 0.8, 0.9},
@@ -417,8 +436,7 @@ local holderConfigs = {
         sparkTexture = "Interface\\AddOns\\Mila_UI\\Textures\\absorbsparkcastbar.tga",
         sparkColor = {0.9, 0.9, 0.9, 1},
         hasGlow = false,
-        hasFlash = true,
-        statusBarTexture = "Interface\\AddOns\\Mila_UI\\Textures\\statusbar\\ArmorCastBar" -- Add this
+        hasFlash = true
     }
 }
         local config = holderConfigs[holderType]
@@ -514,11 +532,6 @@ holder.sparkTexture = holderSpark -- Store texture separately if needed
             holder.glowFrame = glowFrame -- Store the frame reference
             holder.interruptGlow = holderInterruptGlow
         end
-		
-		-- Add this after creating the holder but before other components
-if config.statusBarTexture then
-    holder:SetStatusBarTexture(config.statusBarTexture)
-end
         
         -- Store config for easy access
         holder.holderType = holderType
@@ -544,25 +557,45 @@ end
     -- CORE FUNCTIONS
     
 function castBar:UpdateAppearance(castType, isInterruptible)
+    -- Get colors from database settings or use defaults
+    local colors = self.colorConfig or {}
+    local defaultColors = {
+        cast = {0, 1, 1, 1},
+        completion = {0.2, 1.0, 1.0, 1.0},
+        channel = {1.0, 0.4, 1.0, 1.0},
+        uninterruptible = {0.8, 0.8, 0.8, 1.0},
+        interrupt = {1, 0.2, 0.2, 1}
+    }
+    
     if castType == "cast" then
         if isInterruptible then
-            self:SetStatusBarTexture("Interface\\AddOns\\Mila_UI\\Textures\\HPYellowHD.tga")
-            self:SetStatusBarColor(1, 1, 1, 1) -- Cyan for interruptible cast
+            local texture = GetTexture("statusbar", (self.options.textures and self.options.textures.cast), "Interface\\AddOns\\Mila_UI\\Textures\\HPYellowHD.tga")
+            self:SetStatusBarTexture(texture)
+            local color = colors.cast or defaultColors.cast
+            self:SetStatusBarColor(unpack(color))
         else
-            self:SetStatusBarTexture("Interface\\AddOns\\Mila_UI\\Textures\\statusbar\\ArmorCastBar.tga")
-            self:SetStatusBarColor(1, 1, 1, 1) -- White for uninterruptible cast
+            local texture = GetTexture("statusbar", (self.options.textures and self.options.textures.uninterruptible), "Interface\\AddOns\\Mila_UI\\Textures\\statusbar\\ArmorCastBar.tga")
+            self:SetStatusBarTexture(texture)
+            local color = colors.uninterruptible or defaultColors.uninterruptible
+            self:SetStatusBarColor(unpack(color))
         end
     elseif castType == "channel" then
         if isInterruptible then
-            self:SetStatusBarTexture("Interface\\AddOns\\Mila_UI\\Textures\\shield-fill.tga")
-            self:SetStatusBarColor(0.5, 0.3, 0.9, 1) -- Purple for interruptible channel
+            local texture = GetTexture("statusbar", (self.options.textures and self.options.textures.channel), "Interface\\AddOns\\Mila_UI\\Textures\\shield-fill.tga")
+            self:SetStatusBarTexture(texture)
+            local color = colors.channel or defaultColors.channel
+            self:SetStatusBarColor(unpack(color))
         else
-            self:SetStatusBarTexture("Interface\\AddOns\\Mila_UI\\Textures\\statusbar\\ArmorCastBar.tga")
-            self:SetStatusBarColor(1, 1, 1, 1) -- White for uninterruptible channel
+            local texture = GetTexture("statusbar", (self.options.textures and self.options.textures.uninterruptible), "Interface\\AddOns\\Mila_UI\\Textures\\statusbar\\ArmorCastBar.tga")
+            self:SetStatusBarTexture(texture)
+            local color = colors.uninterruptible or defaultColors.uninterruptible
+            self:SetStatusBarColor(unpack(color))
         end
     elseif castType == "interrupt" then
-        self:SetStatusBarTexture("Interface\\AddOns\\Mila_UI\\Textures\\statusbar\\HPRedHD2.tga")
-        self:SetStatusBarColor(1, 1, 1, 1) --(1, 0.2, 0.2, 1) -- Red for interrupted
+        local texture = GetTexture("statusbar", (self.options.textures and self.options.textures.interrupt), "Interface\\AddOns\\Mila_UI\\Textures\\statusbar\\HPRedHD2.tga")
+        self:SetStatusBarTexture(texture)
+        local color = colors.interrupt or defaultColors.interrupt
+        self:SetStatusBarColor(unpack(color))
     end
 end
     
@@ -789,7 +822,7 @@ end
         
         -- Copy current state to holder (frozen at interrupt point)
         self.holderFrame:SetValue(currentProgress)
-        self.holderFrame:SetStatusBarColor(1, 1, 1, 1.0)  -- ACTUAL COLOR CHANGE
+        -- Color is already set by holder initialization, don't override it
         
         -- Show spark at interrupt progress point
         self:UpdateHolderSpark(self.holderFrame, currentProgress)
@@ -1193,6 +1226,27 @@ elseif event == "UNIT_SPELLCAST_INTERRUPTED" then
         end
     end
     
+    -- Apply colors to all holder frames after creation
+    if options.colors then
+        local interruptColor = options.colors.interrupt or {1, 0.2, 0.2, 1}
+        local completionColor = options.colors.completion or {0.2, 1.0, 1.0, 1.0}
+        local channelColor = options.colors.channel or {1.0, 0.4, 1.0, 1.0}
+        local uninterruptibleColor = options.colors.uninterruptible or {0.8, 0.8, 0.8, 1.0}
+        
+        if castBar.holderFrame then
+            castBar.holderFrame:SetStatusBarColor(unpack(interruptColor))
+        end
+        if castBar.castCompletionHolder then
+            castBar.castCompletionHolder:SetStatusBarColor(unpack(completionColor))
+        end
+        if castBar.channelCompletionHolder then
+            castBar.channelCompletionHolder:SetStatusBarColor(unpack(channelColor))
+        end
+        if castBar.uninterruptibleHolder then
+            castBar.uninterruptibleHolder:SetStatusBarColor(unpack(uninterruptibleColor))
+        end
+    end
+    
     return castBar
 end
 
@@ -1394,9 +1448,9 @@ function module.UpdateCastBarColors(unit)
     local castBar = module:GetCastBarForUnit(unit)
     if not castBar then return end
     
-    local mainCastColor = (settings.colors and settings.colors.cast) or {0, 1, 1, 1}
-    local castCompletionColor = (settings.colors and settings.colors.completion) or {0.2, 1.0, 1.0, 1.0}
-    local channelCompletionColor = (settings.colors and settings.colors.channel) or {1.0, 0.4, 1.0, 1.0}
+    local castColor = (settings.colors and settings.colors.cast) or {0, 1, 1, 1}
+    local completionColor = (settings.colors and settings.colors.completion) or {0.2, 1.0, 1.0, 1.0}
+    local channelColor = (settings.colors and settings.colors.channel) or {1.0, 0.4, 1.0, 1.0}
     local uninterruptibleColor = (settings.colors and settings.colors.uninterruptible) or {0.8, 0.8, 0.8, 1.0}
     local interruptColor = (settings.colors and settings.colors.interrupt) or {1, 0.2, 0.2, 1}
     
@@ -1408,12 +1462,12 @@ function module.UpdateCastBarColors(unit)
     
     if castBar.castCompletionHolder then
         -- Cast completion holder gets its own color
-        castBar.castCompletionHolder:SetStatusBarColor(unpack(castCompletionColor))
+        castBar.castCompletionHolder:SetStatusBarColor(unpack(completionColor))
     end
     
     if castBar.channelCompletionHolder then
         -- Channel completion holder gets its own color
-        castBar.channelCompletionHolder:SetStatusBarColor(unpack(channelCompletionColor))
+        castBar.channelCompletionHolder:SetStatusBarColor(unpack(channelColor))
     end
     
     if castBar.uninterruptibleHolder then
@@ -1421,15 +1475,21 @@ function module.UpdateCastBarColors(unit)
         castBar.uninterruptibleHolder:SetStatusBarColor(unpack(uninterruptibleColor))
     end
     
-    -- Store color config in castbar for UpdateAppearance to use
+    -- Store color config in castbar for UpdateAppearance to use (using GUI color names)
     if castBar then
         castBar.colorConfig = {
-            mainCastColor = mainCastColor,
-            castCompletionColor = castCompletionColor,
-            channelCompletionColor = channelCompletionColor,
-            uninterruptibleColor = uninterruptibleColor,
-            interruptColor = interruptColor
+            cast = castColor,
+            completion = completionColor,
+            channel = channelColor,
+            uninterruptible = uninterruptibleColor,
+            interrupt = interruptColor
         }
+        
+        -- If currently casting/channeling, update the appearance immediately
+        if castBar.isCasting then
+            local castType = castBar.isChanneling and "channel" or "cast"
+            castBar:UpdateAppearance(castType, castBar.isInterruptible)
+        end
     end
 end
 
@@ -1456,6 +1516,30 @@ function module.UpdateCastBarVisibility(unit)
     end
 end
 
+-- Update cast bar textures
+function module.UpdateCastBarTextures(unit)
+    local settings = addon.DB and addon.DB.profile and addon.DB.profile.castBars and addon.DB.profile.castBars[unit]
+    if not settings then return end
+    
+    local castBar = module:GetCastBarForUnit(unit)
+    if not castBar then return end
+    
+    -- Update main texture
+    if settings.textures and settings.textures.main then
+        local mainTexture = GetTexture("statusbar", settings.textures.main, "Interface\\Buttons\\WHITE8X8")
+        castBar:SetStatusBarTexture(mainTexture)
+    end
+    
+    -- Store textures in options for UpdateAppearance to use
+    castBar.options.textures = settings.textures
+    
+    -- If currently casting/channeling, update the appearance
+    if castBar.isCasting then
+        local castType = castBar.isChanneling and "channel" or "cast"
+        castBar:UpdateAppearance(castType, castBar.isInterruptible)
+    end
+end
+
 -- Apply all cast bar settings for a unit
 function module.UpdateCastBarSettings(unit)
     module.UpdateCastBarDimensions(unit)
@@ -1463,6 +1547,7 @@ function module.UpdateCastBarSettings(unit)
     module.UpdateCastBarPosition(unit)
     module.UpdateCastBarDisplay(unit)
     module.UpdateCastBarColors(unit)
+    module.UpdateCastBarTextures(unit)
     module.UpdateCastBarVisibility(unit)
 end
 
