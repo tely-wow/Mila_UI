@@ -1873,6 +1873,12 @@ MilaUIAddon.Defaults = {
                     uninterruptible = {0.8, 0.8, 0.8, 1},
                     interrupt = {1, 0.2, 0.2, 1},
                     completion = {0.2, 1.0, 1.0, 1.0}
+                },
+                flashColors = {
+                    cast = {0.2, 0.8, 0.2, 1.0},
+                    channel = {1.0, 0.4, 1.0, 0.9},
+                    uninterruptible = {0.8, 0.8, 0.8, 0.9},
+                    interrupt = {1, 1, 1, 1}
                 }
             },
             target = {
@@ -1930,6 +1936,12 @@ MilaUIAddon.Defaults = {
                     uninterruptible = {0.8, 0.8, 0.8, 1},
                     interrupt = {1, 0.2, 0.2, 1},
                     completion = {0.2, 1.0, 1.0, 1.0}
+                },
+                flashColors = {
+                    cast = {0.2, 0.8, 0.2, 1.0},
+                    channel = {1.0, 0.4, 1.0, 0.9},
+                    uninterruptible = {0.8, 0.8, 0.8, 0.9},
+                    interrupt = {1, 1, 1, 1}
                 }
             },
             focus = {
@@ -1987,6 +1999,12 @@ MilaUIAddon.Defaults = {
                     uninterruptible = {0.8, 0.8, 0.8, 1},
                     interrupt = {1, 0.2, 0.2, 1},
                     completion = {0.2, 1.0, 1.0, 1.0}
+                },
+                flashColors = {
+                    cast = {0.2, 0.8, 0.2, 1.0},
+                    channel = {1.0, 0.4, 1.0, 0.9},
+                    uninterruptible = {0.8, 0.8, 0.8, 0.9},
+                    interrupt = {1, 1, 1, 1}
                 }
             },
             boss = {
@@ -2044,6 +2062,12 @@ MilaUIAddon.Defaults = {
                     uninterruptible = {0.8, 0.8, 0.8, 1},
                     interrupt = {1, 0.2, 0.2, 1},
                     completion = {0.2, 1.0, 1.0, 1.0}
+                },
+                flashColors = {
+                    cast = {0.2, 0.8, 0.2, 1.0},
+                    channel = {1.0, 0.4, 1.0, 0.9},
+                    uninterruptible = {0.8, 0.8, 0.8, 0.9},
+                    interrupt = {1, 1, 1, 1}
                 }
             },
             pet = {
@@ -2101,6 +2125,12 @@ MilaUIAddon.Defaults = {
                     uninterruptible = {0.8, 0.8, 0.8, 1},
                     interrupt = {1, 0.2, 0.2, 1},
                     completion = {0.2, 1.0, 1.0, 1.0}
+                },
+                flashColors = {
+                    cast = {0.2, 0.8, 0.2, 1.0},
+                    channel = {1.0, 0.4, 1.0, 0.9},
+                    uninterruptible = {0.8, 0.8, 0.8, 0.9},
+                    interrupt = {1, 1, 1, 1}
                 }
             },
              TARGET_CASTBAR_SHOW_ICON = true,

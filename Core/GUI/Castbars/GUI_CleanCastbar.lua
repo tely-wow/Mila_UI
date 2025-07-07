@@ -41,7 +41,7 @@ local function UpdateCastbarSetting(unit, setting, value)
         end
         
         -- Apply specific updates based on setting type
-        if type(setting) == "table" and setting[1] == "colors" then
+        if type(setting) == "table" and (setting[1] == "colors" or setting[1] == "flashColors") then
             -- Color settings changed, update colors immediately
             if MilaUI.NewCastbarSystem and MilaUI.NewCastbarSystem.UpdateCastBarColors then
                 MilaUI.NewCastbarSystem.UpdateCastBarColors(unit)
@@ -300,7 +300,7 @@ local function PopulateColorSettings(parent)
     
     
     -- Color Settings Section
-    local colorSection = CreateBorderedSection(parent, "Color Settings", 160)
+    local colorSection = CreateBorderedSection(parent, "Bar Color Settings", 160)
     
     -- Cast Color
     local castColorPicker = CreateColorPicker(colorSection, "Cast Color",
@@ -331,6 +331,43 @@ local function PopulateColorSettings(parent)
         function() return castbarSettings.colors and castbarSettings.colors.completion or {0.2, 1.0, 1.0, 1.0} end,
         function(value) UpdateCastbarSetting(currentUnit, {"colors", "completion"}, value) end)
     AddWidgetToSection(colorSection, completionColorPicker, 10, -125)
+end
+
+local function PopulateFlashColorSettings(parent)
+    local castbarSettings = GetCastbarSettings(currentUnit)
+    if not castbarSettings then return end
+    
+    -- Flash Color Settings Section
+    local flashColorSection = CreateBorderedSection(parent, "Flash Color Settings", 160)
+    
+    -- Cast Flash Color
+    local castFlashColorPicker = CreateColorPicker(flashColorSection, "Cast Flash Color",
+        function() return castbarSettings.flashColors and castbarSettings.flashColors.cast or {0.2, 0.8, 0.2, 1.0} end,
+        function(value) UpdateCastbarSetting(currentUnit, {"flashColors", "cast"}, value) end)
+    AddWidgetToSection(flashColorSection, castFlashColorPicker, 10, -25)
+    
+    -- Channel Flash Color
+    local channelFlashColorPicker = CreateColorPicker(flashColorSection, "Channel Flash Color",
+        function() return castbarSettings.flashColors and castbarSettings.flashColors.channel or {1.0, 0.4, 1.0, 0.9} end,
+        function(value) UpdateCastbarSetting(currentUnit, {"flashColors", "channel"}, value) end)
+    AddWidgetToSection(flashColorSection, channelFlashColorPicker, 180, -25)
+    
+    -- Uninterruptible Flash Color
+    local uninterruptibleFlashColorPicker = CreateColorPicker(flashColorSection, "Uninterruptible Flash Color",
+        function() return castbarSettings.flashColors and castbarSettings.flashColors.uninterruptible or {0.8, 0.8, 0.8, 0.9} end,
+        function(value) UpdateCastbarSetting(currentUnit, {"flashColors", "uninterruptible"}, value) end)
+    AddWidgetToSection(flashColorSection, uninterruptibleFlashColorPicker, 10, -75)
+    
+    -- Interrupt Flash Color (for glow effect)
+    local interruptFlashColorPicker = CreateColorPicker(flashColorSection, "Interrupt Glow Color",
+        function() return castbarSettings.flashColors and castbarSettings.flashColors.interrupt or {1, 1, 1, 1} end,
+        function(value) UpdateCastbarSetting(currentUnit, {"flashColors", "interrupt"}, value) end)
+    AddWidgetToSection(flashColorSection, interruptFlashColorPicker, 180, -75)
+    
+    -- Info label
+    local infoLabel = AF.CreateFontString(flashColorSection, "Note: Flash colors control the completion flash effect for each cast type", "gray")
+    AF.SetFont(infoLabel, nil, 10)
+    AddWidgetToSection(flashColorSection, infoLabel, 10, -125)
 end
 
 local function PopulateIconSettings(parent)
@@ -590,13 +627,14 @@ local function CreateTabContent(parent)
     
     PopulateGeneralSettings(content.scrollContent)
     PopulateColorSettings(content.scrollContent)
+    PopulateFlashColorSettings(content.scrollContent)
     PopulateTextureSettings(content.scrollContent)
     PopulateIconSettings(content.scrollContent)
     PopulateTextSettings(content.scrollContent)
     PopulateSparkSettings(content.scrollContent)
     PopulateAdvancedSettings(content.scrollContent)
     
-    content:SetContentHeight(1500)  -- Increased for all sections including textures
+    content:SetContentHeight(1700)  -- Increased for flash colors section
     
     return content
 end

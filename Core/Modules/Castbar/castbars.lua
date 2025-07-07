@@ -396,11 +396,18 @@ function module.CreateCleanCastBar(parent, unit, options)
     castBar.uninterruptibleHolder = uninterruptibleHolder
     
     -- Create shared components for all holders with customizable textures/flashes
-    local function setupHolderComponents(holder, holderType)
-        -- Define holder type configurations
+    local function setupHolderComponents(holder, holderType, unitName)
+        -- Get flash colors from database settings - access through namespace
+        local profile = ns.DB and ns.DB.profile
+        
+        
+        -- Get flash colors from database
+        local flashColors = profile and profile.castBars and profile.castBars[unitName] and profile.castBars[unitName].flashColors
+        
+        -- Define holder type configurations with database flash colors
 local holderConfigs = {
     interrupt = {
-        flashColor = {1, 1, 1, 1},
+        flashColor = (flashColors and flashColors.interrupt) or {1, 1, 1, 1},
         flashTexture = "Interface\\AddOns\\Mila_UI\\Textures\\interruptglow.tga",
         sparkTexture = "Interface\\AddOns\\Mila_UI\\Textures\\test\\orangespark.tga",
         sparkColor = {1, 1, 1, 1},
@@ -411,7 +418,7 @@ local holderConfigs = {
         hasFlash = false
     },
     cast = {
-        flashColor = {0.2, 0.8, 0.2, 1.0},
+        flashColor = (flashColors and flashColors.cast) or {0.2, 0.8, 0.2, 1.0},
         flashTexture = "Interface\\AddOns\\Mila_UI\\Textures\\cflash.tga", 
         sparkTexture = "Interface\\AddOns\\Mila_UI\\Textures\\absorbsparkcastbar.tga",
         sparkColor = {1, 1, 1, 0.2},
@@ -420,7 +427,7 @@ local holderConfigs = {
         hasFlash = true
     },
     channel = {
-        flashColor = {1.0, 0.4, 1.0, 0.9},
+        flashColor = (flashColors and flashColors.channel) or {1.0, 0.4, 1.0, 0.9},
         flashTexture = "Interface\\AddOns\\Mila_UI\\Textures\\cflash.tga",
         sparkTexture = "Interface\\AddOns\\Mila_UI\\Textures\\test\\orangespark.tga",
         sparkColor = {1, 1, 1, 1}, --{1.0, 0.4, 1.0, 1},
@@ -431,7 +438,7 @@ local holderConfigs = {
         hasFlash = true
     },
     uninterruptible = {
-        flashColor = {0.8, 0.8, 0.8, 0.9},
+        flashColor = (flashColors and flashColors.uninterruptible) or {0.8, 0.8, 0.8, 0.9},
         flashTexture = "Interface\\AddOns\\Mila_UI\\Textures\\cflash.tga",
         sparkTexture = "Interface\\AddOns\\Mila_UI\\Textures\\absorbsparkcastbar.tga",
         sparkColor = {0.9, 0.9, 0.9, 1},
@@ -539,10 +546,10 @@ holder.sparkTexture = holderSpark -- Store texture separately if needed
     end
     
     -- Setup all holders with their specific types
-    setupHolderComponents(holderFrame, "interrupt")
-    setupHolderComponents(castCompletionHolder, "cast")
-    setupHolderComponents(channelCompletionHolder, "channel")
-    setupHolderComponents(uninterruptibleHolder, "uninterruptible")
+    setupHolderComponents(holderFrame, "interrupt", unit)
+    setupHolderComponents(castCompletionHolder, "cast", unit)
+    setupHolderComponents(channelCompletionHolder, "channel", unit)
+    setupHolderComponents(uninterruptibleHolder, "uninterruptible", unit)
     
     -- CORE STATE VARIABLES
     castBar.isChanneling = false
@@ -1280,7 +1287,7 @@ end
 
 -- Update cast bar dimensions
 function module.UpdateCastBarDimensions(unit)
-    local settings = addon.DB and addon.DB.profile and addon.DB.profile.castBars and addon.DB.profile.castBars[unit]
+    local settings = ns.DB and ns.DB.profile and ns.DB.profile.castBars and ns.DB.profile.castBars[unit]
     if not settings then return end
     
     local castBar = module:GetCastBarForUnit(unit)
@@ -1308,7 +1315,7 @@ end
 
 -- Update cast bar scale
 function module.UpdateCastBarScale(unit)
-    local settings = addon.DB and addon.DB.profile and addon.DB.profile.castBars and addon.DB.profile.castBars[unit]
+    local settings = ns.DB and ns.DB.profile and ns.DB.profile.castBars and ns.DB.profile.castBars[unit]
     if not settings then return end
     
     local castBar = module:GetCastBarForUnit(unit)
@@ -1335,7 +1342,7 @@ end
 
 -- Update cast bar position
 function module.UpdateCastBarPosition(unit)
-    local settings = addon.DB and addon.DB.profile and addon.DB.profile.castBars and addon.DB.profile.castBars[unit]
+    local settings = ns.DB and ns.DB.profile and ns.DB.profile.castBars and ns.DB.profile.castBars[unit]
     if not settings then return end
     
     local castBar = module:GetCastBarForUnit(unit)
@@ -1371,7 +1378,7 @@ end
 
 -- Update cast bar display options (icon, text, timer)
 function module.UpdateCastBarDisplay(unit)
-    local settings = addon.DB and addon.DB.profile and addon.DB.profile.castBars and addon.DB.profile.castBars[unit]
+    local settings = ns.DB and ns.DB.profile and ns.DB.profile.castBars and ns.DB.profile.castBars[unit]
     if not settings then return end
     
     local castBar = module:GetCastBarForUnit(unit)
@@ -1442,7 +1449,7 @@ end
 
 -- Update cast bar colors (applies to individual holders and main bar)
 function module.UpdateCastBarColors(unit)
-    local settings = addon.DB and addon.DB.profile and addon.DB.profile.castBars and addon.DB.profile.castBars[unit]
+    local settings = ns.DB and ns.DB.profile and ns.DB.profile.castBars and ns.DB.profile.castBars[unit]
     if not settings then return end
     
     local castBar = module:GetCastBarForUnit(unit)
@@ -1491,11 +1498,14 @@ function module.UpdateCastBarColors(unit)
             castBar:UpdateAppearance(castType, castBar.isInterruptible)
         end
     end
+    
+    -- Also update flash colors when colors change
+    module.UpdateCastBarFlashColors(unit)
 end
 
 -- Update cast bar visibility
 function module.UpdateCastBarVisibility(unit)
-    local settings = addon.DB and addon.DB.profile and addon.DB.profile.castBars and addon.DB.profile.castBars[unit]
+    local settings = ns.DB and ns.DB.profile and ns.DB.profile.castBars and ns.DB.profile.castBars[unit]
     if not settings then return end
     
     local castBar = module:GetCastBarForUnit(unit)
@@ -1518,7 +1528,7 @@ end
 
 -- Update cast bar textures
 function module.UpdateCastBarTextures(unit)
-    local settings = addon.DB and addon.DB.profile and addon.DB.profile.castBars and addon.DB.profile.castBars[unit]
+    local settings = ns.DB and ns.DB.profile and ns.DB.profile.castBars and ns.DB.profile.castBars[unit]
     if not settings then return end
     
     local castBar = module:GetCastBarForUnit(unit)
@@ -1540,6 +1550,36 @@ function module.UpdateCastBarTextures(unit)
     end
 end
 
+-- Update cast bar flash colors
+function module.UpdateCastBarFlashColors(unit)
+    local castBar = module:GetCastBarForUnit(unit)
+    if not castBar then return end
+    
+    local settings = ns.DB and ns.DB.profile and ns.DB.profile.castBars and ns.DB.profile.castBars[unit]
+    if not settings or not settings.flashColors then return end
+    
+    -- Update all holder frames' flash colors
+    local holders = {
+        {holder = castBar.holderFrame, type = "interrupt"},
+        {holder = castBar.castCompletionHolder, type = "cast"},
+        {holder = castBar.channelCompletionHolder, type = "channel"},
+        {holder = castBar.uninterruptibleHolder, type = "uninterruptible"}
+    }
+    
+    for _, holderData in pairs(holders) do
+        local holder = holderData.holder
+        local flashColor = settings.flashColors[holderData.type]
+        
+        if holder and holder.completionFlash and flashColor then
+            holder.completionFlash:SetVertexColor(unpack(flashColor))
+        end
+        
+        if holder and holder.interruptGlow and flashColor then
+            holder.interruptGlow:SetVertexColor(unpack(flashColor))
+        end
+    end
+end
+
 -- Apply all cast bar settings for a unit
 function module.UpdateCastBarSettings(unit)
     module.UpdateCastBarDimensions(unit)
@@ -1547,6 +1587,7 @@ function module.UpdateCastBarSettings(unit)
     module.UpdateCastBarPosition(unit)
     module.UpdateCastBarDisplay(unit)
     module.UpdateCastBarColors(unit)
+    module.UpdateCastBarFlashColors(unit)
     module.UpdateCastBarTextures(unit)
     module.UpdateCastBarVisibility(unit)
 end
