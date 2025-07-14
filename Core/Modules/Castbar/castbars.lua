@@ -319,11 +319,19 @@ function module.CreateCleanCastBar(parent, unit, options)
     if showIcon then
         local iconFrame = castBar:CreateTexture(nil, "ARTWORK")
         iconFrame:SetSize(icon.size or (height + 4), icon.size or (height + 4))
-        if unit == "player" then
-            iconFrame:SetPoint("LEFT", castBar, "RIGHT", icon.xOffset or 4, icon.yOffset or 0)
-        else
-            iconFrame:SetPoint("RIGHT", castBar, "LEFT", -(icon.xOffset or 4), icon.yOffset or 0)
+        
+        -- Use anchor settings from database
+        local anchorFrom = icon.anchorFrom or (unit == "player" and "LEFT" or "RIGHT")
+        local anchorTo = icon.anchorTo or (unit == "player" and "RIGHT" or "LEFT")
+        local xOffset = icon.xOffset or 4
+        local yOffset = icon.yOffset or 0
+        
+        -- Adjust xOffset for non-player units if using old behavior
+        if unit ~= "player" and not icon.anchorFrom then
+            xOffset = -xOffset
         end
+        
+        iconFrame:SetPoint(anchorFrom, castBar, anchorTo, xOffset, yOffset)
         castBar.icon = iconFrame
     end
     
@@ -332,7 +340,14 @@ function module.CreateCleanCastBar(parent, unit, options)
         local textFrame = castBar:CreateFontString(nil, "OVERLAY")
         local fontPath = LSM:Fetch("font", text.font or "Expressway") or "Fonts\\FRIZQT__.TTF"
         textFrame:SetFont(fontPath, text.size or 12, text.fontFlags or "OUTLINE")
-        textFrame:SetPoint("BOTTOM", castBar, "TOP", text.xOffset or 0, text.yOffset or 2)
+        
+        -- Use anchor settings from database
+        local anchorFrom = text.anchorFrom or "BOTTOM"
+        local anchorTo = text.anchorTo or "TOP"
+        local xOffset = text.xOffset or 0
+        local yOffset = text.yOffset or 2
+        
+        textFrame:SetPoint(anchorFrom, castBar, anchorTo, xOffset, yOffset)
         textFrame:SetTextColor(unpack(text.fontColor or {1, 1, 1, 1}))
         castBar.text = textFrame
     end
@@ -342,7 +357,14 @@ function module.CreateCleanCastBar(parent, unit, options)
         local timerFrame = castBar:CreateFontString(nil, "OVERLAY")
         local fontPath = LSM:Fetch("font", timer.font or "Expressway") or "Fonts\\FRIZQT__.TTF"
         timerFrame:SetFont(fontPath, timer.size or 10, timer.fontFlags or "OUTLINE")
-        timerFrame:SetPoint("RIGHT", castBar, "RIGHT", timer.xOffset or -5, timer.yOffset or 0)
+        
+        -- Use anchor settings from database
+        local anchorFrom = timer.anchorFrom or "RIGHT"
+        local anchorTo = timer.anchorTo or "RIGHT"
+        local xOffset = timer.xOffset or -5
+        local yOffset = timer.yOffset or 0
+        
+        timerFrame:SetPoint(anchorFrom, castBar, anchorTo, xOffset, yOffset)
         timerFrame:SetTextColor(unpack(timer.fontColor or {1, 1, 1, 1}))
         castBar.timer = timerFrame
     end
@@ -470,21 +492,37 @@ local holderConfigs = {
         -- Create holder text
         if showText then
             local holderText = holder:CreateFontString(nil, "OVERLAY")
-            holderText:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
-            holderText:SetPoint("BOTTOM", holder, "TOP", 0, 2)
-            holderText:SetTextColor(1, 1, 1, 1)
+            local fontPath = LSM:Fetch("font", text.font or "Expressway") or "Fonts\\FRIZQT__.TTF"
+            holderText:SetFont(fontPath, text.size or 12, text.fontFlags or "OUTLINE")
+            
+            -- Use anchor settings from database
+            local anchorFrom = text.anchorFrom or "BOTTOM"
+            local anchorTo = text.anchorTo or "TOP"
+            local xOffset = text.xOffset or 0
+            local yOffset = text.yOffset or 2
+            
+            holderText:SetPoint(anchorFrom, holder, anchorTo, xOffset, yOffset)
+            holderText:SetTextColor(unpack(text.fontColor or {1, 1, 1, 1}))
             holder.text = holderText
         end
         
         -- Create holder icon
         if showIcon then
             local holderIcon = holder:CreateTexture(nil, "ARTWORK")
-            holderIcon:SetSize(height + 4, height + 4)
-            if unit == "player" then
-                holderIcon:SetPoint("LEFT", holder, "RIGHT", 4, 0)
-            else
-                holderIcon:SetPoint("RIGHT", holder, "LEFT", -4, 0)
+            holderIcon:SetSize(icon.size or (height + 4), icon.size or (height + 4))
+            
+            -- Use anchor settings from database
+            local anchorFrom = icon.anchorFrom or (unit == "player" and "LEFT" or "RIGHT")
+            local anchorTo = icon.anchorTo or (unit == "player" and "RIGHT" or "LEFT")
+            local xOffset = icon.xOffset or 4
+            local yOffset = icon.yOffset or 0
+            
+            -- Adjust xOffset for non-player units if using old behavior
+            if unit ~= "player" and not icon.anchorFrom then
+                xOffset = -xOffset
             end
+            
+            holderIcon:SetPoint(anchorFrom, holder, anchorTo, xOffset, yOffset)
             holder.icon = holderIcon
         end
         

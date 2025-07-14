@@ -136,8 +136,25 @@ local cursorMod = MilaUI.DB.profile.CursorMod
   showTestCastbarButton:SetText(pink .. "Show Test Castbar")
   showTestCastbarButton:SetRelativeWidth(0.5)
   showTestCastbarButton:SetCallback("OnClick", function(widget, event, value)
-    -- Default to Player unit for test, or prompt user for unit selection if needed
-    MilaUI:ShowTestCastbar("Player")
+    -- Test different units based on what's available
+    local testUnits = {"player", "target", "focus"}
+    
+    for _, unitKey in ipairs(testUnits) do
+      -- Check for clean castbar first
+      local cleanCastbarSettings = MilaUI.DB.profile.castBars and MilaUI.DB.profile.castBars[unitKey]
+      
+      if cleanCastbarSettings and cleanCastbarSettings.enabled then
+        print("Testing clean castbar for " .. unitKey)
+        MilaUI:ShowTestCleanCastbar(unitKey, true)
+      else
+        -- Fall back to oUF castbar
+        local unitName = unitKey:gsub("^%l", string.upper)
+        if MilaUI.DB.profile.Unitframes[unitName] and MilaUI.DB.profile.Unitframes[unitName].Castbar and MilaUI.DB.profile.Unitframes[unitName].Castbar.enabled then
+          print("Testing oUF castbar for " .. unitName)
+          MilaUI:ShowTestCastbar(unitName, true)
+        end
+      end
+    end
   end)
   testCastbarGroup:AddChild(showTestCastbarButton)
 

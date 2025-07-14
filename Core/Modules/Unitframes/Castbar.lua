@@ -57,6 +57,16 @@ end
 -- Function to display a test castbar for customization
 function MilaUI:ShowTestCastbar(unitName, persistent)
     print("ShowTestCastbar called for unit: " .. tostring(unitName) .. (persistent and " (persistent mode)" or ""))
+    
+    -- Check for clean castbar first
+    local unitKey = unitName:lower()
+    local cleanCastbarSettings = MilaUI.DB.profile.castBars and MilaUI.DB.profile.castBars[unitKey]
+    
+    if cleanCastbarSettings and cleanCastbarSettings.enabled then
+        print("Using clean castbar system for " .. unitName)
+        return MilaUI:ShowTestCleanCastbar(unitKey, persistent)
+    end
+    
     if not unitName or not MilaUI.DB.profile.Unitframes[unitName] then
         print("Invalid unit name for test castbar")
         return
@@ -212,6 +222,102 @@ function MilaUI:ShowTestCastbar(unitName, persistent)
 end
 
 -- Function to stop all test castbars
+-- Function to show test castbar for clean castbar system
+function MilaUI:ShowTestCleanCastbar(unitKey, persistent)
+    print("ShowTestCleanCastbar called for unit: " .. tostring(unitKey) .. (persistent and " (persistent mode)" or ""))
+    
+    local cleanCastbarSettings = MilaUI.DB.profile.castBars and MilaUI.DB.profile.castBars[unitKey]
+    if not cleanCastbarSettings or not cleanCastbarSettings.enabled then
+        print("Clean castbar not enabled for unit: " .. unitKey)
+        return
+    end
+    
+    -- Get the parent frame for the castbar
+    local frameObj = MilaUI:GetFrameForUnit(unitKey:gsub("^%l", string.upper))
+    if not frameObj then
+        print("Could not find frame object for unit: " .. unitKey)
+        return
+    end
+    
+    -- Get or create the clean castbar
+    local castBar = frameObj.castBar
+    if not castBar then
+        print("No clean castbar found for unit: " .. unitKey)
+        return
+    end
+    
+    -- Default to persistent mode if not specified
+    if persistent == nil then
+        persistent = true
+    end
+    
+    -- Store the persistent mode flag
+    castBar.testPersistent = persistent
+    
+    -- Define test spell data
+    local testSpells = {
+        -- Regular casts
+        { name = "Fireball", icon = 135809, duration = 2.5, isChannel = false, isInterruptible = true },
+        { name = "Frostbolt", icon = 135846, duration = 3.0, isChannel = false, isInterruptible = true },
+        { name = "Pyroblast", icon = 135808, duration = 4.5, isChannel = false, isInterruptible = true },
+        -- Channeled spells
+        { name = "Arcane Missiles", icon = 136096, duration = 2.8, isChannel = true, isInterruptible = true },
+        { name = "Mind Flay", icon = 136208, duration = 3.0, isChannel = true, isInterruptible = true },
+        { name = "Drain Soul", icon = 136163, duration = 4.0, isChannel = true, isInterruptible = true },
+        -- Uninterruptible casts
+        { name = "Greater Heal", icon = 135913, duration = 3.0, isChannel = false, isInterruptible = false },
+        { name = "Divine Hymn", icon = 237540, duration = 5.0, isChannel = true, isInterruptible = false },
+    }
+    
+    -- Select a random spell from the list
+    local randomIndex = math.random(1, #testSpells)
+    local selectedSpell = testSpells[randomIndex]
+    
+    local duration = selectedSpell.duration
+    local testSpellName = selectedSpell.name
+    local testSpellIcon = selectedSpell.icon
+    
+    -- Set up the test cast using the clean castbar's StartCast or SetupChannel function
+    local currentTime = GetTime() * 1000
+    local startTime = currentTime
+    local endTime = currentTime + (duration * 1000)
+    
+    if selectedSpell.isChannel then
+        castBar:SetupChannel(testSpellName, testSpellIcon, startTime, endTime, selectedSpell.isInterruptible)
+    else
+        castBar:StartCast(testSpellName, testSpellIcon, startTime, endTime, selectedSpell.isInterruptible, 1)
+    end
+    
+    -- Store test data for persistence
+    castBar.testSpellData = selectedSpell
+    
+    -- Schedule next test cast if persistent mode is enabled
+    if persistent then
+        C_Timer.After(duration + 0.8, function()
+            if castBar.testPersistent then -- Check again in case it was stopped
+                MilaUI:ShowTestCleanCastbar(unitKey, true)
+            end
+        end)
+    end
+    
+    -- Create a button to stop the test if it doesn't exist
+    if not MilaUI.TestCastbarStopButton then
+        local button = CreateFrame("Button", "MilaUI_TestCastbarStop", UIParent, "UIPanelButtonTemplate")
+        button:SetSize(150, 30)
+        button:SetPoint("TOP", UIParent, "TOP", 0, -100)
+        button:SetText("Stop Test Castbars")
+        button:SetFrameStrata("HIGH")
+        button:SetScript("OnClick", function()
+            MilaUI:StopAllTestCastbars()
+            button:Hide()
+        end)
+        MilaUI.TestCastbarStopButton = button
+    end
+    
+    MilaUI.TestCastbarStopButton:Show()
+    print("Showing test clean castbar for " .. unitKey)
+end
+
 function MilaUI:StopAllTestCastbars()
     local unitNames = {unpack(MilaUI.UnitList)}
     
@@ -223,6 +329,7 @@ function MilaUI:StopAllTestCastbars()
     for _, unitName in ipairs(unitNames) do
         local frameObj = MilaUI:GetFrameForUnit(unitName)
         
+        -- Stop oUF castbars
         if frameObj and frameObj.Castbar then
             local castbar = frameObj.Castbar
             if castbar.testCastTimer and castbar.testCastTimer.handle then
@@ -243,6 +350,15 @@ function MilaUI:StopAllTestCastbars()
             castbar.notInterruptible = nil
             castbar.testPersistent = false -- Stop the persistent loop
             castbar:Hide()
+        end
+        
+        -- Stop clean castbars
+        if frameObj and frameObj.castBar then
+            local castBar = frameObj.castBar
+            castBar.testPersistent = false -- Stop the persistent loop
+            if castBar.StopCast then
+                castBar:StopCast()
+            end
         end
     end
     

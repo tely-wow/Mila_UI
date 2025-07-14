@@ -420,7 +420,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
     tabGroup:SetFullHeight(true)
     
     -- Set up the tabs
-    tabGroup:SetTabs({
+    local tabs = {
         { text = "Healthbar", value = "Healthbar" },
         { text = "PowerBar", value = "PowerBar" },
         { text = "Castbar", value = "Castbar" },
@@ -428,7 +428,16 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
         { text = "Debuffs", value = "Debuffs" },
         { text = "Indicators", value = "Indicators" },
         { text = "Text", value = "Text" },
-    })
+    }
+    
+    -- Check if this unit has a clean castbar defined in the database
+    local unitKey = dbUnitName:lower()
+    if MilaUI.DB.profile.castBars and MilaUI.DB.profile.castBars[unitKey] then
+        -- Add CleanCastbar tab after regular castbar
+        table.insert(tabs, 4, { text = "CleanCastbar", value = "CleanCastbar" })
+    end
+    
+    tabGroup:SetTabs(tabs)
     
     -- Add the tab group to the container first
     container:AddChild(tabGroup)
@@ -952,6 +961,9 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
 
         elseif tabKey == "Castbar" then
             MilaUI:DrawCastbarContainer(dbUnitName, contentFrame)
+        
+        elseif tabKey == "CleanCastbar" then
+            MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
 
         elseif tabKey == "Buffs" then
             MilaUI:DrawBuffsContainer(dbUnitName, contentFrame)

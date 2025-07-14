@@ -623,4 +623,433 @@ function MilaUI:DrawCastbarContainer(dbUnitName, contentFrame)
 
 
 end
+
+-- Helper functions for clean castbar settings
+local function GetCleanCastbarSettings(unit)
+    local profile = MilaUI.DB.profile
+    if profile.castBars and profile.castBars[unit] then
+        return profile.castBars[unit]
+    end
+    return nil
+end
+
+local function UpdateCleanCastbarSetting(unit, setting, value)
+    local castbarSettings = GetCleanCastbarSettings(unit)
+    if castbarSettings then
+        if type(setting) == "table" then
+            local current = castbarSettings
+            for i = 1, #setting - 1 do
+                if not current[setting[i]] then current[setting[i]] = {} end
+                current = current[setting[i]]
+            end
+            current[setting[#setting]] = value
+        else
+            castbarSettings[setting] = value
+        end
+        
+        -- Apply specific updates based on setting type
+        if type(setting) == "table" and (setting[1] == "colors" or setting[1] == "flashColors") then
+            if MilaUI.modules and MilaUI.modules.bars and MilaUI.modules.bars.UpdateCastBarColors then
+                MilaUI.modules.bars.UpdateCastBarColors(unit)
+            end
+        end
+        
+        -- Update castbar settings
+        if MilaUI.modules and MilaUI.modules.bars and MilaUI.modules.bars.UpdateCastBarSettings then
+            MilaUI.modules.bars.UpdateCastBarSettings(unit)
+        end
+    end
+end
+
+function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
+    local unitKey = dbUnitName:lower()
+    local castbarSettings = GetCleanCastbarSettings(unitKey)
+    
+    if not castbarSettings then
+        local errorLabel = GUI:Create("Label")
+        errorLabel:SetText("|cffFF0000Error: Clean Castbar data not found for " .. dbUnitName)
+        errorLabel:SetFullWidth(true)
+        contentFrame:AddChild(errorLabel)
+        return
+    end
+    
+    local textures = LSM and LSM:HashTable(LSM.MediaType.STATUSBAR) or {}
+    local fonts = LSM and LSM:HashTable(LSM.MediaType.FONT) or {}
+    local AnchorPoints = {
+        ["TOPLEFT"] = "Top Left",
+        ["TOP"] = "Top",
+        ["TOPRIGHT"] = "Top Right",
+        ["LEFT"] = "Left",
+        ["CENTER"] = "Center",
+        ["RIGHT"] = "Right",
+        ["BOTTOMLEFT"] = "Bottom Left",
+        ["BOTTOM"] = "Bottom",
+        ["BOTTOMRIGHT"] = "Bottom Right"
+    }
+    
+    -- General Settings
+    MilaUI:CreateLargeHeading("General Settings", contentFrame)
+    MilaUI:CreateVerticalSpacer(20, contentFrame)
+    
+    local generalGroup = GUI:Create("InlineGroup")
+    generalGroup:SetLayout("Flow")
+    generalGroup:SetFullWidth(true)
+    generalGroup:SetTitle(pink .. "General")
+    contentFrame:AddChild(generalGroup)
+    
+    local enabledCB = GUI:Create("CheckBox")
+    enabledCB:SetLabel("Enable Clean Castbar")
+    enabledCB:SetValue(castbarSettings.enabled)
+    enabledCB:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, "enabled", value)
+    end)
+    enabledCB:SetRelativeWidth(0.5)
+    generalGroup:AddChild(enabledCB)
+    
+    -- Size Settings
+    MilaUI:CreateLargeHeading("Size Settings", contentFrame)
+    MilaUI:CreateVerticalSpacer(20, contentFrame)
+    
+    local sizeGroup = GUI:Create("InlineGroup")
+    sizeGroup:SetLayout("Flow")
+    sizeGroup:SetFullWidth(true)
+    sizeGroup:SetTitle(pink .. "Size")
+    contentFrame:AddChild(sizeGroup)
+    
+    local widthSlider = GUI:Create("Slider")
+    widthSlider:SetLabel(lavender .. "Width")
+    widthSlider:SetSliderValues(50, 400, 1)
+    widthSlider:SetValue(castbarSettings.size and castbarSettings.size.width or 200)
+    widthSlider:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"size", "width"}, value)
+    end)
+    widthSlider:SetRelativeWidth(0.5)
+    sizeGroup:AddChild(widthSlider)
+    
+    local heightSlider = GUI:Create("Slider")
+    heightSlider:SetLabel(lavender .. "Height")
+    heightSlider:SetSliderValues(10, 50, 1)
+    heightSlider:SetValue(castbarSettings.size and castbarSettings.size.height or 18)
+    heightSlider:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"size", "height"}, value)
+    end)
+    heightSlider:SetRelativeWidth(0.5)
+    sizeGroup:AddChild(heightSlider)
+    
+    local scaleSlider = GUI:Create("Slider")
+    scaleSlider:SetLabel(lavender .. "Scale")
+    scaleSlider:SetSliderValues(0.5, 2.0, 0.1)
+    scaleSlider:SetValue(castbarSettings.size and castbarSettings.size.scale or 1.0)
+    scaleSlider:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"size", "scale"}, value)
+    end)
+    scaleSlider:SetRelativeWidth(0.5)
+    sizeGroup:AddChild(scaleSlider)
+    
+    -- Position Settings
+    MilaUI:CreateLargeHeading("Position Settings", contentFrame)
+    MilaUI:CreateVerticalSpacer(20, contentFrame)
+    
+    local positionGroup = GUI:Create("InlineGroup")
+    positionGroup:SetLayout("Flow")
+    positionGroup:SetFullWidth(true)
+    positionGroup:SetTitle(pink .. "Position")
+    contentFrame:AddChild(positionGroup)
+    
+    local anchorPointDD = GUI:Create("Dropdown")
+    anchorPointDD:SetLabel(lavender .. "Anchor Point")
+    anchorPointDD:SetList(AnchorPoints)
+    anchorPointDD:SetValue(castbarSettings.position and castbarSettings.position.anchorPoint or "CENTER")
+    anchorPointDD:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"position", "anchorPoint"}, value)
+    end)
+    anchorPointDD:SetRelativeWidth(0.5)
+    positionGroup:AddChild(anchorPointDD)
+    
+    local anchorToDD = GUI:Create("Dropdown")
+    anchorToDD:SetLabel(lavender .. "Anchor To")
+    anchorToDD:SetList(AnchorPoints)
+    anchorToDD:SetValue(castbarSettings.position and castbarSettings.position.anchorTo or "CENTER")
+    anchorToDD:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"position", "anchorTo"}, value)
+    end)
+    anchorToDD:SetRelativeWidth(0.5)
+    positionGroup:AddChild(anchorToDD)
+    
+    local xOffsetSlider = GUI:Create("Slider")
+    xOffsetSlider:SetLabel(lavender .. "X Offset")
+    xOffsetSlider:SetSliderValues(-1000, 1000, 1)
+    xOffsetSlider:SetValue(castbarSettings.position and castbarSettings.position.xOffset or 0)
+    xOffsetSlider:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"position", "xOffset"}, value)
+    end)
+    xOffsetSlider:SetRelativeWidth(0.5)
+    positionGroup:AddChild(xOffsetSlider)
+    
+    local yOffsetSlider = GUI:Create("Slider")
+    yOffsetSlider:SetLabel(lavender .. "Y Offset")
+    yOffsetSlider:SetSliderValues(-1000, 1000, 1)
+    yOffsetSlider:SetValue(castbarSettings.position and castbarSettings.position.yOffset or -20)
+    yOffsetSlider:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"position", "yOffset"}, value)
+    end)
+    yOffsetSlider:SetRelativeWidth(0.5)
+    positionGroup:AddChild(yOffsetSlider)
+    
+    local anchorFrameInput = GUI:Create("EditBox")
+    anchorFrameInput:SetLabel(lavender .. "Anchor Frame")
+    anchorFrameInput:SetText(castbarSettings.position and castbarSettings.position.anchorFrame or "MilaUI_Player")
+    anchorFrameInput:SetCallback("OnEnterPressed", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"position", "anchorFrame"}, value)
+    end)
+    anchorFrameInput:SetRelativeWidth(0.5)
+    positionGroup:AddChild(anchorFrameInput)
+    
+    -- Icon Settings
+    MilaUI:CreateLargeHeading("Icon Settings", contentFrame)
+    MilaUI:CreateVerticalSpacer(20, contentFrame)
+    
+    local iconGroup = GUI:Create("InlineGroup")
+    iconGroup:SetLayout("Flow")
+    iconGroup:SetFullWidth(true)
+    iconGroup:SetTitle(pink .. "Icon")
+    contentFrame:AddChild(iconGroup)
+    
+    local iconEnabledCB = GUI:Create("CheckBox")
+    iconEnabledCB:SetLabel("Show Icon")
+    iconEnabledCB:SetValue(castbarSettings.display and castbarSettings.display.icon and castbarSettings.display.icon.show)
+    iconEnabledCB:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "icon", "show"}, value)
+    end)
+    iconEnabledCB:SetRelativeWidth(0.5)
+    iconGroup:AddChild(iconEnabledCB)
+    
+    local iconSizeSlider = GUI:Create("Slider")
+    iconSizeSlider:SetLabel(lavender .. "Icon Size")
+    iconSizeSlider:SetSliderValues(10, 100, 1)
+    iconSizeSlider:SetValue(castbarSettings.display and castbarSettings.display.icon and castbarSettings.display.icon.size or 24)
+    iconSizeSlider:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "icon", "size"}, value)
+    end)
+    iconSizeSlider:SetRelativeWidth(0.5)
+    iconGroup:AddChild(iconSizeSlider)
+    
+    local iconAnchorFromDD = GUI:Create("Dropdown")
+    iconAnchorFromDD:SetLabel(lavender .. "Icon Anchor From")
+    iconAnchorFromDD:SetList(AnchorPoints)
+    iconAnchorFromDD:SetValue(castbarSettings.display and castbarSettings.display.icon and castbarSettings.display.icon.anchorFrom or "LEFT")
+    iconAnchorFromDD:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "icon", "anchorFrom"}, value)
+    end)
+    iconAnchorFromDD:SetRelativeWidth(0.5)
+    iconGroup:AddChild(iconAnchorFromDD)
+    
+    local iconAnchorToDD = GUI:Create("Dropdown")
+    iconAnchorToDD:SetLabel(lavender .. "Icon Anchor To")
+    iconAnchorToDD:SetList(AnchorPoints)
+    iconAnchorToDD:SetValue(castbarSettings.display and castbarSettings.display.icon and castbarSettings.display.icon.anchorTo or "LEFT")
+    iconAnchorToDD:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "icon", "anchorTo"}, value)
+    end)
+    iconAnchorToDD:SetRelativeWidth(0.5)
+    iconGroup:AddChild(iconAnchorToDD)
+    
+    local iconXOffsetSlider = GUI:Create("Slider")
+    iconXOffsetSlider:SetLabel(lavender .. "Icon X Offset")
+    iconXOffsetSlider:SetSliderValues(-50, 50, 1)
+    iconXOffsetSlider:SetValue(castbarSettings.display and castbarSettings.display.icon and castbarSettings.display.icon.xOffset or 4)
+    iconXOffsetSlider:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "icon", "xOffset"}, value)
+    end)
+    iconXOffsetSlider:SetRelativeWidth(0.5)
+    iconGroup:AddChild(iconXOffsetSlider)
+    
+    local iconYOffsetSlider = GUI:Create("Slider")
+    iconYOffsetSlider:SetLabel(lavender .. "Icon Y Offset")
+    iconYOffsetSlider:SetSliderValues(-50, 50, 1)
+    iconYOffsetSlider:SetValue(castbarSettings.display and castbarSettings.display.icon and castbarSettings.display.icon.yOffset or 0)
+    iconYOffsetSlider:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "icon", "yOffset"}, value)
+    end)
+    iconYOffsetSlider:SetRelativeWidth(0.5)
+    iconGroup:AddChild(iconYOffsetSlider)
+    
+    -- Text Settings
+    MilaUI:CreateLargeHeading("Text Settings", contentFrame)
+    MilaUI:CreateVerticalSpacer(20, contentFrame)
+    
+    local textGroup = GUI:Create("InlineGroup")
+    textGroup:SetLayout("Flow")
+    textGroup:SetFullWidth(true)
+    textGroup:SetTitle(pink .. "Text")
+    contentFrame:AddChild(textGroup)
+    
+    local textEnabledCB = GUI:Create("CheckBox")
+    textEnabledCB:SetLabel("Show Text")
+    textEnabledCB:SetValue(castbarSettings.display and castbarSettings.display.text and castbarSettings.display.text.show)
+    textEnabledCB:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "text", "show"}, value)
+    end)
+    textEnabledCB:SetRelativeWidth(0.5)
+    textGroup:AddChild(textEnabledCB)
+    
+    local timerEnabledCB = GUI:Create("CheckBox")
+    timerEnabledCB:SetLabel("Show Timer")
+    timerEnabledCB:SetValue(castbarSettings.display and castbarSettings.display.timer and castbarSettings.display.timer.show)
+    timerEnabledCB:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "timer", "show"}, value)
+    end)
+    timerEnabledCB:SetRelativeWidth(0.5)
+    textGroup:AddChild(timerEnabledCB)
+    
+    local textAnchorFromDD = GUI:Create("Dropdown")
+    textAnchorFromDD:SetLabel(lavender .. "Text Anchor From")
+    textAnchorFromDD:SetList(AnchorPoints)
+    textAnchorFromDD:SetValue(castbarSettings.display and castbarSettings.display.text and castbarSettings.display.text.anchorFrom or "BOTTOM")
+    textAnchorFromDD:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "text", "anchorFrom"}, value)
+    end)
+    textAnchorFromDD:SetRelativeWidth(0.5)
+    textGroup:AddChild(textAnchorFromDD)
+    
+    local textAnchorToDD = GUI:Create("Dropdown")
+    textAnchorToDD:SetLabel(lavender .. "Text Anchor To")
+    textAnchorToDD:SetList(AnchorPoints)
+    textAnchorToDD:SetValue(castbarSettings.display and castbarSettings.display.text and castbarSettings.display.text.anchorTo or "TOP")
+    textAnchorToDD:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "text", "anchorTo"}, value)
+    end)
+    textAnchorToDD:SetRelativeWidth(0.5)
+    textGroup:AddChild(textAnchorToDD)
+    
+    local timerAnchorFromDD = GUI:Create("Dropdown")
+    timerAnchorFromDD:SetLabel(lavender .. "Timer Anchor From")
+    timerAnchorFromDD:SetList(AnchorPoints)
+    timerAnchorFromDD:SetValue(castbarSettings.display and castbarSettings.display.timer and castbarSettings.display.timer.anchorFrom or "RIGHT")
+    timerAnchorFromDD:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "timer", "anchorFrom"}, value)
+    end)
+    timerAnchorFromDD:SetRelativeWidth(0.5)
+    textGroup:AddChild(timerAnchorFromDD)
+    
+    local timerAnchorToDD = GUI:Create("Dropdown")
+    timerAnchorToDD:SetLabel(lavender .. "Timer Anchor To")
+    timerAnchorToDD:SetList(AnchorPoints)
+    timerAnchorToDD:SetValue(castbarSettings.display and castbarSettings.display.timer and castbarSettings.display.timer.anchorTo or "RIGHT")
+    timerAnchorToDD:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "timer", "anchorTo"}, value)
+    end)
+    timerAnchorToDD:SetRelativeWidth(0.5)
+    textGroup:AddChild(timerAnchorToDD)
+    
+    -- Colors Settings
+    MilaUI:CreateLargeHeading("Colors", contentFrame)
+    MilaUI:CreateVerticalSpacer(20, contentFrame)
+    
+    local colorsGroup = GUI:Create("InlineGroup")
+    colorsGroup:SetLayout("Flow")
+    colorsGroup:SetFullWidth(true)
+    colorsGroup:SetTitle(pink .. "Bar Colors")
+    contentFrame:AddChild(colorsGroup)
+    
+    local castColorPicker = GUI:Create("ColorPicker")
+    castColorPicker:SetLabel(lavender .. "Cast Color")
+    castColorPicker:SetColor(unpack(castbarSettings.colors and castbarSettings.colors.cast or {0, 1, 1, 1}))
+    castColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
+        UpdateCleanCastbarSetting(unitKey, {"colors", "cast"}, {r, g, b, a})
+    end)
+    castColorPicker:SetRelativeWidth(0.5)
+    colorsGroup:AddChild(castColorPicker)
+    
+    local channelColorPicker = GUI:Create("ColorPicker")
+    channelColorPicker:SetLabel(lavender .. "Channel Color")
+    channelColorPicker:SetColor(unpack(castbarSettings.colors and castbarSettings.colors.channel or {0.5, 0.3, 0.9, 1}))
+    channelColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
+        UpdateCleanCastbarSetting(unitKey, {"colors", "channel"}, {r, g, b, a})
+    end)
+    channelColorPicker:SetRelativeWidth(0.5)
+    colorsGroup:AddChild(channelColorPicker)
+    
+    local uninterruptibleColorPicker = GUI:Create("ColorPicker")
+    uninterruptibleColorPicker:SetLabel(lavender .. "Uninterruptible Color")
+    uninterruptibleColorPicker:SetColor(unpack(castbarSettings.colors and castbarSettings.colors.uninterruptible or {0.8, 0.8, 0.8, 1}))
+    uninterruptibleColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
+        UpdateCleanCastbarSetting(unitKey, {"colors", "uninterruptible"}, {r, g, b, a})
+    end)
+    uninterruptibleColorPicker:SetRelativeWidth(0.5)
+    colorsGroup:AddChild(uninterruptibleColorPicker)
+    
+    local interruptColorPicker = GUI:Create("ColorPicker")
+    interruptColorPicker:SetLabel(lavender .. "Interrupt Color")
+    interruptColorPicker:SetColor(unpack(castbarSettings.colors and castbarSettings.colors.interrupt or {1, 0.2, 0.2, 1}))
+    interruptColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
+        UpdateCleanCastbarSetting(unitKey, {"colors", "interrupt"}, {r, g, b, a})
+    end)
+    interruptColorPicker:SetRelativeWidth(0.5)
+    colorsGroup:AddChild(interruptColorPicker)
+    
+    local completionColorPicker = GUI:Create("ColorPicker")
+    completionColorPicker:SetLabel(lavender .. "Completion Color")
+    completionColorPicker:SetColor(unpack(castbarSettings.colors and castbarSettings.colors.completion or {0.2, 1.0, 1.0, 1.0}))
+    completionColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
+        UpdateCleanCastbarSetting(unitKey, {"colors", "completion"}, {r, g, b, a})
+    end)
+    completionColorPicker:SetRelativeWidth(0.5)
+    colorsGroup:AddChild(completionColorPicker)
+    
+    -- Flash Colors Settings
+    MilaUI:CreateLargeHeading("Flash Colors", contentFrame)
+    MilaUI:CreateVerticalSpacer(20, contentFrame)
+    
+    local flashColorsGroup = GUI:Create("InlineGroup")
+    flashColorsGroup:SetLayout("Flow")
+    flashColorsGroup:SetFullWidth(true)
+    flashColorsGroup:SetTitle(pink .. "Flash Colors")
+    contentFrame:AddChild(flashColorsGroup)
+    
+    local castFlashColorPicker = GUI:Create("ColorPicker")
+    castFlashColorPicker:SetLabel(lavender .. "Cast Flash Color")
+    castFlashColorPicker:SetColor(unpack(castbarSettings.flashColors and castbarSettings.flashColors.cast or {0.2, 0.8, 0.2, 1.0}))
+    castFlashColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
+        UpdateCleanCastbarSetting(unitKey, {"flashColors", "cast"}, {r, g, b, a})
+    end)
+    castFlashColorPicker:SetRelativeWidth(0.5)
+    flashColorsGroup:AddChild(castFlashColorPicker)
+    
+    local channelFlashColorPicker = GUI:Create("ColorPicker")
+    channelFlashColorPicker:SetLabel(lavender .. "Channel Flash Color")
+    channelFlashColorPicker:SetColor(unpack(castbarSettings.flashColors and castbarSettings.flashColors.channel or {1.0, 0.4, 1.0, 0.9}))
+    channelFlashColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
+        UpdateCleanCastbarSetting(unitKey, {"flashColors", "channel"}, {r, g, b, a})
+    end)
+    channelFlashColorPicker:SetRelativeWidth(0.5)
+    flashColorsGroup:AddChild(channelFlashColorPicker)
+    
+    local uninterruptibleFlashColorPicker = GUI:Create("ColorPicker")
+    uninterruptibleFlashColorPicker:SetLabel(lavender .. "Uninterruptible Flash Color")
+    uninterruptibleFlashColorPicker:SetColor(unpack(castbarSettings.flashColors and castbarSettings.flashColors.uninterruptible or {0.8, 0.8, 0.8, 0.9}))
+    uninterruptibleFlashColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
+        UpdateCleanCastbarSetting(unitKey, {"flashColors", "uninterruptible"}, {r, g, b, a})
+    end)
+    uninterruptibleFlashColorPicker:SetRelativeWidth(0.5)
+    flashColorsGroup:AddChild(uninterruptibleFlashColorPicker)
+    
+    local interruptFlashColorPicker = GUI:Create("ColorPicker")
+    interruptFlashColorPicker:SetLabel(lavender .. "Interrupt Glow Color")
+    interruptFlashColorPicker:SetColor(unpack(castbarSettings.flashColors and castbarSettings.flashColors.interrupt or {1, 1, 1, 1}))
+    interruptFlashColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
+        UpdateCleanCastbarSetting(unitKey, {"flashColors", "interrupt"}, {r, g, b, a})
+    end)
+    interruptFlashColorPicker:SetRelativeWidth(0.5)
+    flashColorsGroup:AddChild(interruptFlashColorPicker)
+    
+    -- Layout update
+    C_Timer.After(0.1, function()
+        local p = contentFrame
+        while p and p.DoLayout do
+            p:DoLayout()
+            p = p.parent
+        end
+    end)
+end
     
