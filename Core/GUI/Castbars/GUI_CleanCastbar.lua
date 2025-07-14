@@ -690,7 +690,17 @@ end
 
 SLASH_MILACAST1 = "/muicast"
 SlashCmdList["MILACAST"] = function(msg)
-    MilaUI:CreateCleanCastbarGUI()
+    -- Show deprecation notice and redirect to main GUI
+    print("|cffFF9CD0[MilaUI]|r The /muicast command has been deprecated.")
+    print("|cffFF9CD0[MilaUI]|r Please use /mui2 and go to the 'Cast Bars' tab for all castbar settings.")
+    print("|cffFF9CD0[MilaUI]|r Opening the main GUI for you...")
+    
+    -- Small delay to let user read the message, then open main GUI
+    C_Timer.After(2, function()
+        if MilaUI and MilaUI.CreateAFGUI then
+            MilaUI:CreateAFGUI()
+        end
+    end)
 end
 
 function MilaUI:RefreshCastbars()

@@ -17,3 +17,4 @@ LSM:Register("statusbar", "HPredHD2", [[Interface\Addons\Mila_UI\Textures\status
 LSM:Register("statusbar", "shield-fill", [[Interface\Addons\Mila_UI\Textures\statusbar\shield-fill.tga]])
 LSM:Register("statusbar", "HPYellowHD", [[Interface\Addons\Mila_UI\Textures\statusbar\HPYellowHD.tga]])
 LSM:Register("statusbar", "MirroredFrameSingleBG", [[Interface\Addons\Mila_UI\Textures\statusbar\MirroredFrameSingleBG.tga]])
+LSM:Register("sound", "Whisper", [[Interface\Addons\Mila_UI\Media\Sounds\Whisper.ogg]])

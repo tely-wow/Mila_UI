@@ -905,10 +905,15 @@ function MilaUI:CreateUnitFrame(Unit)
         CreateCustomBorder(self, Unit, "Power")
     end
     
-    -- Create castbar if enabled for this unit
-    if MilaUI.DB.profile.Unitframes[Unit].Castbar and MilaUI.DB.profile.Unitframes[Unit].Castbar.enabled then
+    -- Create castbar if enabled for this unit AND the new castbar system is not enabled
+    local unitLower = string.lower(Unit)
+    local newCastbarSettings = MilaUI.DB.profile.castBars and MilaUI.DB.profile.castBars[unitLower]
+    local isNewCastbarEnabled = newCastbarSettings and newCastbarSettings.enabled
+    
+    -- Only create oUF castbar if the old system is enabled AND the new system is disabled
+    if MilaUI.DB.profile.Unitframes[Unit].Castbar and MilaUI.DB.profile.Unitframes[Unit].Castbar.enabled and not isNewCastbarEnabled then
         -- Create castbar using the CreateCastbar function from Castbar.lua
-        MilaUI:CreateCastbar(self, string.lower(Unit))
+        MilaUI:CreateCastbar(self, unitLower)
     end
     
     -- Create other elements on the main frame

@@ -22,6 +22,17 @@ function MilaUI:SpawnBossFrames()
         MilaUI.BossFrames[i] = BossFrame
         MilaUI:RegisterTargetHighlightFrame(BossFrame, "boss" .. i)
         if MilaUI.DB.profile.Unitframes.Boss.Frame.CustomScale then BossFrame:SetScale(MilaUI.DB.profile.Unitframes.Boss.Frame.Scale) end
+        
+        -- Dual castbar system integration
+        local castbarSettings = MilaUI.DB.profile.castBars and MilaUI.DB.profile.castBars.boss
+        if castbarSettings and castbarSettings.enabled then
+            if MilaUI.NewCastbarSystem and MilaUI.NewCastbarSystem.CreateCleanCastBar then
+                MilaUI.NewCastbarSystem.CreateCleanCastBar(BossFrame, "boss" .. i, castbarSettings)
+                if BossFrame.Castbar then
+                    BossFrame.Castbar:Hide()
+                end
+            end
+        end
     end
     MilaUI:UpdateBossFrames()
 end

@@ -10,4 +10,15 @@ function MilaUI:SpawnTargetFrame()
     local AnchorParent = (_G[Frame.AnchorParent] and _G[Frame.AnchorParent]:IsObjectType("Frame")) and _G[Frame.AnchorParent] or UIParent
     self.TargetFrame:SetPoint(Frame.AnchorFrom, AnchorParent, Frame.AnchorTo, Frame.XPosition, Frame.YPosition)
     if Frame.CustomScale then self.TargetFrame:SetScale(Frame.Scale) end
+    
+    -- Dual castbar system integration
+    local castbarSettings = MilaUI.DB.profile.castBars and MilaUI.DB.profile.castBars.target
+    if castbarSettings and castbarSettings.enabled then
+        if MilaUI.NewCastbarSystem and MilaUI.NewCastbarSystem.CreateCleanCastBar then
+            MilaUI.NewCastbarSystem.CreateCleanCastBar(self.TargetFrame, "target", castbarSettings)
+            if self.TargetFrame.Castbar then
+                self.TargetFrame.Castbar:Hide()
+            end
+        end
+    end
 end

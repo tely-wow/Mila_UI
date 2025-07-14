@@ -604,6 +604,12 @@ function castBar:UpdateAppearance(castType, isInterruptible)
         local color = colors.interrupt or defaultColors.interrupt
         self:SetStatusBarColor(unpack(color))
     end
+    
+    -- Force texture update for statusbar (sometimes needed for mid-cast target changes)
+    local statusBarTexture = self:GetStatusBarTexture()
+    if statusBarTexture then
+        statusBarTexture:SetDrawLayer("ARTWORK", 0)
+    end
 end
     
     -- UNIFIED: Setup channel (used everywhere channels are detected)
@@ -635,8 +641,15 @@ end
             self.castEndTime = endTimeMS
         else
             -- Fallback: get current channel state
-            local currentName, currentText, currentTexture, currentStartTime, currentEndTime = UnitChannelInfo(self.unit)
+            local currentName, currentText, currentTexture, currentStartTime, currentEndTime, _, currentNotInterruptible = UnitChannelInfo(self.unit)
             if currentEndTime then
+                -- Check if interruptibility changed in the fresh data
+                if currentNotInterruptible ~= nil and (not currentNotInterruptible) ~= self.isInterruptible then
+                    -- Update if there's a mismatch
+                    self.isInterruptible = not currentNotInterruptible
+                    self:UpdateAppearance("channel", self.isInterruptible)
+                end
+                
                 self.castStartTime = currentStartTime or (currentEndTime - 5000)
                 self.castEndTime = currentEndTime
             else
@@ -677,8 +690,15 @@ end
             self.castEndTime = endTime
         else
             -- Mid-cast: calculate timing like Blizzard
-            local currentName, currentText, currentTexture, currentStartTime = UnitCastingInfo(self.unit)
+            local currentName, currentText, currentTexture, currentStartTime, currentEndTime, _, _, currentNotInterruptible = UnitCastingInfo(self.unit)
             if currentName and currentStartTime then
+                -- Check if interruptibility changed in the fresh data
+                if currentNotInterruptible ~= nil and (not currentNotInterruptible) ~= self.isInterruptible then
+                    -- Update if there's a mismatch
+                    self.isInterruptible = not currentNotInterruptible
+                    self:UpdateAppearance("cast", self.isInterruptible)
+                end
+                
                 local spellID = C_Spell.GetSpellIDForSpellIdentifier(name)
                 local castTime = 2500 -- default
                 
@@ -1019,6 +1039,11 @@ end
                     local name, text, texture, startTimeMS, endTimeMS, isTradeSkill, castID, notInterruptible = castingInfo
                     if name then
                         self.isInterruptible = not notInterruptible
+                        -- Debug logging
+                        if MilaUI.DebugMode then
+                            print(string.format("[Castbar] Target changed mid-cast: %s, notInterruptible=%s, isInterruptible=%s", 
+                                name, tostring(notInterruptible), tostring(not notInterruptible)))
+                        end
                         self:StartCast(name, texture, startTimeMS, endTimeMS, not notInterruptible, castID)
                     end
                 elseif channelInfo then
@@ -1034,17 +1059,13 @@ end
     
     -- EVENT HANDLING
     local function OnEvent(self, event, unitID, ...)
-        -- Handle target/focus changes first (these don't have unitID)
-        if event == "PLAYER_TARGET_CHANGED" and self.unit == "target" then
-            OnTargetFocusChange(self, event)
-            return
-        elseif event == "PLAYER_FOCUS_CHANGED" and self.unit == "focus" then
+        -- Handle target/focus changes (these are global events without unitID)
+        if event == "PLAYER_TARGET_CHANGED" or event == "PLAYER_FOCUS_CHANGED" then
             OnTargetFocusChange(self, event)
             return
         end
         
-        -- For unit-specific events, ensure they match our unit
-        if unitID ~= self.unit then return end
+        -- Unit-specific events are already filtered by RegisterUnitEvent
         
         if event == "UNIT_SPELLCAST_START" then
             local name, text, texture, startTimeMS, endTimeMS, isTradeSkill, castID, notInterruptible = UnitCastingInfo(unitID)
@@ -1088,19 +1109,25 @@ elseif event == "UNIT_SPELLCAST_INTERRUPTED" then
             
         elseif event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE" then
             self.isInterruptible = false
-            local castingInfo = UnitCastingInfo(unitID)
-            local channelInfo = UnitChannelInfo(unitID)
-            if castingInfo then
-                self:UpdateAppearance("cast", false)
-            elseif channelInfo then
+            if self.isChanneling then
                 self:UpdateAppearance("channel", false)
+            else
+                self:UpdateAppearance("cast", false)
+            end
+            
+        elseif event == "UNIT_SPELLCAST_INTERRUPTIBLE" then
+            self.isInterruptible = true
+            if self.isChanneling then
+                self:UpdateAppearance("channel", true)
+            else
+                self:UpdateAppearance("cast", true)
             end
         end
     end
     
-    -- UPDATE LOOP - Handles progress AND completion detection
+    -- UPDATE LOOP - Handles progress calculation and display only
     local function OnUpdate(self, elapsed)
-        -- CRITICAL: Validate state before doing any math
+        -- Validate state before calculations
         if not self.castStartTime or not self.castEndTime or 
            self.castStartTime == 0 or self.castEndTime == 0 then 
             return 
@@ -1109,63 +1136,13 @@ elseif event == "UNIT_SPELLCAST_INTERRUPTED" then
         local currentTime = GetTime() * 1000
         local totalTime = self.castEndTime - self.castStartTime
         
-        -- Additional safety check for invalid times
+        -- Safety check for invalid times
         if totalTime <= 0 then
             self:StopCast()
             return
         end
         
-        -- Always refresh spell data during active casting (like uninterruptible detection does)
-        if self.isCasting then
-            if self.isChanneling then
-                local currentName, currentText, currentTexture, _, _, _, notInterruptible = UnitChannelInfo(self.unit)
-                if currentName and currentTexture then
-                    -- Always update spell data for channels
-                    local newInterruptible = not (notInterruptible or false)
-                    local interruptibilityChanged = newInterruptible ~= self.isInterruptible
-                    
-                    -- Update spell data
-                    self.spellName = currentName
-                    self.spellIcon = currentTexture
-                    if self.text then
-                        self.text:SetText(currentName)
-                    end
-                    if self.icon then
-                        self.icon:SetTexture(currentTexture)
-                    end
-                    
-                    -- Update interruptibility and appearance if changed
-                    if interruptibilityChanged then
-                        self.isInterruptible = newInterruptible
-                        self:UpdateAppearance("channel", newInterruptible)
-                    end
-                end
-            else
-                local currentName, currentText, currentTexture, _, _, _, _, notInterruptible = UnitCastingInfo(self.unit)
-                if currentName and currentTexture then
-                    -- Always update spell data for casts
-                    local newInterruptible = not (notInterruptible or false)
-                    local interruptibilityChanged = newInterruptible ~= self.isInterruptible
-                    
-                    -- Update spell data
-                    self.spellName = currentName
-                    self.spellIcon = currentTexture
-                    if self.text then
-                        self.text:SetText(currentName)
-                    end
-                    if self.icon then
-                        self.icon:SetTexture(currentTexture)
-                    end
-                    
-                    -- Update interruptibility and appearance if changed
-                    if interruptibilityChanged then
-                        self.isInterruptible = newInterruptible
-                        self:UpdateAppearance("cast", newInterruptible)
-                    end
-                end
-            end
-        end
-        
+        -- Calculate progress
         local progress
         if self.isChanneling then
             -- Channeling goes from 1 to 0
@@ -1175,11 +1152,12 @@ elseif event == "UNIT_SPELLCAST_INTERRUPTED" then
             progress = (currentTime - self.castStartTime) / totalTime
         end
         
+        -- Update visual elements
         progress = math.max(0, math.min(1, progress))
         self:SetValue(progress)
         self:UpdateSpark()
         
-        -- Update timer
+        -- Update timer display
         if self.timer then
             local remaining = (self.castEndTime - currentTime) / 1000
             if remaining > 0 then
@@ -1197,16 +1175,17 @@ elseif event == "UNIT_SPELLCAST_INTERRUPTED" then
         end
     end
     
-    -- REGISTER EVENTS
-    castBar:RegisterEvent("UNIT_SPELLCAST_START")
-    castBar:RegisterEvent("UNIT_SPELLCAST_STOP")
-    castBar:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
-    castBar:RegisterEvent("UNIT_SPELLCAST_FAILED")
-    castBar:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")
-    castBar:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
-    castBar:RegisterEvent("UNIT_SPELLCAST_INTERRUPTIBLE")
-    castBar:RegisterEvent("UNIT_SPELLCAST_NOT_INTERRUPTIBLE")
+    -- REGISTER EVENTS - Use unit-specific events for better performance
+    castBar:RegisterUnitEvent("UNIT_SPELLCAST_START", unit)
+    castBar:RegisterUnitEvent("UNIT_SPELLCAST_STOP", unit)
+    castBar:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", unit)
+    castBar:RegisterUnitEvent("UNIT_SPELLCAST_FAILED", unit)
+    castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", unit)
+    castBar:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", unit)
+    castBar:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTIBLE", unit)
+    castBar:RegisterUnitEvent("UNIT_SPELLCAST_NOT_INTERRUPTIBLE", unit)
     
+    -- Global events for unit changes (can't be unit-specific)
     if unit == "target" then
         castBar:RegisterEvent("PLAYER_TARGET_CHANGED")
     elseif unit == "focus" then

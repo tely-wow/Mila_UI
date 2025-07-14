@@ -1837,7 +1837,9 @@ MilaUIAddon.Defaults = {
                         show = true,
                         size = 24,
                         xOffset = 4,
-                        yOffset = 0
+                        yOffset = 0,
+                        anchorTo = "LEFT",
+                        anchorFrom = "LEFT",
                     },
                     text = {
                         show = true,
@@ -1846,7 +1848,9 @@ MilaUIAddon.Defaults = {
                         yOffset = 2,
                         font = "Expressway",
                         fontFlags = "OUTLINE",
-                        fontColor = {1, 1, 1, 1}
+                        fontColor = {1, 1, 1, 1},
+                        anchorTo = "TOP",
+                        anchorFrom = "BOTTOM",
                     },
                     timer = {
                         show = true,
@@ -1855,7 +1859,9 @@ MilaUIAddon.Defaults = {
                         yOffset = 0,
                         font = "Expressway",
                         fontFlags = "OUTLINE",
-                        fontColor = {1, 1, 1, 1}
+                        fontColor = {1, 1, 1, 1},
+                        anchorTo = "RIGHT",
+                        anchorFrom = "RIGHT",
                     }
                 },
                 textures = {
@@ -1900,7 +1906,9 @@ MilaUIAddon.Defaults = {
                         show = true,
                         size = 24,
                         xOffset = 4,
-                        yOffset = 0
+                        yOffset = 0,
+                        anchorTo = "LEFT",
+                        anchorFrom = "LEFT",
                     },
                     text = {
                         show = true,
@@ -1909,7 +1917,9 @@ MilaUIAddon.Defaults = {
                         yOffset = 2,
                         font = "Expressway",
                         fontFlags = "OUTLINE",
-                        fontColor = {1, 1, 1, 1}
+                        fontColor = {1, 1, 1, 1},
+                        anchorTo = "TOP",
+                        anchorFrom = "BOTTOM",
                     },
                     timer = {
                         show = true,
@@ -1918,7 +1928,9 @@ MilaUIAddon.Defaults = {
                         yOffset = 0,
                         font = "Expressway",
                         fontFlags = "OUTLINE",
-                        fontColor = {1, 1, 1, 1}
+                        fontColor = {1, 1, 1, 1},
+                        anchorTo = "RIGHT",
+                        anchorFrom = "RIGHT",
                     }
                 },
                 textures = {
@@ -1963,7 +1975,9 @@ MilaUIAddon.Defaults = {
                         show = true,
                         size = 24,
                         xOffset = 4,
-                        yOffset = 0
+                        yOffset = 0,
+                        anchorTo = "LEFT",
+                        anchorFrom = "LEFT",
                     },
                     text = {
                         show = true,
@@ -1972,7 +1986,9 @@ MilaUIAddon.Defaults = {
                         yOffset = 2,
                         font = "Expressway",
                         fontFlags = "OUTLINE",
-                        fontColor = {1, 1, 1, 1}
+                        fontColor = {1, 1, 1, 1},
+                        anchorTo = "TOP",
+                        anchorFrom = "BOTTOM",
                     },
                     timer = {
                         show = true,
@@ -1981,7 +1997,9 @@ MilaUIAddon.Defaults = {
                         yOffset = 0,
                         font = "Expressway",
                         fontFlags = "OUTLINE",
-                        fontColor = {1, 1, 1, 1}
+                        fontColor = {1, 1, 1, 1},
+                        anchorTo = "RIGHT",
+                        anchorFrom = "RIGHT",
                     }
                 },
                 textures = {
@@ -2026,7 +2044,9 @@ MilaUIAddon.Defaults = {
                         show = true,
                         size = 24,
                         xOffset = 4,
-                        yOffset = 0
+                        yOffset = 0,
+                        anchorTo = "LEFT",
+                        anchorFrom = "LEFT",
                     },
                     text = {
                         show = true,
@@ -2035,7 +2055,9 @@ MilaUIAddon.Defaults = {
                         yOffset = 2,
                         font = "Expressway",
                         fontFlags = "OUTLINE",
-                        fontColor = {1, 1, 1, 1}
+                        fontColor = {1, 1, 1, 1},
+                        anchorTo = "TOP",
+                        anchorFrom = "BOTTOM",
                     },
                     timer = {
                         show = true,
@@ -2044,7 +2066,9 @@ MilaUIAddon.Defaults = {
                         yOffset = 0,
                         font = "Expressway",
                         fontFlags = "OUTLINE",
-                        fontColor = {1, 1, 1, 1}
+                        fontColor = {1, 1, 1, 1},
+                        anchorTo = "RIGHT",
+                        anchorFrom = "RIGHT",
                     }
                 },
                 textures = {
@@ -2089,7 +2113,9 @@ MilaUIAddon.Defaults = {
                         show = true,
                         size = 24,
                         xOffset = 4,
-                        yOffset = 0
+                        yOffset = 0,
+                        anchorTo = "LEFT",
+                        anchorFrom = "LEFT",
                     },
                     text = {
                         show = true,
@@ -2098,7 +2124,9 @@ MilaUIAddon.Defaults = {
                         yOffset = 2,
                         font = "Expressway",
                         fontFlags = "OUTLINE",
-                        fontColor = {1, 1, 1, 1}
+                        fontColor = {1, 1, 1, 1},
+                        anchorTo = "TOP",
+                        anchorFrom = "BOTTOM",
                     },
                     timer = {
                         show = true,
@@ -2107,7 +2135,9 @@ MilaUIAddon.Defaults = {
                         yOffset = 0,
                         font = "Expressway",
                         fontFlags = "OUTLINE",
-                        fontColor = {1, 1, 1, 1}
+                        fontColor = {1, 1, 1, 1},
+                        anchorTo = "RIGHT",
+                        anchorFrom = "RIGHT",
                     }
                 },
                 textures = {
