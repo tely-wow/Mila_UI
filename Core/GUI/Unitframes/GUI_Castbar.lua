@@ -646,17 +646,245 @@ local function UpdateCleanCastbarSetting(unit, setting, value)
         else
             castbarSettings[setting] = value
         end
+    end
+end
+
+-- Helper function to call castbar update functions
+local function UpdateCastBarForUnit(unit)
+    -- Get the frame object for this unit
+    local unitName = unit:gsub("^%l", string.upper)
+    local frameObj = MilaUI:GetFrameForUnit(unitName)
+    
+    if frameObj and frameObj.castBar then
+        local castBar = frameObj.castBar
+        local settings = GetCleanCastbarSettings(unit)
         
-        -- Apply specific updates based on setting type
-        if type(setting) == "table" and (setting[1] == "colors" or setting[1] == "flashColors") then
-            if MilaUI.modules and MilaUI.modules.bars and MilaUI.modules.bars.UpdateCastBarColors then
-                MilaUI.modules.bars.UpdateCastBarColors(unit)
+        if settings and castBar.options then
+            -- Update the castbar's options with new settings
+            castBar.options = settings
+            
+            -- Apply size changes
+            local width = (settings.size and settings.size.width) or 200
+            local height = (settings.size and settings.size.height) or 18
+            local scale = (settings.size and settings.size.scale) or 1.0
+            
+            castBar:SetSize(width, height)
+            castBar:SetScale(scale)
+            
+            -- Update holder frames
+            local holders = {
+                castBar.holderFrame,
+                castBar.castCompletionHolder,
+                castBar.channelCompletionHolder,
+                castBar.uninterruptibleHolder
+            }
+            
+            for _, holder in pairs(holders) do
+                if holder then
+                    holder:SetSize(width, height)
+                    holder:SetScale(scale)
+                end
             end
-        end
-        
-        -- Update castbar settings
-        if MilaUI.modules and MilaUI.modules.bars and MilaUI.modules.bars.UpdateCastBarSettings then
-            MilaUI.modules.bars.UpdateCastBarSettings(unit)
+            
+            -- Apply position changes
+            local anchorPoint = (settings.position and settings.position.anchorPoint) or "CENTER"
+            local anchorTo = (settings.position and settings.position.anchorTo) or "CENTER"
+            local xOffset = (settings.position and settings.position.xOffset) or 0
+            local yOffset = (settings.position and settings.position.yOffset) or -20
+            
+            -- Get the anchor frame from settings, not the current parent
+            local anchorFrameName = (settings.position and settings.position.anchorFrame) or "UIParent"
+            local anchorFrame = _G[anchorFrameName] or UIParent
+            
+            if anchorFrame then
+                castBar:ClearAllPoints()
+                castBar:SetPoint(anchorPoint, anchorFrame, anchorTo, xOffset, yOffset)
+                
+                for _, holder in pairs(holders) do
+                    if holder then
+                        holder:ClearAllPoints()
+                        holder:SetPoint(anchorPoint, anchorFrame, anchorTo, xOffset, yOffset)
+                    end
+                end
+            end
+            
+            -- Apply color changes
+            if settings.colors and castBar.colorConfig then
+                castBar.colorConfig = {
+                    cast = settings.colors.cast or {0, 1, 1, 1},
+                    completion = settings.colors.completion or {0.2, 1.0, 1.0, 1.0},
+                    channel = settings.colors.channel or {1.0, 0.4, 1.0, 1.0},
+                    uninterruptible = settings.colors.uninterruptible or {0.8, 0.8, 0.8, 1.0},
+                    interrupt = settings.colors.interrupt or {1, 0.2, 0.2, 1}
+                }
+                
+                -- Update holder frame colors
+                if castBar.holderFrame then
+                    castBar.holderFrame:SetStatusBarColor(unpack(castBar.colorConfig.interrupt))
+                end
+                if castBar.castCompletionHolder then
+                    castBar.castCompletionHolder:SetStatusBarColor(unpack(castBar.colorConfig.completion))
+                end
+                if castBar.channelCompletionHolder then
+                    castBar.channelCompletionHolder:SetStatusBarColor(unpack(castBar.colorConfig.channel))
+                end
+                if castBar.uninterruptibleHolder then
+                    castBar.uninterruptibleHolder:SetStatusBarColor(unpack(castBar.colorConfig.uninterruptible))
+                end
+                
+                -- If currently casting/channeling, update appearance
+                if castBar.isCasting then
+                    local castType = castBar.isChanneling and "channel" or "cast"
+                    castBar:UpdateAppearance(castType, castBar.isInterruptible)
+                end
+            end
+            
+            -- Update display elements (icon, text, timer)
+            if settings.display then
+                local icon = settings.display.icon or {}
+                local text = settings.display.text or {}
+                local timer = settings.display.timer or {}
+                
+                -- Update icon visibility and anchoring
+                if icon.show ~= false then
+                    -- Create icon if it doesn't exist
+                    if not castBar.icon then
+                        local iconFrame = castBar:CreateTexture(nil, "OVERLAY", nil, 1)
+                        iconFrame:SetSize(icon.size or 24, icon.size or 24)
+                        castBar.icon = iconFrame
+                    end
+                    
+                    castBar.icon:Show()
+                    
+                    -- Update icon size
+                    local iconSize = icon.size or 24
+                    castBar.icon:SetSize(iconSize, iconSize)
+                    
+                    -- Update icon anchoring
+                    local anchorFrom = icon.anchorFrom or "LEFT"
+                    local anchorTo = icon.anchorTo or "RIGHT"
+                    local xOffset = icon.xOffset or 4
+                    local yOffset = icon.yOffset or 0
+                    
+                    castBar.icon:ClearAllPoints()
+                    castBar.icon:SetPoint(anchorFrom, castBar, anchorTo, xOffset, yOffset)
+                else
+                    -- Hide icon if it exists
+                    if castBar.icon then
+                        castBar.icon:Hide()
+                    end
+                end
+                
+                -- Update text visibility and anchoring
+                if text.show ~= false then
+                    -- Create text if it doesn't exist
+                    if not castBar.text then
+                        local LSM = LibStub("LibSharedMedia-3.0")
+                        local textFrame = castBar:CreateFontString(nil, "OVERLAY")
+                        local fontPath = LSM:Fetch("font", text.font or "Expressway") or "Fonts\\FRIZQT__.TTF"
+                        textFrame:SetFont(fontPath, text.size or 12, text.fontFlags or "OUTLINE")
+                        textFrame:SetTextColor(unpack(text.fontColor or {1, 1, 1, 1}))
+                        castBar.text = textFrame
+                    end
+                    
+                    castBar.text:Show()
+                    
+                    -- Update text font and size
+                    local LSM = LibStub("LibSharedMedia-3.0")
+                    local fontPath = LSM:Fetch("font", text.font or "Expressway") or "Fonts\\FRIZQT__.TTF"
+                    local fontSize = text.size or 12
+                    local fontFlags = text.fontFlags or "OUTLINE"
+                    castBar.text:SetFont(fontPath, fontSize, fontFlags)
+                    castBar.text:SetTextColor(unpack(text.fontColor or {1, 1, 1, 1}))
+                    
+                    -- Update text anchoring
+                    local anchorFrom = text.anchorFrom or "BOTTOM"
+                    local anchorTo = text.anchorTo or "TOP"
+                    local xOffset = text.xOffset or 0
+                    local yOffset = text.yOffset or 2
+                    
+                    castBar.text:ClearAllPoints()
+                    castBar.text:SetPoint(anchorFrom, castBar, anchorTo, xOffset, yOffset)
+                else
+                    -- Hide text if it exists
+                    if castBar.text then
+                        castBar.text:Hide()
+                    end
+                end
+                
+                -- Update timer visibility and anchoring
+                if castBar.timer then
+                    if timer.show ~= false then
+                        castBar.timer:Show()
+                        
+                        -- Update timer font and size
+                        local LSM = LibStub("LibSharedMedia-3.0")
+                        local fontPath = LSM:Fetch("font", timer.font or "Expressway") or "Fonts\\FRIZQT__.TTF"
+                        local fontSize = timer.size or 10
+                        local fontFlags = timer.fontFlags or "OUTLINE"
+                        castBar.timer:SetFont(fontPath, fontSize, fontFlags)
+                        castBar.timer:SetTextColor(unpack(timer.fontColor or {1, 1, 1, 1}))
+                        
+                        -- Update timer anchoring
+                        local anchorFrom = timer.anchorFrom or "RIGHT"
+                        local anchorTo = timer.anchorTo or "RIGHT"
+                        local xOffset = timer.xOffset or -5
+                        local yOffset = timer.yOffset or 0
+                        
+                        castBar.timer:ClearAllPoints()
+                        castBar.timer:SetPoint(anchorFrom, castBar, anchorTo, xOffset, yOffset)
+                    else
+                        castBar.timer:Hide()
+                    end
+                end
+                
+                -- Update holder frame elements too
+                for _, holder in pairs(holders) do
+                    if holder then
+                        if holder.icon then
+                            if icon.show ~= false then
+                                holder.icon:Show()
+                                
+                                -- Update holder icon size
+                                local iconSize = icon.size or 24
+                                holder.icon:SetSize(iconSize, iconSize)
+                                
+                                local anchorFrom = icon.anchorFrom or "LEFT"
+                                local anchorTo = icon.anchorTo or "RIGHT"
+                                local xOffset = icon.xOffset or 4
+                                local yOffset = icon.yOffset or 0
+                                holder.icon:ClearAllPoints()
+                                holder.icon:SetPoint(anchorFrom, holder, anchorTo, xOffset, yOffset)
+                            else
+                                holder.icon:Hide()
+                            end
+                        end
+                        
+                        if holder.text then
+                            if text.show ~= false then
+                                holder.text:Show()
+                                
+                                -- Update holder text font and size
+                                local LSM = LibStub("LibSharedMedia-3.0")
+                                local fontPath = LSM:Fetch("font", text.font or "Expressway") or "Fonts\\FRIZQT__.TTF"
+                                local fontSize = text.size or 12
+                                local fontFlags = text.fontFlags or "OUTLINE"
+                                holder.text:SetFont(fontPath, fontSize, fontFlags)
+                                holder.text:SetTextColor(unpack(text.fontColor or {1, 1, 1, 1}))
+                                
+                                local anchorFrom = text.anchorFrom or "BOTTOM"
+                                local anchorTo = text.anchorTo or "TOP"
+                                local xOffset = text.xOffset or 0
+                                local yOffset = text.yOffset or 2
+                                holder.text:ClearAllPoints()
+                                holder.text:SetPoint(anchorFrom, holder, anchorTo, xOffset, yOffset)
+                            else
+                                holder.text:Hide()
+                            end
+                        end
+                    end
+                end
+            end
         end
     end
 end
@@ -702,6 +930,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     enabledCB:SetValue(castbarSettings.enabled)
     enabledCB:SetCallback("OnValueChanged", function(widget, event, value)
         UpdateCleanCastbarSetting(unitKey, "enabled", value)
+        UpdateCastBarForUnit(unitKey)
     end)
     enabledCB:SetRelativeWidth(0.5)
     generalGroup:AddChild(enabledCB)
@@ -722,6 +951,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     widthSlider:SetValue(castbarSettings.size and castbarSettings.size.width or 200)
     widthSlider:SetCallback("OnValueChanged", function(widget, event, value)
         UpdateCleanCastbarSetting(unitKey, {"size", "width"}, value)
+        UpdateCastBarForUnit(unitKey)
     end)
     widthSlider:SetRelativeWidth(0.5)
     sizeGroup:AddChild(widthSlider)
@@ -732,6 +962,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     heightSlider:SetValue(castbarSettings.size and castbarSettings.size.height or 18)
     heightSlider:SetCallback("OnValueChanged", function(widget, event, value)
         UpdateCleanCastbarSetting(unitKey, {"size", "height"}, value)
+        UpdateCastBarForUnit(unitKey)
     end)
     heightSlider:SetRelativeWidth(0.5)
     sizeGroup:AddChild(heightSlider)
@@ -742,6 +973,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     scaleSlider:SetValue(castbarSettings.size and castbarSettings.size.scale or 1.0)
     scaleSlider:SetCallback("OnValueChanged", function(widget, event, value)
         UpdateCleanCastbarSetting(unitKey, {"size", "scale"}, value)
+        UpdateCastBarForUnit(unitKey)
     end)
     scaleSlider:SetRelativeWidth(0.5)
     sizeGroup:AddChild(scaleSlider)
@@ -762,6 +994,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     anchorPointDD:SetValue(castbarSettings.position and castbarSettings.position.anchorPoint or "CENTER")
     anchorPointDD:SetCallback("OnValueChanged", function(widget, event, value)
         UpdateCleanCastbarSetting(unitKey, {"position", "anchorPoint"}, value)
+        UpdateCastBarForUnit(unitKey)
     end)
     anchorPointDD:SetRelativeWidth(0.5)
     positionGroup:AddChild(anchorPointDD)
@@ -772,6 +1005,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     anchorToDD:SetValue(castbarSettings.position and castbarSettings.position.anchorTo or "CENTER")
     anchorToDD:SetCallback("OnValueChanged", function(widget, event, value)
         UpdateCleanCastbarSetting(unitKey, {"position", "anchorTo"}, value)
+        UpdateCastBarForUnit(unitKey)
     end)
     anchorToDD:SetRelativeWidth(0.5)
     positionGroup:AddChild(anchorToDD)
@@ -782,6 +1016,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     xOffsetSlider:SetValue(castbarSettings.position and castbarSettings.position.xOffset or 0)
     xOffsetSlider:SetCallback("OnValueChanged", function(widget, event, value)
         UpdateCleanCastbarSetting(unitKey, {"position", "xOffset"}, value)
+        UpdateCastBarForUnit(unitKey)
     end)
     xOffsetSlider:SetRelativeWidth(0.5)
     positionGroup:AddChild(xOffsetSlider)
@@ -792,6 +1027,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     yOffsetSlider:SetValue(castbarSettings.position and castbarSettings.position.yOffset or -20)
     yOffsetSlider:SetCallback("OnValueChanged", function(widget, event, value)
         UpdateCleanCastbarSetting(unitKey, {"position", "yOffset"}, value)
+        UpdateCastBarForUnit(unitKey)
     end)
     yOffsetSlider:SetRelativeWidth(0.5)
     positionGroup:AddChild(yOffsetSlider)
@@ -801,6 +1037,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     anchorFrameInput:SetText(castbarSettings.position and castbarSettings.position.anchorFrame or "MilaUI_Player")
     anchorFrameInput:SetCallback("OnEnterPressed", function(widget, event, value)
         UpdateCleanCastbarSetting(unitKey, {"position", "anchorFrame"}, value)
+        UpdateCastBarForUnit(unitKey)
     end)
     anchorFrameInput:SetRelativeWidth(0.5)
     positionGroup:AddChild(anchorFrameInput)
@@ -820,6 +1057,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     iconEnabledCB:SetValue(castbarSettings.display and castbarSettings.display.icon and castbarSettings.display.icon.show)
     iconEnabledCB:SetCallback("OnValueChanged", function(widget, event, value)
         UpdateCleanCastbarSetting(unitKey, {"display", "icon", "show"}, value)
+        UpdateCastBarForUnit(unitKey)
     end)
     iconEnabledCB:SetRelativeWidth(0.5)
     iconGroup:AddChild(iconEnabledCB)
@@ -830,6 +1068,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     iconSizeSlider:SetValue(castbarSettings.display and castbarSettings.display.icon and castbarSettings.display.icon.size or 24)
     iconSizeSlider:SetCallback("OnValueChanged", function(widget, event, value)
         UpdateCleanCastbarSetting(unitKey, {"display", "icon", "size"}, value)
+        UpdateCastBarForUnit(unitKey)
     end)
     iconSizeSlider:SetRelativeWidth(0.5)
     iconGroup:AddChild(iconSizeSlider)
@@ -840,6 +1079,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     iconAnchorFromDD:SetValue(castbarSettings.display and castbarSettings.display.icon and castbarSettings.display.icon.anchorFrom or "LEFT")
     iconAnchorFromDD:SetCallback("OnValueChanged", function(widget, event, value)
         UpdateCleanCastbarSetting(unitKey, {"display", "icon", "anchorFrom"}, value)
+        UpdateCastBarForUnit(unitKey)
     end)
     iconAnchorFromDD:SetRelativeWidth(0.5)
     iconGroup:AddChild(iconAnchorFromDD)
@@ -850,6 +1090,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     iconAnchorToDD:SetValue(castbarSettings.display and castbarSettings.display.icon and castbarSettings.display.icon.anchorTo or "LEFT")
     iconAnchorToDD:SetCallback("OnValueChanged", function(widget, event, value)
         UpdateCleanCastbarSetting(unitKey, {"display", "icon", "anchorTo"}, value)
+        UpdateCastBarForUnit(unitKey)
     end)
     iconAnchorToDD:SetRelativeWidth(0.5)
     iconGroup:AddChild(iconAnchorToDD)
@@ -860,6 +1101,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     iconXOffsetSlider:SetValue(castbarSettings.display and castbarSettings.display.icon and castbarSettings.display.icon.xOffset or 4)
     iconXOffsetSlider:SetCallback("OnValueChanged", function(widget, event, value)
         UpdateCleanCastbarSetting(unitKey, {"display", "icon", "xOffset"}, value)
+        UpdateCastBarForUnit(unitKey)
     end)
     iconXOffsetSlider:SetRelativeWidth(0.5)
     iconGroup:AddChild(iconXOffsetSlider)
@@ -870,6 +1112,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     iconYOffsetSlider:SetValue(castbarSettings.display and castbarSettings.display.icon and castbarSettings.display.icon.yOffset or 0)
     iconYOffsetSlider:SetCallback("OnValueChanged", function(widget, event, value)
         UpdateCleanCastbarSetting(unitKey, {"display", "icon", "yOffset"}, value)
+        UpdateCastBarForUnit(unitKey)
     end)
     iconYOffsetSlider:SetRelativeWidth(0.5)
     iconGroup:AddChild(iconYOffsetSlider)
@@ -889,18 +1132,36 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     textEnabledCB:SetValue(castbarSettings.display and castbarSettings.display.text and castbarSettings.display.text.show)
     textEnabledCB:SetCallback("OnValueChanged", function(widget, event, value)
         UpdateCleanCastbarSetting(unitKey, {"display", "text", "show"}, value)
+        UpdateCastBarForUnit(unitKey)
     end)
-    textEnabledCB:SetRelativeWidth(0.5)
+    textEnabledCB:SetRelativeWidth(1)
     textGroup:AddChild(textEnabledCB)
     
-    local timerEnabledCB = GUI:Create("CheckBox")
-    timerEnabledCB:SetLabel("Show Timer")
-    timerEnabledCB:SetValue(castbarSettings.display and castbarSettings.display.timer and castbarSettings.display.timer.show)
-    timerEnabledCB:SetCallback("OnValueChanged", function(widget, event, value)
-        UpdateCleanCastbarSetting(unitKey, {"display", "timer", "show"}, value)
+    local textFontDD = GUI:Create("LSM30_Font")
+    textFontDD:SetLabel(lavender .. "Text Font")
+    textFontDD:SetList(fonts)
+    textFontDD:SetValue(castbarSettings.display and castbarSettings.display.text and castbarSettings.display.text.font or "Expressway")
+    textFontDD:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "text", "font"}, value)
+        UpdateCastBarForUnit(unitKey)
+        -- Force widget to update its display after a brief delay
+        C_Timer.After(0.01, function()
+            widget:SetValue(value)
+        end)
     end)
-    timerEnabledCB:SetRelativeWidth(0.5)
-    textGroup:AddChild(timerEnabledCB)
+    textFontDD:SetRelativeWidth(0.5)
+    textGroup:AddChild(textFontDD)
+    
+    local textSizeSlider = GUI:Create("Slider")
+    textSizeSlider:SetLabel(lavender .. "Text Size")
+    textSizeSlider:SetSliderValues(6, 30, 1)
+    textSizeSlider:SetValue(castbarSettings.display and castbarSettings.display.text and castbarSettings.display.text.size or 12)
+    textSizeSlider:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "text", "size"}, value)
+        UpdateCastBarForUnit(unitKey)
+    end)
+    textSizeSlider:SetRelativeWidth(0.5)
+    textGroup:AddChild(textSizeSlider)
     
     local textAnchorFromDD = GUI:Create("Dropdown")
     textAnchorFromDD:SetLabel(lavender .. "Text Anchor From")
@@ -908,6 +1169,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     textAnchorFromDD:SetValue(castbarSettings.display and castbarSettings.display.text and castbarSettings.display.text.anchorFrom or "BOTTOM")
     textAnchorFromDD:SetCallback("OnValueChanged", function(widget, event, value)
         UpdateCleanCastbarSetting(unitKey, {"display", "text", "anchorFrom"}, value)
+        UpdateCastBarForUnit(unitKey)
     end)
     textAnchorFromDD:SetRelativeWidth(0.5)
     textGroup:AddChild(textAnchorFromDD)
@@ -918,9 +1180,78 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     textAnchorToDD:SetValue(castbarSettings.display and castbarSettings.display.text and castbarSettings.display.text.anchorTo or "TOP")
     textAnchorToDD:SetCallback("OnValueChanged", function(widget, event, value)
         UpdateCleanCastbarSetting(unitKey, {"display", "text", "anchorTo"}, value)
+        UpdateCastBarForUnit(unitKey)
     end)
     textAnchorToDD:SetRelativeWidth(0.5)
     textGroup:AddChild(textAnchorToDD)
+    
+    local textXOffsetSlider = GUI:Create("Slider")
+    textXOffsetSlider:SetLabel(lavender .. "Text X Offset")
+    textXOffsetSlider:SetSliderValues(-50, 50, 1)
+    textXOffsetSlider:SetValue(castbarSettings.display and castbarSettings.display.text and castbarSettings.display.text.xOffset or 0)
+    textXOffsetSlider:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "text", "xOffset"}, value)
+        UpdateCastBarForUnit(unitKey)
+    end)
+    textXOffsetSlider:SetRelativeWidth(0.5)
+    textGroup:AddChild(textXOffsetSlider)
+    
+    local textYOffsetSlider = GUI:Create("Slider")
+    textYOffsetSlider:SetLabel(lavender .. "Text Y Offset")
+    textYOffsetSlider:SetSliderValues(-50, 50, 1)
+    textYOffsetSlider:SetValue(castbarSettings.display and castbarSettings.display.text and castbarSettings.display.text.yOffset or 2)
+    textYOffsetSlider:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "text", "yOffset"}, value)
+        UpdateCastBarForUnit(unitKey)
+    end)
+    textYOffsetSlider:SetRelativeWidth(0.5)
+    textGroup:AddChild(textYOffsetSlider)
+    
+    -- Timer Settings
+    MilaUI:CreateLargeHeading("Timer Settings", contentFrame)
+    MilaUI:CreateVerticalSpacer(20, contentFrame)
+    
+    local timerGroup = GUI:Create("InlineGroup")
+    timerGroup:SetLayout("Flow")
+    timerGroup:SetFullWidth(true)
+    timerGroup:SetTitle(pink .. "Timer")
+    contentFrame:AddChild(timerGroup)
+    
+    local timerEnabledCB = GUI:Create("CheckBox")
+    timerEnabledCB:SetLabel("Show Timer")
+    timerEnabledCB:SetValue(castbarSettings.display and castbarSettings.display.timer and castbarSettings.display.timer.show)
+    timerEnabledCB:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "timer", "show"}, value)
+        UpdateCastBarForUnit(unitKey)
+    end)
+    timerEnabledCB:SetRelativeWidth(1)
+    timerGroup:AddChild(timerEnabledCB)
+    
+    local timerFontDD = GUI:Create("LSM30_Font")
+    timerFontDD:SetLabel(lavender .. "Timer Font")
+    timerFontDD:SetList(fonts)
+    timerFontDD:SetValue(castbarSettings.display and castbarSettings.display.timer and castbarSettings.display.timer.font or "Expressway")
+    timerFontDD:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "timer", "font"}, value)
+        UpdateCastBarForUnit(unitKey)
+        -- Force widget to update its display after a brief delay
+        C_Timer.After(0.01, function()
+            widget:SetValue(value)
+        end)
+    end)
+    timerFontDD:SetRelativeWidth(0.5)
+    timerGroup:AddChild(timerFontDD)
+    
+    local timerSizeSlider = GUI:Create("Slider")
+    timerSizeSlider:SetLabel(lavender .. "Timer Size")
+    timerSizeSlider:SetSliderValues(6, 30, 1)
+    timerSizeSlider:SetValue(castbarSettings.display and castbarSettings.display.timer and castbarSettings.display.timer.size or 10)
+    timerSizeSlider:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "timer", "size"}, value)
+        UpdateCastBarForUnit(unitKey)
+    end)
+    timerSizeSlider:SetRelativeWidth(0.5)
+    timerGroup:AddChild(timerSizeSlider)
     
     local timerAnchorFromDD = GUI:Create("Dropdown")
     timerAnchorFromDD:SetLabel(lavender .. "Timer Anchor From")
@@ -928,9 +1259,10 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     timerAnchorFromDD:SetValue(castbarSettings.display and castbarSettings.display.timer and castbarSettings.display.timer.anchorFrom or "RIGHT")
     timerAnchorFromDD:SetCallback("OnValueChanged", function(widget, event, value)
         UpdateCleanCastbarSetting(unitKey, {"display", "timer", "anchorFrom"}, value)
+        UpdateCastBarForUnit(unitKey)
     end)
     timerAnchorFromDD:SetRelativeWidth(0.5)
-    textGroup:AddChild(timerAnchorFromDD)
+    timerGroup:AddChild(timerAnchorFromDD)
     
     local timerAnchorToDD = GUI:Create("Dropdown")
     timerAnchorToDD:SetLabel(lavender .. "Timer Anchor To")
@@ -938,9 +1270,32 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     timerAnchorToDD:SetValue(castbarSettings.display and castbarSettings.display.timer and castbarSettings.display.timer.anchorTo or "RIGHT")
     timerAnchorToDD:SetCallback("OnValueChanged", function(widget, event, value)
         UpdateCleanCastbarSetting(unitKey, {"display", "timer", "anchorTo"}, value)
+        UpdateCastBarForUnit(unitKey)
     end)
     timerAnchorToDD:SetRelativeWidth(0.5)
-    textGroup:AddChild(timerAnchorToDD)
+    timerGroup:AddChild(timerAnchorToDD)
+    
+    local timerXOffsetSlider = GUI:Create("Slider")
+    timerXOffsetSlider:SetLabel(lavender .. "Timer X Offset")
+    timerXOffsetSlider:SetSliderValues(-50, 50, 1)
+    timerXOffsetSlider:SetValue(castbarSettings.display and castbarSettings.display.timer and castbarSettings.display.timer.xOffset or -5)
+    timerXOffsetSlider:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "timer", "xOffset"}, value)
+        UpdateCastBarForUnit(unitKey)
+    end)
+    timerXOffsetSlider:SetRelativeWidth(0.5)
+    timerGroup:AddChild(timerXOffsetSlider)
+    
+    local timerYOffsetSlider = GUI:Create("Slider")
+    timerYOffsetSlider:SetLabel(lavender .. "Timer Y Offset")
+    timerYOffsetSlider:SetSliderValues(-50, 50, 1)
+    timerYOffsetSlider:SetValue(castbarSettings.display and castbarSettings.display.timer and castbarSettings.display.timer.yOffset or 0)
+    timerYOffsetSlider:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, {"display", "timer", "yOffset"}, value)
+        UpdateCastBarForUnit(unitKey)
+    end)
+    timerYOffsetSlider:SetRelativeWidth(0.5)
+    timerGroup:AddChild(timerYOffsetSlider)
     
     -- Colors Settings
     MilaUI:CreateLargeHeading("Colors", contentFrame)
@@ -957,6 +1312,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     castColorPicker:SetColor(unpack(castbarSettings.colors and castbarSettings.colors.cast or {0, 1, 1, 1}))
     castColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
         UpdateCleanCastbarSetting(unitKey, {"colors", "cast"}, {r, g, b, a})
+        UpdateCastBarForUnit(unitKey)
     end)
     castColorPicker:SetRelativeWidth(0.5)
     colorsGroup:AddChild(castColorPicker)
@@ -966,6 +1322,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     channelColorPicker:SetColor(unpack(castbarSettings.colors and castbarSettings.colors.channel or {0.5, 0.3, 0.9, 1}))
     channelColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
         UpdateCleanCastbarSetting(unitKey, {"colors", "channel"}, {r, g, b, a})
+        UpdateCastBarForUnit(unitKey)
     end)
     channelColorPicker:SetRelativeWidth(0.5)
     colorsGroup:AddChild(channelColorPicker)
@@ -975,6 +1332,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     uninterruptibleColorPicker:SetColor(unpack(castbarSettings.colors and castbarSettings.colors.uninterruptible or {0.8, 0.8, 0.8, 1}))
     uninterruptibleColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
         UpdateCleanCastbarSetting(unitKey, {"colors", "uninterruptible"}, {r, g, b, a})
+        UpdateCastBarForUnit(unitKey)
     end)
     uninterruptibleColorPicker:SetRelativeWidth(0.5)
     colorsGroup:AddChild(uninterruptibleColorPicker)
@@ -984,6 +1342,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     interruptColorPicker:SetColor(unpack(castbarSettings.colors and castbarSettings.colors.interrupt or {1, 0.2, 0.2, 1}))
     interruptColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
         UpdateCleanCastbarSetting(unitKey, {"colors", "interrupt"}, {r, g, b, a})
+        UpdateCastBarForUnit(unitKey)
     end)
     interruptColorPicker:SetRelativeWidth(0.5)
     colorsGroup:AddChild(interruptColorPicker)
@@ -993,6 +1352,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     completionColorPicker:SetColor(unpack(castbarSettings.colors and castbarSettings.colors.completion or {0.2, 1.0, 1.0, 1.0}))
     completionColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
         UpdateCleanCastbarSetting(unitKey, {"colors", "completion"}, {r, g, b, a})
+        UpdateCastBarForUnit(unitKey)
     end)
     completionColorPicker:SetRelativeWidth(0.5)
     colorsGroup:AddChild(completionColorPicker)
@@ -1012,6 +1372,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     castFlashColorPicker:SetColor(unpack(castbarSettings.flashColors and castbarSettings.flashColors.cast or {0.2, 0.8, 0.2, 1.0}))
     castFlashColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
         UpdateCleanCastbarSetting(unitKey, {"flashColors", "cast"}, {r, g, b, a})
+        UpdateCastBarForUnit(unitKey)
     end)
     castFlashColorPicker:SetRelativeWidth(0.5)
     flashColorsGroup:AddChild(castFlashColorPicker)
@@ -1021,6 +1382,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     channelFlashColorPicker:SetColor(unpack(castbarSettings.flashColors and castbarSettings.flashColors.channel or {1.0, 0.4, 1.0, 0.9}))
     channelFlashColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
         UpdateCleanCastbarSetting(unitKey, {"flashColors", "channel"}, {r, g, b, a})
+        UpdateCastBarForUnit(unitKey)
     end)
     channelFlashColorPicker:SetRelativeWidth(0.5)
     flashColorsGroup:AddChild(channelFlashColorPicker)
@@ -1030,6 +1392,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     uninterruptibleFlashColorPicker:SetColor(unpack(castbarSettings.flashColors and castbarSettings.flashColors.uninterruptible or {0.8, 0.8, 0.8, 0.9}))
     uninterruptibleFlashColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
         UpdateCleanCastbarSetting(unitKey, {"flashColors", "uninterruptible"}, {r, g, b, a})
+        UpdateCastBarForUnit(unitKey)
     end)
     uninterruptibleFlashColorPicker:SetRelativeWidth(0.5)
     flashColorsGroup:AddChild(uninterruptibleFlashColorPicker)
@@ -1039,6 +1402,7 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     interruptFlashColorPicker:SetColor(unpack(castbarSettings.flashColors and castbarSettings.flashColors.interrupt or {1, 1, 1, 1}))
     interruptFlashColorPicker:SetCallback("OnValueChanged", function(widget, event, r, g, b, a)
         UpdateCleanCastbarSetting(unitKey, {"flashColors", "interrupt"}, {r, g, b, a})
+        UpdateCastBarForUnit(unitKey)
     end)
     interruptFlashColorPicker:SetRelativeWidth(0.5)
     flashColorsGroup:AddChild(interruptFlashColorPicker)

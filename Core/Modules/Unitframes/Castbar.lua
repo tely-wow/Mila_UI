@@ -56,19 +56,15 @@ end
 
 -- Function to display a test castbar for customization
 function MilaUI:ShowTestCastbar(unitName, persistent)
-    print("ShowTestCastbar called for unit: " .. tostring(unitName) .. (persistent and " (persistent mode)" or ""))
-    
     -- Check for clean castbar first
     local unitKey = unitName:lower()
     local cleanCastbarSettings = MilaUI.DB.profile.castBars and MilaUI.DB.profile.castBars[unitKey]
     
     if cleanCastbarSettings and cleanCastbarSettings.enabled then
-        print("Using clean castbar system for " .. unitName)
         return MilaUI:ShowTestCleanCastbar(unitKey, persistent)
     end
     
     if not unitName or not MilaUI.DB.profile.Unitframes[unitName] then
-        print("Invalid unit name for test castbar")
         return
     end
     
@@ -78,23 +74,16 @@ function MilaUI:ShowTestCastbar(unitName, persistent)
     end
     
     local frameObj = MilaUI:GetFrameForUnit(unitName)
-    if frameObj then
-        print("Found frame for " .. unitName)
-    end
     
     if not frameObj then
-        print("Could not find frame object for unit: " .. unitName)
         return
     end
     
     if not frameObj.Castbar then
-        print("Frame found but no Castbar component for unit: " .. unitName)
         return
     end
     
     local castbar = frameObj.Castbar
-    print("Castbar found for " .. unitName .. ": " .. tostring(castbar:GetName() or "unnamed"))
-    print("Castbar current visibility: " .. (castbar:IsVisible() and "visible" or "hidden"))
     -- Store the persistent mode flag
     castbar.testPersistent = persistent
     
@@ -218,31 +207,25 @@ function MilaUI:ShowTestCastbar(unitName, persistent)
     end
     
     MilaUI.TestCastbarStopButton:Show()
-    print("Showing test castbar for " .. unitName)
 end
 
 -- Function to stop all test castbars
 -- Function to show test castbar for clean castbar system
 function MilaUI:ShowTestCleanCastbar(unitKey, persistent)
-    print("ShowTestCleanCastbar called for unit: " .. tostring(unitKey) .. (persistent and " (persistent mode)" or ""))
-    
     local cleanCastbarSettings = MilaUI.DB.profile.castBars and MilaUI.DB.profile.castBars[unitKey]
     if not cleanCastbarSettings or not cleanCastbarSettings.enabled then
-        print("Clean castbar not enabled for unit: " .. unitKey)
         return
     end
     
     -- Get the parent frame for the castbar
     local frameObj = MilaUI:GetFrameForUnit(unitKey:gsub("^%l", string.upper))
     if not frameObj then
-        print("Could not find frame object for unit: " .. unitKey)
         return
     end
     
     -- Get or create the clean castbar
     local castBar = frameObj.castBar
     if not castBar then
-        print("No clean castbar found for unit: " .. unitKey)
         return
     end
     
@@ -315,7 +298,6 @@ function MilaUI:ShowTestCleanCastbar(unitKey, persistent)
     end
     
     MilaUI.TestCastbarStopButton:Show()
-    print("Showing test clean castbar for " .. unitKey)
 end
 
 function MilaUI:StopAllTestCastbars()
@@ -365,8 +347,6 @@ function MilaUI:StopAllTestCastbars()
     if MilaUI.TestCastbarStopButton then
         MilaUI.TestCastbarStopButton:Hide()
     end
-    
-    print("All test castbars stopped")
 end
 
 -- Helper function to position the castbar

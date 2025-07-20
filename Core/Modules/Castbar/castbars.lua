@@ -317,7 +317,7 @@ function module.CreateCleanCastBar(parent, unit, options)
     
     -- Create icon
     if showIcon then
-        local iconFrame = castBar:CreateTexture(nil, "ARTWORK")
+        local iconFrame = castBar:CreateTexture(nil, "OVERLAY", nil, 1)
         iconFrame:SetSize(icon.size or (height + 4), icon.size or (height + 4))
         
         -- Use anchor settings from database
@@ -508,7 +508,7 @@ local holderConfigs = {
         
         -- Create holder icon
         if showIcon then
-            local holderIcon = holder:CreateTexture(nil, "ARTWORK")
+            local holderIcon = holder:CreateTexture(nil, "OVERLAY", nil, 1)
             holderIcon:SetSize(icon.size or (height + 4), icon.size or (height + 4))
             
             -- Use anchor settings from database

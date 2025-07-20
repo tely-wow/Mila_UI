@@ -57,7 +57,6 @@ local cursorMod = MilaUI.DB.profile.CursorMod
 
   -- Background with padding
   local bg = mainFrame.frame:CreateTexture(nil, "BACKGROUND")
-  bg:SetColorTexture(0.1, 0.1, 0.4, 0.85)
   bg:SetPoint("TOPLEFT", 6, -6)
   bg:SetPoint("BOTTOMRIGHT", -6, 6)
 
@@ -144,13 +143,11 @@ local cursorMod = MilaUI.DB.profile.CursorMod
       local cleanCastbarSettings = MilaUI.DB.profile.castBars and MilaUI.DB.profile.castBars[unitKey]
       
       if cleanCastbarSettings and cleanCastbarSettings.enabled then
-        print("Testing clean castbar for " .. unitKey)
         MilaUI:ShowTestCleanCastbar(unitKey, true)
       else
         -- Fall back to oUF castbar
         local unitName = unitKey:gsub("^%l", string.upper)
         if MilaUI.DB.profile.Unitframes[unitName] and MilaUI.DB.profile.Unitframes[unitName].Castbar and MilaUI.DB.profile.Unitframes[unitName].Castbar.enabled then
-          print("Testing oUF castbar for " .. unitName)
           MilaUI:ShowTestCastbar(unitName, true)
         end
       end
