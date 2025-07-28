@@ -539,6 +539,61 @@ local function CreatePowerBar(self, Unit)
     end
 end
 
+-- Helper function to determine smart anchor frame
+local function GetSmartAnchorFrame(frameName, Unit, Debuffs)
+    if not Debuffs.SmartAnchoring then
+        -- Use regular anchor logic
+        local anchorFrame = frameName
+        if Debuffs.AnchorFrame then
+            if Debuffs.AnchorFrame == "HealthBar" and frameName.unitHealthBar then
+                anchorFrame = frameName.unitHealthBar
+            elseif Debuffs.AnchorFrame == "PowerBar" and frameName.unitPowerBar then
+                anchorFrame = frameName.unitPowerBar
+            elseif Debuffs.AnchorFrame == "Buffs" and frameName.unitBuffs then
+                anchorFrame = frameName.unitBuffs
+            elseif Debuffs.AnchorFrame ~= "Debuffs" and _G[Debuffs.AnchorFrame] then
+                anchorFrame = _G[Debuffs.AnchorFrame]
+            end
+        end
+        return anchorFrame
+    end
+    
+    -- Smart anchoring logic
+    local Buffs = MilaUI.DB.profile.Unitframes[Unit].Buffs
+    if Buffs.Enabled and frameName.unitBuffs and frameName.unitBuffs:IsShown() then
+        -- Check if buffs have any visible children (actual buff icons)
+        local hasVisibleBuffs = false
+        
+        -- Check both createdIcons (custom property) and standard children
+        if frameName.unitBuffs.createdIcons then
+            for i = 1, #frameName.unitBuffs.createdIcons do
+                local icon = frameName.unitBuffs.createdIcons[i]
+                if icon and icon:IsShown() then
+                    hasVisibleBuffs = true
+                    break
+                end
+            end
+        else
+            -- Fallback: check all child frames for visible buff icons
+            for i = 1, frameName.unitBuffs:GetNumChildren() do
+                local child = select(i, frameName.unitBuffs:GetChildren())
+                if child and child:IsShown() and child.Icon then -- oUF aura button has Icon texture
+                    hasVisibleBuffs = true
+                    break
+                end
+            end
+        end
+        
+        -- If buffs exist and are visible, anchor to buffs, otherwise to unitframe
+        if hasVisibleBuffs then
+            return frameName.unitBuffs
+        end
+    end
+    
+    -- Default to unitframe if no buffs or smart anchoring fallback
+    return frameName
+end
+
 local function CreateBuffs(self, Unit)
     local Buffs = MilaUI.DB.profile.Unitframes[Unit].Buffs
     if Buffs.Enabled and not self.unitBuffs then
@@ -571,9 +626,25 @@ local function CreateBuffs(self, Unit)
         self.unitBuffs["growth-y"] = Buffs.GrowthY
         self.unitBuffs.filter = "HELPFUL"
         self.unitBuffs.PostCreateButton = function(_, button) PostCreateButton(_, button, "Player", "HELPFUL") end
+        
+        -- Add PostUpdate to handle smart anchoring updates
+        self.unitBuffs.PostUpdate = function(element, unit)
+            -- Update debuff positioning if smart anchoring is enabled
+            if self.unitDebuffs then
+                local Unit = MilaUI.Frames[self.unit] or "Player"
+                local Debuffs = MilaUI.DB.profile.Unitframes[Unit].Debuffs
+                if Debuffs and Debuffs.SmartAnchoring and Debuffs.Enabled then
+                    self.unitDebuffs:ClearAllPoints()
+                    local anchorFrame = GetSmartAnchorFrame(self, Unit, Debuffs)
+                    self.unitDebuffs:SetPoint(Debuffs.AnchorFrom, anchorFrame, Debuffs.AnchorTo, Debuffs.XOffset, Debuffs.YOffset)
+                end
+            end
+        end
+        
         self.Buffs = self.unitBuffs
     end
 end
+
 
 local function CreateDebuffs(self, Unit)
     local Debuffs = MilaUI.DB.profile.Unitframes[Unit].Debuffs
@@ -581,20 +652,8 @@ local function CreateDebuffs(self, Unit)
         self.unitDebuffs = CreateFrame("Frame", nil, self)
         self.unitDebuffs:SetSize(self:GetWidth(), Debuffs.Size)
         
-        -- Determine anchor based on AnchorFrame setting
-        local anchorFrame = self
-        if Debuffs.AnchorFrame then
-            if Debuffs.AnchorFrame == "HealthBar" and self.unitHealthBar then
-                anchorFrame = self.unitHealthBar
-            elseif Debuffs.AnchorFrame == "PowerBar" and self.unitPowerBar then
-                anchorFrame = self.unitPowerBar
-            elseif Debuffs.AnchorFrame == "Buffs" and self.unitBuffs then
-                anchorFrame = self.unitBuffs
-            elseif Debuffs.AnchorFrame ~= "Debuffs" and _G[Debuffs.AnchorFrame] then
-                -- Try to find a global frame with this name
-                anchorFrame = _G[Debuffs.AnchorFrame]
-            end
-        end
+        -- Determine anchor based on smart anchoring or regular AnchorFrame setting
+        local anchorFrame = GetSmartAnchorFrame(self, Unit, Debuffs)
         
         self.unitDebuffs:SetPoint(Debuffs.AnchorFrom, anchorFrame, Debuffs.AnchorTo, Debuffs.XOffset, Debuffs.YOffset)
         self.unitDebuffs.size = Debuffs.Size
@@ -1277,6 +1336,20 @@ local function UpdateBuffs(FrameName)
         FrameName.unitBuffs.filter = "HELPFUL"
         FrameName.unitBuffs:Show()
         FrameName.unitBuffs.PostUpdateButton = function(_, button) PostUpdateButton(_, button, Unit, "HELPFUL") end
+        
+        -- Add PostUpdate to handle smart anchoring updates
+        FrameName.unitBuffs.PostUpdate = function(element, unit)
+            -- Update debuff positioning if smart anchoring is enabled
+            if FrameName.unitDebuffs then
+                local Debuffs = MilaUI.DB.profile.Unitframes[Unit].Debuffs
+                if Debuffs and Debuffs.SmartAnchoring and Debuffs.Enabled then
+                    FrameName.unitDebuffs:ClearAllPoints()
+                    local anchorFrame = GetSmartAnchorFrame(FrameName, Unit, Debuffs)
+                    FrameName.unitDebuffs:SetPoint(Debuffs.AnchorFrom, anchorFrame, Debuffs.AnchorTo, Debuffs.XOffset, Debuffs.YOffset)
+                end
+            end
+        end
+        
         FrameName.unitBuffs:ForceUpdate()
     else
         if FrameName.unitBuffs then
@@ -1298,20 +1371,8 @@ local function UpdateDebuffs(FrameName)
         FrameName.unitDebuffs:ClearAllPoints()
         FrameName.unitDebuffs:SetSize(FrameName:GetWidth(), Debuffs.Size)
         
-        -- Determine anchor based on AnchorFrame setting
-        local anchorFrame = FrameName
-        if Debuffs.AnchorFrame then
-            if Debuffs.AnchorFrame == "HealthBar" and FrameName.unitHealthBar then
-                anchorFrame = FrameName.unitHealthBar
-            elseif Debuffs.AnchorFrame == "PowerBar" and FrameName.unitPowerBar then
-                anchorFrame = FrameName.unitPowerBar
-            elseif Debuffs.AnchorFrame == "Buffs" and FrameName.unitBuffs then
-                anchorFrame = FrameName.unitBuffs
-            elseif Debuffs.AnchorFrame ~= "Debuffs" and _G[Debuffs.AnchorFrame] then
-                -- Try to find a global frame with this name
-                anchorFrame = _G[Debuffs.AnchorFrame]
-            end
-        end
+        -- Determine anchor based on smart anchoring or regular AnchorFrame setting
+        local anchorFrame = GetSmartAnchorFrame(FrameName, Unit, Debuffs)
         
         FrameName.unitDebuffs:SetPoint(Debuffs.AnchorFrom, anchorFrame, Debuffs.AnchorTo, Debuffs.XOffset, Debuffs.YOffset)
         FrameName.unitDebuffs.size = Debuffs.Size
@@ -1573,6 +1634,18 @@ function MilaUI:UpdateUnitFrame(FrameName)
     UpdateTextFields(FrameName)
     UpdateMouseoverHighlight(FrameName)
     if MilaUI.DB.profile.TestMode then MilaUI:DisplayBossFrames() end
+end
+
+function MilaUI:UpdateFrames()
+    -- Update all unit frames
+    for _, unitName in ipairs(MilaUI.UnitList) do
+        local frame = MilaUI:GetFrameForUnit(unitName)
+        if frame then
+            MilaUI:UpdateUnitFrame(frame)
+        end
+    end
+    -- Update boss frames
+    MilaUI:UpdateBossFrames()
 end
 
 function MilaUI:UpdateBossFrames()
