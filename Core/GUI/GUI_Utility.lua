@@ -71,7 +71,7 @@ end
 
 
 
--- UpdateFrames function has been moved to GUI_AF_Utility.lua
+-- UpdateFrames function is located in Core/Main.lua
 
 function MilaUI:UpdateIndicator()
     if self.PlayerFrame then

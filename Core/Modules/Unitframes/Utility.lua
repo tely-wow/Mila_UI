@@ -66,6 +66,8 @@ local function PostCreateButton(_, button, Unit, AuraType)
     local General = MilaUI.DB.profile.Unitframes.General
     local BuffCount = MilaUI.DB.profile.Unitframes[Unit].Buffs.Count
     local DebuffCount = MilaUI.DB.profile.Unitframes[Unit].Debuffs.Count
+    local LSM = LibStub("LibSharedMedia-3.0")
+    
     -- Icon Options
     local auraIcon = button.Icon
     auraIcon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
@@ -85,17 +87,20 @@ local function PostCreateButton(_, button, Unit, AuraType)
 
     -- Count Options
     local auraCount = button.Count
-    local fontPath = LSM:Fetch("font", General.Font)
     if AuraType == "HELPFUL" then
         auraCount:ClearAllPoints()
         auraCount:SetPoint(BuffCount.AnchorFrom, button, BuffCount.AnchorTo, BuffCount.XOffset, BuffCount.YOffset)
-        auraCount:SetFont(fontPath, BuffCount.FontSize, "OUTLINE")
+        local buffFont = BuffCount.Font and LSM:Fetch("font", BuffCount.Font) or LSM:Fetch("font", General.Font)
+        local buffFontFlags = BuffCount.FontFlags or "OUTLINE"
+        auraCount:SetFont(buffFont, BuffCount.FontSize, buffFontFlags)
         auraCount:SetJustifyH("CENTER")
         auraCount:SetTextColor(BuffCount.Colour[1], BuffCount.Colour[2], BuffCount.Colour[3], BuffCount.Colour[4])
     elseif AuraType == "HARMFUL" then
         auraCount:ClearAllPoints()
         auraCount:SetPoint(DebuffCount.AnchorFrom, button, DebuffCount.AnchorTo, DebuffCount.XOffset, DebuffCount.YOffset)
-        auraCount:SetFont(fontPath, DebuffCount.FontSize, "OUTLINE")
+        local debuffFont = DebuffCount.Font and LSM:Fetch("font", DebuffCount.Font) or LSM:Fetch("font", General.Font)
+        local debuffFontFlags = DebuffCount.FontFlags or "OUTLINE"
+        auraCount:SetFont(debuffFont, DebuffCount.FontSize, debuffFontFlags)
         auraCount:SetJustifyH("CENTER")
         auraCount:SetTextColor(DebuffCount.Colour[1], DebuffCount.Colour[2], DebuffCount.Colour[3], DebuffCount.Colour[4])
     end
@@ -105,18 +110,23 @@ local function PostUpdateButton(_, button, Unit, AuraType)
     local General = MilaUI.DB.profile.Unitframes.General
     local BuffCount = MilaUI.DB.profile.Unitframes[Unit].Buffs.Count
     local DebuffCount = MilaUI.DB.profile.Unitframes[Unit].Debuffs.Count
+    local LSM = LibStub("LibSharedMedia-3.0")
 
     local auraCount = button.Count
     if AuraType == "HELPFUL" then
         auraCount:ClearAllPoints()
         auraCount:SetPoint(BuffCount.AnchorFrom, button, BuffCount.AnchorTo, BuffCount.XOffset, BuffCount.YOffset)
-        auraCount:SetFont(General.Font, BuffCount.FontSize, "OUTLINE")
+        local buffFont = BuffCount.Font and LSM:Fetch("font", BuffCount.Font) or LSM:Fetch("font", General.Font)
+        local buffFontFlags = BuffCount.FontFlags or "OUTLINE"
+        auraCount:SetFont(buffFont, BuffCount.FontSize, buffFontFlags)
         auraCount:SetJustifyH("CENTER")
         auraCount:SetTextColor(BuffCount.Colour[1], BuffCount.Colour[2], BuffCount.Colour[3], BuffCount.Colour[4])
     elseif AuraType == "HARMFUL" then
         auraCount:ClearAllPoints()
         auraCount:SetPoint(DebuffCount.AnchorFrom, button, DebuffCount.AnchorTo, DebuffCount.XOffset, DebuffCount.YOffset)
-        auraCount:SetFont(General.Font, DebuffCount.FontSize, "OUTLINE")
+        local debuffFont = DebuffCount.Font and LSM:Fetch("font", DebuffCount.Font) or LSM:Fetch("font", General.Font)
+        local debuffFontFlags = DebuffCount.FontFlags or "OUTLINE"
+        auraCount:SetFont(debuffFont, DebuffCount.FontSize, debuffFontFlags)
         auraCount:SetJustifyH("CENTER")
         auraCount:SetTextColor(DebuffCount.Colour[1], DebuffCount.Colour[2], DebuffCount.Colour[3], DebuffCount.Colour[4])
     end

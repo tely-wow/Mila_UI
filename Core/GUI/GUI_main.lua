@@ -40,8 +40,6 @@ unitframesTabs = nil
 function MilaUI:InitGUI()
   if not MilaUI.DB then return end
   isOpen = true
-  local LSMFonts = LSM:HashTable(LSM.MediaType.FONT)
-  local LSMTextures = LSM:HashTable(LSM.MediaType.STATUSBAR)
 
 local Global = MilaUI.DB.global
 local General = MilaUI.DB.profile.Unitframes.General
@@ -60,16 +58,6 @@ local cursorMod = MilaUI.DB.profile.CursorMod
   bg:SetPoint("TOPLEFT", 6, -6)
   bg:SetPoint("BOTTOMRIGHT", -6, 6)
 
-  -- Border around entire frame
-  local border = CreateFrame("Frame", nil, mainFrame.frame, "BackdropTemplate")
-  border:SetAllPoints()
-  border:SetBackdrop({
-    bgFile = nil,
-    edgeFile = "Interface\\AddOns\\Mila_UI\\Media\\Borders\\border-glow-overlay.tga",
-    edgeSize = 16,
-  })
-  border:SetBackdropBorderColor(1.0, 0.41, 1.0)
-
   mainFrame:SetCallback("OnClose", function(widget)
     GUI:Release(widget)
     isOpen = false
@@ -78,25 +66,22 @@ local cursorMod = MilaUI.DB.profile.CursorMod
   _G["MilaUI_MainFrame"] = mainFrame.frame
   tinsert(UISpecialFrames, "MilaUI_MainFrame")
 
-  -- Create a container for the logo
-  local logoGroup = GUI:Create("SimpleGroup")
-  logoGroup:SetLayout("Fill")
-  logoGroup:SetPoint("TOPLEFT", mainFrame.frame, "TOPLEFT", 8, -25)
-  logoGroup:SetWidth(150)
-  logoGroup:SetHeight(150)
-  -- Add the logo texture to the logoGroup's frame
-  local logo = logoGroup.frame:CreateTexture(nil, "ARTWORK")
-  logo:SetTexture("Interface\\Addons\\Mila_UI\\Media\\logo.tga")
-  logo:SetAllPoints()
-  -- Add the logoGroup to the leftPanel as the first child
-  mainFrame:AddChild(logoGroup)
+  -- Create logo using Icon widget (AceGUI best practice)
+  local logo = GUI:Create("Icon")
+  logo:SetImage("Interface\\Addons\\Mila_UI\\Media\\logo.tga")
+  logo:SetImageSize(150, 150)
+  logo:SetPoint("TOPLEFT", mainFrame.frame, "TOPLEFT", 8, -25)
+  logo:SetWidth(150)
+  logo:SetHeight(150)
+  logo:SetLabel("")  -- No label for the logo
+  mainFrame:AddChild(logo)
 
   -- Create a label for the lock/unlock button
   local lockLabel = GUI:Create("Label")
   lockLabel:SetText(pink .. "Lock / Unlock Unit Frames")
   lockLabel:SetFontObject(GameFontNormal)
   lockLabel:SetFullWidth(false)
-  lockLabel.frame:SetPoint("TOPLEFT", logoGroup.frame, "TOPRIGHT", 0, -20)
+  lockLabel.frame:SetPoint("TOPLEFT", logo.frame, "TOPRIGHT", 0, -20)
   mainFrame:AddChild(lockLabel)
 
   -- Create the lock/unlock button
@@ -171,7 +156,7 @@ local cursorMod = MilaUI.DB.profile.CursorMod
   mainTree:SetLayout("Fill")
   mainTree:SetFullWidth(true)
   mainTree:SetFullHeight(true)
-  mainTree.frame:SetPoint("TOPLEFT", logoGroup.frame, "BOTTOMLEFT", 10, -20)
+  mainTree.frame:SetPoint("TOPLEFT", logo.frame, "BOTTOMLEFT", 10, -20)
   mainTree.frame:SetPoint("BOTTOMRIGHT", mainFrame.frame, "BOTTOMRIGHT", -20, 20)
   mainFrame:AddChild(mainTree)
   
@@ -196,14 +181,19 @@ local cursorMod = MilaUI.DB.profile.CursorMod
   }
   
   mainTree:SetTree(treeData)
-  mainTree:SetStatusTable({Units = true})
+  -- Set the status table to keep the Units group expanded
+  local statusTable = {
+    groups = {
+      ["Units"] = true  -- This keeps the Units group expanded
+    }
+  }
+  mainTree:SetStatusTable(statusTable)
   mainTree:SetCallback("OnClick", function(widget, uniquevalue)
   end)
-  mainTree:SetStatusTable({["Units"] = true})
   
-  -- Directly call the OnGroupSelected callback with 'General' as the selection
+  -- Select General by default
   C_Timer.After(0.1, function()
-    mainTree:Fire("OnGroupSelected", "General")
+    mainTree:SelectByValue("General")
   end)
   
   -- Handle tree selection
@@ -277,8 +267,13 @@ local cursorMod = MilaUI.DB.profile.CursorMod
     end)
   end)
   
-  -- Select the default tree item
-  mainTree:SetStatusTable({Units = true})
+  -- Force the Units group to expand after a short delay
+  C_Timer.After(0.2, function()
+    if mainTree and mainTree.status and mainTree.status.groups then
+      mainTree.status.groups["Units"] = true
+      mainTree:RefreshTree()
+    end
+  end)
 end
 
 function HandleGeneralTab(parent)
@@ -578,39 +573,12 @@ function HandleGeneralTab(parent)
   cursormodcolorpicker:SetRelativeWidth(1)
   cursormodcolorcontainer:AddChild(cursormodcolorpicker)
   
-  -- Font Options
-  MilaUI:CreateLargeHeading("Font Options", container)
-  local FontOptions = GUI:Create("InlineGroup")
-  FontOptions:SetLayout("Flow")
-  FontOptions:SetFullWidth(true)
-  container:AddChild(FontOptions)
-  
-  local Font = MilaUI_GUI:Create("LSM30_Font")
-  Font:SetLabel(lavender .. "Font")
-  Font:SetList(LSM:HashTable(LSM.MediaType.FONT))
-  Font:SetValue(General.Font)
-  -- NOTE: General.Font now stores the font key (e.g., "Friz Quadrata TT"). Always use LSM:Fetch("font", General.Font) when applying fonts!
-  Font:SetCallback("OnValueChanged", function(widget, event, value)
-    General.Font = value
-    MilaUI:CreateReloadPrompt()
+  -- Force layout update to show scrollbar
+  C_Timer.After(0.1, function()
+    if parent and parent.DoLayout then
+      parent:DoLayout()
+    end
   end)
-  Font:SetRelativeWidth(0.3)
-  FontOptions:AddChild(Font)
-  
-  local FontFlag = MilaUI_GUI:Create("Dropdown")
-  FontFlag:SetLabel(lavender .. "Font Flag")
-  FontFlag:SetList({
-      ["NONE"] = "None",
-      ["OUTLINE"] = "Outline",
-      ["THICKOUTLINE"] = "Thick Outline",
-      ["MONOCHROME"] = "Monochrome",
-      ["OUTLINE, MONOCHROME"] = "Outline, Monochrome",
-      ["THICKOUTLINE, MONOCHROME"] = "Thick Outline, Monochrome",
-  })
-  FontFlag:SetValue(General.FontFlag)
-  FontFlag:SetCallback("OnValueChanged", function(widget, event, value) General.FontFlag = value MilaUI:UpdateFrames() end)
-  FontFlag:SetRelativeWidth(0.2)
-  FontOptions:AddChild(FontFlag)
 end
 
 
@@ -619,9 +587,9 @@ function MilaUI_OpenGUIMain()
   MilaUI:InitGUI()
   
   -- Select General tab after initialization
-  C_Timer.After(0.1, function()
+  C_Timer.After(0.15, function()
     if mainTree then
-      mainTree:SelectByPath("General")
+      mainTree:SelectByValue("General")
     end
   end)
 end

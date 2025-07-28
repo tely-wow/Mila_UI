@@ -2,9 +2,8 @@ local _, MilaUI = ...
 local GUI = LibStub("AceGUI-3.0") -- Direct reference to AceGUI
 local LSM = LibStub:GetLibrary("LibSharedMedia-3.0") or LibStub("LibSharedMedia-3.0")
 MilaUI.GUI = GUI
-local pink = "|cffFF77B5"
-local lavender = "|cFFCBA0E3"
 local unitSettingsContainer = nil
+
 
 -- Create a global resize throttling system
 if not MilaUI.resizeThrottle then
@@ -44,7 +43,9 @@ if not MilaUI.resizeThrottle then
 end
 
 function MilaUI:DrawUnitframesGeneralTab(parent)
-    
+    local white = MilaUI.DB.global.Colors.white
+    local pink = MilaUI.DB.global.Colors.pink
+    local lavender = MilaUI.DB.global.Colors.lavender
     parent:ReleaseChildren()
     local General = MilaUI.DB.profile.Unitframes.General
     local LSM = LibStub:GetLibrary("LibSharedMedia-3.0")
@@ -392,6 +393,10 @@ function MilaUI:DrawUnitframesGeneralTab(parent)
 end
 
 function MilaUI:DrawUnitContainer(container, unitName, tabKey)
+    local white = MilaUI.DB.global.Colors.white
+    local pink = MilaUI.DB.global.Colors.pink
+    local lavender = MilaUI.DB.global.Colors.lavender
+
     -- Use pcall to safely release children
     local success, errorMsg = pcall(function()
         container:ReleaseChildren() -- Clear previous unit's settings
@@ -419,8 +424,8 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
     tabGroup:SetFullWidth(true)
     tabGroup:SetFullHeight(true)
     
-    -- Set up the tabs
-    local tabs = {
+    -- Store base tab names without colors
+    local tabNames = {
         { text = "Healthbar", value = "Healthbar" },
         { text = "PowerBar", value = "PowerBar" },
         { text = "Castbar", value = "Castbar" },
@@ -434,16 +439,41 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
     local unitKey = dbUnitName:lower()
     if MilaUI.DB.profile.castBars and MilaUI.DB.profile.castBars[unitKey] then
         -- Add CleanCastbar tab after regular castbar
-        table.insert(tabs, 4, { text = "CleanCastbar", value = "CleanCastbar" })
+        table.insert(tabNames, 4, { text = "CleanCastbar", value = "CleanCastbar" })
     end
     
-    tabGroup:SetTabs(tabs)
+    -- Store current selected tab to prevent recursion
+    local currentSelectedTab = "Healthbar"
+    
+    -- Function to update tab colors
+    local function updateTabColors(selectedValue)
+        if currentSelectedTab == selectedValue then return end -- Prevent unnecessary updates
+        currentSelectedTab = selectedValue
+        
+        local coloredTabs = {}
+        for i, tab in ipairs(tabNames) do
+            local color = (tab.value == selectedValue) and pink or lavender
+            coloredTabs[i] = { text = color .. tab.text, value = tab.value }
+        end
+        tabGroup:SetTabs(coloredTabs)
+    end
+    
+    -- Set initial tabs with all lavender except first
+    local initialTabs = {}
+    for i, tab in ipairs(tabNames) do
+        local color = (tab.value == "Healthbar") and pink or lavender
+        initialTabs[i] = { text = color .. tab.text, value = tab.value }
+    end
+    tabGroup:SetTabs(initialTabs)
     
     -- Add the tab group to the container first
     container:AddChild(tabGroup)
     
     -- Set up the callback for tab selection - use a simple approach
     tabGroup:SetCallback("OnGroupSelected", function(widget, event, tabKey)
+        -- Update tab colors when selection changes
+        updateTabColors(tabKey)
+        
         -- Use pcall to safely release children and catch any errors
         local success, errorMsg = pcall(function()
             widget:ReleaseChildren() -- Clear previous tab's content
@@ -551,25 +581,25 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             
             local AbsorbsContainer = GUI:Create("InlineGroup")
             local HealPrediction = GUI:Create("CheckBox")
-            HealPrediction:SetLabel(lavender .. "Enable Heal Prediction")
+            HealPrediction:SetLabel("Enable Heal Prediction")
             HealPrediction:SetValue(HealthPrediction.Enabled)
             HealPrediction:SetCallback("OnValueChanged", function(widget, event, value) HealthPrediction.Enabled = value MilaUI:UpdateFrames() end)
             HealPrediction:SetRelativeWidth(1)
             contentFrame:AddChild(HealPrediction)
-            AbsorbsContainer:SetTitle("Absorbs")
+            AbsorbsContainer:SetTitle(lavender .. "Absorbs")
             AbsorbsContainer:SetLayout("Flow")
             AbsorbsContainer:SetRelativeWidth(0.5)
             contentFrame:AddChild(AbsorbsContainer)
         
             local AbsorbsEnabled = GUI:Create("CheckBox")
-            AbsorbsEnabled:SetLabel(lavender .. "Enable Absorbs")
+            AbsorbsEnabled:SetLabel("Enable Absorbs")
             AbsorbsEnabled:SetValue(HealthPrediction.Absorbs.Enabled)
             AbsorbsEnabled:SetCallback("OnValueChanged", function(widget, event, value) HealthPrediction.Absorbs.Enabled = value MilaUI:CreateReloadPrompt() end)
             AbsorbsEnabled:SetRelativeWidth(1)
             AbsorbsContainer:AddChild(AbsorbsEnabled)
         
             local AbsorbsColourPicker = GUI:Create("ColorPicker")
-            AbsorbsColourPicker:SetLabel(lavender .. "Colour")
+            AbsorbsColourPicker:SetLabel("Colour")
             local AR, AG, AB, AA = unpack(HealthPrediction.Absorbs.Colour)
             AbsorbsColourPicker:SetColor(AR, AG, AB, AA)
             AbsorbsColourPicker:SetCallback("OnValueChanged", function(widget, _, r, g, b, a) HealthPrediction.Absorbs.Colour = {r, g, b, a} MilaUI:UpdateFrames() end)
@@ -584,14 +614,14 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             contentFrame:AddChild(HealAbsorbsContainer)
         
             local HealAbsorbsEnabled = GUI:Create("CheckBox")
-            HealAbsorbsEnabled:SetLabel(lavender .. "Enable Heal Absorbs")
+            HealAbsorbsEnabled:SetLabel("Enable Heal Absorbs")
             HealAbsorbsEnabled:SetValue(HealthPrediction.HealAbsorbs.Enabled)
             HealAbsorbsEnabled:SetCallback("OnValueChanged", function(widget, event, value) HealthPrediction.HealAbsorbs.Enabled = value MilaUI:UpdateFrames() end)
             HealAbsorbsEnabled:SetRelativeWidth(1)
             HealAbsorbsContainer:AddChild(HealAbsorbsEnabled)
         
             local HealAbsorbsColourPicker = GUI:Create("ColorPicker")
-            HealAbsorbsColourPicker:SetLabel(lavender .. "Colour")
+            HealAbsorbsColourPicker:SetLabel("Colour")
             local HAR, HAG, HAB, HAA = unpack(HealthPrediction.HealAbsorbs.Colour)
             HealAbsorbsColourPicker:SetColor(HAR, HAG, HAB, HAA)
             HealAbsorbsColourPicker:SetCallback("OnValueChanged", function(widget, _, r, g, b, a) HealthPrediction.HealAbsorbs.Colour = {r, g, b, a} MilaUI:UpdateFrames() end)
@@ -602,38 +632,48 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             -- Size and Position
             MilaUI:CreateLargeHeading("Size and Position", contentFrame)
             MilaUI:CreateVerticalSpacer(20, contentFrame)
+            
+            -- Create Size group
             local Size = GUI:Create("InlineGroup")
-            local Position = GUI:Create("InlineGroup")
-            local Anchor = GUI:Create("InlineGroup")
             Size:SetLayout("Flow")
             Size:SetRelativeWidth(0.5)
-            Size:SetTitle(pink .. "Size")
+            Size:SetHeight(150)
+            Size:SetAutoAdjustHeight(false)
+            Size:SetTitle(lavender .. "Size")
+            contentFrame:AddChild(Size)
+            
+            -- Create Position group
+            local Position = GUI:Create("InlineGroup")
             Position:SetLayout("Flow")
             Position:SetRelativeWidth(0.5)
-            Position:SetTitle(pink .. "Position")
-            Anchor:SetLayout("Flow")
-            Anchor:SetRelativeWidth(0.5)
-            Anchor:SetTitle(pink .. "Anchor")
-            contentFrame:AddChild(Size)
+            Position:SetHeight(150)
+            Position:SetAutoAdjustHeight(false)
+            Position:SetTitle(lavender .. "Position")
             contentFrame:AddChild(Position)
+            
+            -- Create Anchor group
+            local Anchor = GUI:Create("InlineGroup")
+            Anchor:SetLayout("Flow")
+            Anchor:SetFullWidth(true)
+            Anchor:SetTitle(lavender .. "Anchor")
             contentFrame:AddChild(Anchor)
             -- Frame Scale
             local FrameScaleEnabled = GUI:Create("CheckBox")
-            FrameScaleEnabled:SetLabel("Enable Custom Frame Scale")
+            FrameScaleEnabled:SetLabel("Custom Scale")
             FrameScaleEnabled:SetValue(Frame.CustomScale)
             FrameScaleEnabled:SetCallback("OnValueChanged", function(widget, event, value) Frame.CustomScale = value MilaUI:UpdateFrameScale() end)
             FrameScaleEnabled:SetRelativeWidth(0.5)
             Size:AddChild(FrameScaleEnabled)
             local FrameScale = GUI:Create("Slider")
-            FrameScale:SetLabel(lavender .. "Scale")
+            FrameScale:SetLabel(white .. "Scale")
             FrameScale:SetSliderValues(0, 1, 0.01)
             FrameScale:SetValue(Frame.Scale)
             FrameScale:SetCallback("OnMouseUp", function(widget, event, value) Frame.Scale = value MilaUI:UpdateFrameScale() end)
-            FrameScale:SetRelativeWidth(1)
+            FrameScale:SetRelativeWidth(0.5)
             Size:AddChild(FrameScale)
             -- Frame Width
             local FrameWidth = GUI:Create("Slider")
-            FrameWidth:SetLabel(lavender .. "Width")
+            FrameWidth:SetLabel(white .. "Width")
             FrameWidth:SetSliderValues(1, 500, 1)
             FrameWidth:SetValue(Health.Width)
             FrameWidth:SetCallback("OnValueChanged", function(widget, event, value) 
@@ -645,7 +685,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
 
             -- Frame Height
             local FrameHeight = GUI:Create("Slider")
-            FrameHeight:SetLabel(lavender .. "Height")
+            FrameHeight:SetLabel(white .. "Height")
             FrameHeight:SetSliderValues(1, 500, 1)
             FrameHeight:SetValue(Health.Height)
             FrameHeight:SetCallback("OnValueChanged", function(widget, event, value) 
@@ -656,8 +696,9 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             Size:AddChild(FrameHeight)
 
             -- Frame X Position
+            MilaUI:CreateVerticalSpacer(30, Position)
             local FrameXPosition = GUI:Create("Slider")
-            FrameXPosition:SetLabel(lavender .. "Frame X Position")
+            FrameXPosition:SetLabel(white .. "Frame X Position")
             FrameXPosition:SetSliderValues(-999, 999, 0.1)
             FrameXPosition:SetValue(Frame.XPosition)
             FrameXPosition:SetCallback("OnValueChanged", function(widget, event, value) 
@@ -669,7 +710,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             
             -- Frame Y Position
             local FrameYPosition = GUI:Create("Slider")
-            FrameYPosition:SetLabel(lavender .. "Frame Y Position")
+            FrameYPosition:SetLabel(white .. "Frame Y Position")
             FrameYPosition:SetSliderValues(-999, 999, 0.1)
             FrameYPosition:SetValue(Frame.YPosition)
             FrameYPosition:SetCallback("OnValueChanged", function(widget, event, value) 
@@ -681,7 +722,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             
             -- Frame Anchor Parent
             local FrameAnchorParent = GUI:Create("EditBox")
-            FrameAnchorParent:SetLabel(lavender .. "Anchor Parent")
+            FrameAnchorParent:SetLabel(white .. "Anchor Parent")
             FrameAnchorParent:SetText(type(Frame.AnchorParent) == "string" and Frame.AnchorParent or "UIParent")
             FrameAnchorParent:SetCallback("OnEnterPressed", function(widget, event, value)
                 local anchor = _G[value]
@@ -704,7 +745,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
 
             -- Frame Anchor From
             local FrameAnchorFrom = GUI:Create("Dropdown")
-            FrameAnchorFrom:SetLabel(lavender .. "Anchor From")
+            FrameAnchorFrom:SetLabel(white .. "Anchor From")
             FrameAnchorFrom:SetList(AnchorPoints)
             FrameAnchorFrom:SetValue(Frame.AnchorFrom)
             FrameAnchorFrom:SetCallback("OnValueChanged", function(widget, event, value) Frame.AnchorFrom = value MilaUI:UpdateFrames() end)
@@ -713,7 +754,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
 
             -- Frame Anchor To
             local FrameAnchorTo = GUI:Create("Dropdown")
-            FrameAnchorTo:SetLabel(lavender .. "Anchor To")
+            FrameAnchorTo:SetLabel(white .. "Anchor To")
             FrameAnchorTo:SetList(AnchorPoints)
             FrameAnchorTo:SetValue(Frame.AnchorTo)
             FrameAnchorTo:SetCallback("OnValueChanged", function(widget, event, value) Frame.AnchorTo = value MilaUI:UpdateFrames() end)
@@ -797,7 +838,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             
             Anchor:SetLayout("Flow")
             Anchor:SetTitle(pink .. "Anchor")
-            Anchor:SetRelativeWidth(0.5)
+            Anchor:SetFullWidth(true)
             contentFrame:AddChild(Anchor)
             
             
@@ -844,21 +885,9 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             PowerBarAnchorParent:SetLabel(lavender .. "Anchor Parent")
             PowerBarAnchorParent:SetText(PowerBar.AnchorParent or "UIParent")
             PowerBarAnchorParent:SetCallback("OnEnterPressed", function(widget, event, value) PowerBar.AnchorParent = value MilaUI:UpdateFrames() end)
-            PowerBarAnchorParent:SetRelativeWidth(0.7)
+            PowerBarAnchorParent:SetRelativeWidth(0.5)
             Anchor:AddChild(PowerBarAnchorParent)
-            
-            -- PowerBar Growth Direction
-            local PowerBarGrowthDirection = GUI:Create("Dropdown")
-            PowerBarGrowthDirection:SetLabel(lavender .. "Growth Direction")
-            PowerBarGrowthDirection:SetList({
-                ["LR"] = "Left To Right",
-                ["RL"] = "Right To Left",
-            })
-            PowerBarGrowthDirection:SetValue(PowerBar.GrowthDirection or "LR")
-            PowerBarGrowthDirection:SetCallback("OnValueChanged", function(widget, event, value) PowerBar.GrowthDirection = value MilaUI:UpdateFrames() end)
-            PowerBarGrowthDirection:SetRelativeWidth(0.3)
-            Anchor:AddChild(PowerBarGrowthDirection)
-            
+
             -- PowerBar Anchor From dropdown
             local PowerBarAnchorFrom = GUI:Create("Dropdown")
             PowerBarAnchorFrom:SetLabel(lavender .. "Anchor From")
@@ -877,6 +906,18 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             PowerBarAnchorFrom:SetCallback("OnValueChanged", function(widget, event, value) PowerBar.AnchorFrom = value MilaUI:UpdateFrames() end)
             PowerBarAnchorFrom:SetRelativeWidth(0.5)
             Anchor:AddChild(PowerBarAnchorFrom)
+            
+            -- PowerBar Growth Direction
+            local PowerBarGrowthDirection = GUI:Create("Dropdown")
+            PowerBarGrowthDirection:SetLabel(lavender .. "Growth Direction")
+            PowerBarGrowthDirection:SetList({
+                ["LR"] = "Left To Right",
+                ["RL"] = "Right To Left",
+            })
+            PowerBarGrowthDirection:SetValue(PowerBar.GrowthDirection or "LR")
+            PowerBarGrowthDirection:SetCallback("OnValueChanged", function(widget, event, value) PowerBar.GrowthDirection = value MilaUI:UpdateFrames() end)
+            PowerBarGrowthDirection:SetRelativeWidth(0.5)
+            Anchor:AddChild(PowerBarGrowthDirection)
             
             -- PowerBar Anchor To dropdown
             local PowerBarAnchorTo = GUI:Create("Dropdown")
@@ -904,35 +945,17 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             backgroundcolours:SetLayout("Flow")
             backgroundcolours:SetRelativeWidth(0.5)
             backgroundcolours:SetHeight(100)
+            backgroundcolours:SetAutoAdjustHeight(false)
             backgroundcolours:SetTitle(pink .. "Background Colours")
             contentFrame:AddChild(backgroundcolours)
             local foregroundcolours = GUI:Create("InlineGroup")
             foregroundcolours:SetLayout("Flow")
             foregroundcolours:SetRelativeWidth(0.5)
             foregroundcolours:SetHeight(100)
+            foregroundcolours:SetAutoAdjustHeight(false)
             foregroundcolours:SetTitle(pink .. "Foreground Colours")
             contentFrame:AddChild(foregroundcolours)
             
-            -- PowerBar Foreground Colour
-            local PowerBarColour = GUI:Create("ColorPicker")
-            PowerBarColour:SetLabel("Foreground Colour")
-            local PBR, PBG, PBB, PBA = unpack(PowerBar.Colour or {1,1,1,1})
-            PowerBarColour:SetColor(PBR, PBG, PBB, PBA)
-            PowerBarColour:SetCallback("OnValueChanged", function(widget, event, r, g, b, a) PowerBar.Colour = {r, g, b, a} MilaUI:UpdateFrames() end)
-            PowerBarColour:SetHasAlpha(true)
-            PowerBarColour:SetRelativeWidth(0.5)
-            foregroundcolours:AddChild(PowerBarColour)
-
-            -- PowerBar Background Colour
-            local PowerBarBackdropColour = GUI:Create("ColorPicker")
-            PowerBarBackdropColour:SetLabel("Background Colour")
-            local PBGR, PBGB, PBGG, PBGA = unpack(PowerBar.BackgroundColour or {0,0,0,1})
-            PowerBarBackdropColour:SetColor(PBGR, PBGB, PBGG, PBGA)
-            PowerBarBackdropColour:SetCallback("OnValueChanged", function(widget, event, r, g, b, a) PowerBar.BackgroundColour = {r, g, b, a} MilaUI:UpdateFrames() end)
-            PowerBarBackdropColour:SetHasAlpha(true)
-            PowerBarBackdropColour:SetRelativeWidth(0.5)
-            backgroundcolours:AddChild(PowerBarBackdropColour)
-
             -- Colour By Type
             local PowerBarColourByType = GUI:Create("CheckBox")
             PowerBarColourByType:SetLabel("Colour By Type")
@@ -945,10 +968,26 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
             end)
             PowerBarColourByType:SetRelativeWidth(0.5)
             foregroundcolours:AddChild(PowerBarColourByType)
-            
-            -- Set initial disabled state for the foreground color picker
+            -- PowerBar Foreground Colour
+            local PowerBarColour = GUI:Create("ColorPicker")
+            PowerBarColour:SetLabel("Foreground Colour")
+            local PBR, PBG, PBB, PBA = unpack(PowerBar.Colour or {1,1,1,1})
+            PowerBarColour:SetColor(PBR, PBG, PBB, PBA)
+            PowerBarColour:SetCallback("OnValueChanged", function(widget, event, r, g, b, a) PowerBar.Colour = {r, g, b, a} MilaUI:UpdateFrames() end)
+            PowerBarColour:SetHasAlpha(true)
+            PowerBarColour:SetRelativeWidth(0.5)
             PowerBarColour:SetDisabled(PowerBar.ColourByType)
-            
+            foregroundcolours:AddChild(PowerBarColour)
+
+            -- PowerBar Background Colour
+            local PowerBarBackdropColour = GUI:Create("ColorPicker")
+            PowerBarBackdropColour:SetLabel("Background Colour")
+            local PBGR, PBGB, PBGG, PBGA = unpack(PowerBar.BackgroundColour or {0,0,0,1})
+            PowerBarBackdropColour:SetColor(PBGR, PBGB, PBGG, PBGA)
+            PowerBarBackdropColour:SetCallback("OnValueChanged", function(widget, event, r, g, b, a) PowerBar.BackgroundColour = {r, g, b, a} MilaUI:UpdateFrames() end)
+            PowerBarBackdropColour:SetHasAlpha(true)
+            PowerBarBackdropColour:SetRelativeWidth(0.5)
+            backgroundcolours:AddChild(PowerBarBackdropColour)
 
             -- Background Multiplier
             local BackgroundColourMultiplier = GUI:Create("Slider")

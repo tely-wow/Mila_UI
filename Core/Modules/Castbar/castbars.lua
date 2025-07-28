@@ -674,13 +674,13 @@ end
         self:Show()
         
         -- Set up timing
-        if startTimeMS and endTimeMS then
+        if startTimeMS and endTimeMS and startTimeMS > 0 and endTimeMS > 0 then
             self.castStartTime = startTimeMS
             self.castEndTime = endTimeMS
         else
             -- Fallback: get current channel state
             local currentName, currentText, currentTexture, currentStartTime, currentEndTime, _, currentNotInterruptible = UnitChannelInfo(self.unit)
-            if currentEndTime then
+            if currentName and currentStartTime and currentEndTime then
                 -- Check if interruptibility changed in the fresh data
                 if currentNotInterruptible ~= nil and (not currentNotInterruptible) ~= self.isInterruptible then
                     -- Update if there's a mismatch
@@ -688,13 +688,22 @@ end
                     self:UpdateAppearance("channel", self.isInterruptible)
                 end
                 
-                self.castStartTime = currentStartTime or (currentEndTime - 5000)
+                self.castStartTime = currentStartTime
                 self.castEndTime = currentEndTime
             else
-                self.castStartTime = 0
-                self.castEndTime = 0
-                self:SetValue(0.5)
+                -- Fallback if no channel info available
+                self.castStartTime = GetTime() * 1000
+                self.castEndTime = self.castStartTime + 3000 -- default 3s channel
+                self:SetValue(1) -- Channels start at full
             end
+        end
+        
+        -- If timing is invalid, use fallback like reference implementation
+        if self.castStartTime == 0 or self.castEndTime == 0 or self.castEndTime <= self.castStartTime then
+            -- Fallback: show castbar at full progress for channels instead of hiding
+            self.castStartTime = 0
+            self.castEndTime = 0
+            self:SetValue(1) -- Channels start at full
         end
     end
     
@@ -727,9 +736,17 @@ end
             self.castStartTime = startTime
             self.castEndTime = endTime
         else
-            -- Mid-cast: calculate timing like Blizzard
+            if ns.DB and ns.DB.global.DebugMode then
+                print(string.format("  Entering fallback path..."))
+            end
+            -- Mid-cast: get fresh timing data
             local currentName, currentText, currentTexture, currentStartTime, currentEndTime, _, _, currentNotInterruptible = UnitCastingInfo(self.unit)
-            if currentName and currentStartTime then
+            if ns.DB and ns.DB.global.DebugMode then
+                print(string.format("  UnitCastingInfo result: name=%s, startTime=%s, endTime=%s", 
+                    tostring(currentName), tostring(currentStartTime), tostring(currentEndTime)))
+            end
+            
+            if currentName and currentStartTime and currentEndTime then
                 -- Check if interruptibility changed in the fresh data
                 if currentNotInterruptible ~= nil and (not currentNotInterruptible) ~= self.isInterruptible then
                     -- Update if there's a mismatch
@@ -737,22 +754,39 @@ end
                     self:UpdateAppearance("cast", self.isInterruptible)
                 end
                 
-                local spellID = C_Spell.GetSpellIDForSpellIdentifier(name)
-                local castTime = 2500 -- default
-                
-                if spellID then
-                    local spellInfo = C_Spell.GetSpellInfo(spellID)
-                    if spellInfo and spellInfo.castTime then
-                        castTime = spellInfo.castTime
-                    end
-                end
-                
+                -- Use the actual times from the API
                 self.castStartTime = currentStartTime
-                self.castEndTime = currentStartTime + castTime
+                self.castEndTime = currentEndTime
+                if ns.DB and ns.DB.global.DebugMode then
+                    print(string.format("  Using API times: start=%s, end=%s", currentStartTime, currentEndTime))
+                end
             else
-                self.castStartTime = 0
-                self.castEndTime = 0
-                self:SetValue(0.5)
+                -- Fallback if no cast info available
+                if ns.DB and ns.DB.global.DebugMode then
+                    print("  No valid cast info, using basic fallback")
+                end
+                self.castStartTime = GetTime() * 1000
+                self.castEndTime = self.castStartTime + 2500 -- default 2.5s
+                self:SetValue(0)
+                if ns.DB and ns.DB.global.DebugMode then
+                    print(string.format("  Fallback times: start=%s, end=%s", self.castStartTime, self.castEndTime))
+                end
+            end
+        end
+        
+        -- If timing is invalid, use fallback like reference implementation
+        if self.castStartTime == 0 or self.castEndTime == 0 or self.castEndTime <= self.castStartTime then
+            if ns.DB and ns.DB.global.DebugMode then
+                print(string.format("  Invalid timing! start=%s, end=%s - using fallback", 
+                    self.castStartTime, self.castEndTime))
+            end
+            -- Fallback: show castbar at 50% progress instead of hiding
+            self.castStartTime = 0
+            self.castEndTime = 0
+            self:SetValue(0.5)
+        else
+            if ns.DB and ns.DB.global.DebugMode then
+                print(string.format("  Final times set: start=%s, end=%s", self.castStartTime, self.castEndTime))
             end
         end
     end
@@ -1059,6 +1093,11 @@ end
             
             module.StopHolderAnimations(self)
             
+            -- Store previous state for smoother transition
+            local wasVisible = self:IsShown()
+            local prevStartTime = self.castStartTime
+            local prevEndTime = self.castEndTime
+            
             -- Clear all casting states
             self.isChanneling = false
             self.isCasting = false
@@ -1070,25 +1109,33 @@ end
             
             -- Only check new target/focus if one exists
             if UnitExists(self.unit) then
-                local castingInfo = UnitCastingInfo(self.unit)
-                local channelInfo = UnitChannelInfo(self.unit)
+                -- Check channels first (like reference), then casts
+                local nameChannel = UnitChannelInfo(self.unit)
+                local nameSpell = UnitCastingInfo(self.unit)
                 
-                if castingInfo then
-                    local name, text, texture, startTimeMS, endTimeMS, isTradeSkill, castID, notInterruptible = castingInfo
+                if nameChannel then
+                    -- Get full channel info
+                    local name, text, texture, startTimeMS, endTimeMS, isTradeSkill, notInterruptible = UnitChannelInfo(self.unit)
                     if name then
-                        self.isInterruptible = not notInterruptible
-                        -- Debug logging
-                        if MilaUI.DebugMode then
-                            print(string.format("[Castbar] Target changed mid-cast: %s, notInterruptible=%s, isInterruptible=%s", 
-                                name, tostring(notInterruptible), tostring(not notInterruptible)))
+                        if ns.DB and ns.DB.global.DebugMode then
+                            print(string.format("  Channel detected: %s, start=%s, end=%s", tostring(name), tostring(startTimeMS), tostring(endTimeMS)))
                         end
-                        self:StartCast(name, texture, startTimeMS, endTimeMS, not notInterruptible, castID)
-                    end
-                elseif channelInfo then
-                    local name, text, texture, startTimeMS, endTimeMS, isTradeSkill, notInterruptible = channelInfo
-                    if name then
                         self.isInterruptible = not notInterruptible
                         self:SetupChannel(name, texture, startTimeMS, endTimeMS, not notInterruptible)
+                    end
+                elseif nameSpell then
+                    -- Get full cast info
+                    local name, text, texture, startTimeMS, endTimeMS, isTradeSkill, castID, notInterruptible = UnitCastingInfo(self.unit)
+                    if name then
+                        if ns.DB and ns.DB.global.DebugMode then
+                            print(string.format("  Cast detected: %s, start=%s, end=%s", tostring(name), tostring(startTimeMS), tostring(endTimeMS)))
+                        end
+                        self.isInterruptible = not notInterruptible
+                        self:StartCast(name, texture, startTimeMS, endTimeMS, not notInterruptible, castID)
+                    end
+                else
+                    if ns.DB and ns.DB.global.DebugMode then
+                        print("  No cast or channel detected")
                     end
                 end
             end

@@ -6,8 +6,6 @@ local LSM = LibStub:GetLibrary("LibSharedMedia-3.0") or LibStub("LibSharedMedia-
 MilaUI.GUI = GUI
 
 
-local pink = "|cffFF77B5"
-local lavender = "|cFFCBA0E3"
 -- Placeholder for where unit frame settings will be drawn for the selected unit
 local unitSettingsContainer = nil
 
@@ -16,7 +14,9 @@ function MilaUI:DrawUnitframesGeneralTab(parent)
     local General = MilaUI.DB.profile.UnitframesGeneral or MilaUI.DB.profile.Unitframes.General -- fallback if not split
     local LSM = LibStub:GetLibrary("LibSharedMedia-3.0")
     local LSMTextures = LSM and LSM:HashTable(LSM.MediaType.STATUSBAR) or {}
-    
+    local white = MilaUI.DB.global.Colors.white
+    local pink = MilaUI.DB.global.Colors.pink
+    local lavender = MilaUI.DB.global.Colors.lavender
     -- Create a single container for all content to ensure proper spacing
     local mainContainer = GUI:Create("SimpleGroup")
     mainContainer:SetLayout("Flow")
@@ -24,9 +24,54 @@ function MilaUI:DrawUnitframesGeneralTab(parent)
     mainContainer:SetFullHeight(true)
     parent:AddChild(mainContainer)
 
+    -- Font Options
+    MilaUI:CreateLargeHeading("Font Options", mainContainer)
+    local FontOptions = GUI:Create("InlineGroup")
+    FontOptions:SetLayout("Flow")
+    FontOptions:SetFullWidth(true)
+    mainContainer:AddChild(FontOptions)
+    
+    local Font = GUI:Create("LSM30_Font")
+    Font:SetLabel(lavender .. "Font")
+    Font:SetList(LSM:HashTable(LSM.MediaType.FONT))
+    Font:SetValue(General.Font)
+    -- NOTE: General.Font now stores the font key (e.g., "Friz Quadrata TT"). Always use LSM:Fetch("font", General.Font) when applying fonts!
+    Font:SetCallback("OnValueChanged", function(widget, event, value)
+        General.Font = value
+        MilaUI:UpdateFrames()
+        -- Update the displayed text to show the font name (value is already the font name/key)
+        if widget and widget.SetText then
+            widget:SetText(value)
+        end
+    end)
+    Font:SetRelativeWidth(0.3)
+    FontOptions:AddChild(Font)
+    
+    local FontFlag = GUI:Create("Dropdown")
+    FontFlag:SetLabel(lavender .. "Font Flag")
+    FontFlag:SetList({
+        ["NONE"] = "None",
+        ["OUTLINE"] = "Outline",
+        ["THICKOUTLINE"] = "Thick Outline",
+        ["MONOCHROME"] = "Monochrome",
+        ["OUTLINE, MONOCHROME"] = "Outline, Monochrome",
+        ["THICKOUTLINE, MONOCHROME"] = "Thick Outline, Monochrome",
+    })
+    FontFlag:SetValue(General.FontFlag)
+    FontFlag:SetCallback("OnValueChanged", function(widget, event, value) 
+        General.FontFlag = value 
+        MilaUI:UpdateFrames() 
+    end)
+    FontFlag:SetRelativeWidth(0.2)
+    FontOptions:AddChild(FontFlag)
+
     -- Mouseover Highlight Options
+    MilaUI:CreateLargeHeading("Mouseover Highlight Options", mainContainer)
     local MouseoverHighlight = MilaUI.DB.profile.Unitframes.General.MouseoverHighlight or {Enabled=false, Colour={1,1,1,1}, Style="BORDER"}
-    local MouseoverHighlightOptions = MilaUI:CreateInlineGroup("Mouseover Highlight Options", mainContainer)
+    local MouseoverHighlightOptions = GUI:Create("InlineGroup")
+    MouseoverHighlightOptions:SetLayout("Flow")
+    MouseoverHighlightOptions:SetFullWidth(true)
+    mainContainer:AddChild(MouseoverHighlightOptions)
     
     -- Enable checkbox
     MilaUI:CreateCheckBox("Enable Mouseover Highlight", 
@@ -59,12 +104,9 @@ function MilaUI:DrawUnitframesGeneralTab(parent)
         end,
         0.33, MouseoverHighlightOptions)
     
-    -- *** COLOUR OPTIONS (Moved from Colors tab) ***
-    
-    -- Create the main container for color options
-   
+    -- Health Colour Options
+    MilaUI:CreateLargeHeading("Health Colour Options", mainContainer)
     local ColouringOptionsContainer = GUI:Create("InlineGroup")
-    ColouringOptionsContainer:SetTitle(pink .. "Health Colour Options")
     ColouringOptionsContainer:SetLayout("Flow")
     ColouringOptionsContainer:SetFullWidth(true)
     mainContainer:AddChild(ColouringOptionsContainer)
@@ -143,9 +185,14 @@ function MilaUI:DrawUnitframesGeneralTab(parent)
     ColourIfTapped:SetRelativeWidth(0.5)
     ColourOptions:AddChild(ColourIfTapped)
     
-    MilaUI:CreateVerticalSpacer(15, ColourOptions)
-    -- Background Colour Options section
-    local BackgroundColourOptions = MilaUI:CreateInlineGroup("Background Colour Options", ColouringOptionsContainer)
+    MilaUI:CreateVerticalSpacer(15, mainContainer)
+    
+    -- Background Colour Options
+    MilaUI:CreateLargeHeading("Background Colour Options", mainContainer)
+    local BackgroundColourOptions = GUI:Create("InlineGroup")
+    BackgroundColourOptions:SetLayout("Flow")
+    BackgroundColourOptions:SetFullWidth(true)
+    mainContainer:AddChild(BackgroundColourOptions)
     
     -- Background Colour picker
     local BackgroundColour = GUI:Create("ColorPicker")
@@ -209,8 +256,12 @@ function MilaUI:DrawUnitframesGeneralTab(parent)
         end,
         0.25, BackgroundColourOptions)
     
-    -- Border Colour Options section
-    local BorderColourOptions = MilaUI:CreateInlineGroup("Border Colour Options", ColouringOptionsContainer)
+    -- Border Colour Options
+    MilaUI:CreateLargeHeading("Border Colour Options", mainContainer)
+    local BorderColourOptions = GUI:Create("InlineGroup")
+    BorderColourOptions:SetLayout("Flow")
+    BorderColourOptions:SetFullWidth(true)
+    mainContainer:AddChild(BorderColourOptions)
     
     -- Border Colour picker
     MilaUI:CreateColorPicker("Border Colour", 
@@ -222,7 +273,11 @@ function MilaUI:DrawUnitframesGeneralTab(parent)
         0.33, true, BorderColourOptions)
     
     -- Custom Colours
-    local CustomColours = MilaUI:CreateInlineGroup("Custom Colours", mainContainer)
+    MilaUI:CreateLargeHeading("Custom Colours", mainContainer)
+    local CustomColours = GUI:Create("InlineGroup")
+    CustomColours:SetLayout("Flow")
+    CustomColours:SetFullWidth(true)
+    mainContainer:AddChild(CustomColours)
     
     local ResetCustomColoursButton = GUI:Create("Button")
     ResetCustomColoursButton:SetText("Reset Custom Colours")
@@ -233,7 +288,11 @@ function MilaUI:DrawUnitframesGeneralTab(parent)
     CustomColours:AddChild(ResetCustomColoursButton)
     
     -- Power Colours
-    local PowerColours = MilaUI:CreateInlineGroup("Power Colours", CustomColours)
+    local PowerColours = GUI:Create("InlineGroup")
+    PowerColours:SetTitle(pink .. "Power Colours")
+    PowerColours:SetLayout("Flow")
+    PowerColours:SetFullWidth(true)
+    CustomColours:AddChild(PowerColours)
 
     local PowerNames = {
         [0] = "Mana", [1] = "Rage", [2] = "Focus", [3] = "Energy", [6] = "Rune", [8] = "Runic Power", [11] = "Maelstrom", [13] = "Insanity", [17] = "Fury", [18] = "Pain"
@@ -257,7 +316,11 @@ function MilaUI:DrawUnitframesGeneralTab(parent)
     end
 
     -- Reaction Colours
-    local ReactionColours = MilaUI:CreateInlineGroup("Reaction Colours", CustomColours)
+    local ReactionColours = GUI:Create("InlineGroup")
+    ReactionColours:SetTitle(pink .. "Reaction Colours")
+    ReactionColours:SetLayout("Flow")
+    ReactionColours:SetFullWidth(true)
+    CustomColours:AddChild(ReactionColours)
 
     local ReactionNames = {
         [1] = "Hated", [2] = "Hostile", [3] = "Unfriendly", [4] = "Neutral", [5] = "Friendly", [6] = "Honored", [7] = "Revered", [8] = "Exalted"
@@ -279,7 +342,11 @@ function MilaUI:DrawUnitframesGeneralTab(parent)
     end
 
     -- Status Colours
-    local StatusColours = MilaUI:CreateInlineGroup("Status Colours", CustomColours)
+    local StatusColours = GUI:Create("InlineGroup")
+    StatusColours:SetTitle(pink .. "Status Colours")
+    StatusColours:SetLayout("Flow")
+    StatusColours:SetFullWidth(true)
+    CustomColours:AddChild(StatusColours)
 
     local StatusNames = {
         [1] = "Dead",

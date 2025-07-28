@@ -4,8 +4,6 @@ MilaUI.addon = MilaUIAddon
 MilaUI.NewCastbarSystem = MilaUI.NewCastbarSystem or {}
 MilaUI.modules = MilaUI.modules or {}
 MilaUI.modules.bars = MilaUI.NewCastbarSystem
-local pink = "|cffFF77B5"
-local lavender = "|cFFCBA0E3"
 MilaUIAddon_GUI = MilaUIAddon_GUI or {}
 MilaUIAddon:SetDefaultModuleState(false)
 
@@ -16,6 +14,12 @@ MilaUIAddon.Defaults = {
         GameMenuScale     = 1,
         TagUpdateInterval = 0.5,
         FramesLocked      = true,
+        DebugMode         = false,
+        Colors = {
+            pink = "|cffFF77B5",
+            lavender = "|cFFCBA0E3",
+            white = "|cffffffff",
+        },
     },
     profile = {
         TestMode = false,
@@ -315,6 +319,8 @@ MilaUIAddon.Defaults = {
                     GrowthY             = "DOWN",
                     Count               = {
                         FontSize        = 12,
+                        Font            = "Friz Quadrata TT",
+                        FontFlags       = "OUTLINE",
                         XOffset         = 0,
                         YOffset         = 3,
                         AnchorFrom     = "BOTTOMRIGHT",
@@ -337,12 +343,15 @@ MilaUIAddon.Defaults = {
                     AnchorFrom          = "TOPLEFT",
                     AnchorTo            = "BOTTOMLEFT",
                     AnchorFrame         = "Buffs",
+                    SmartAnchoring      = true,
                     XOffset             = 0,
                     YOffset             = 0,
                     GrowthX             = "RIGHT",
                     GrowthY             = "DOWN",
                     Count               = {
                         FontSize        = 12,
+                        Font            = "Friz Quadrata TT",
+                        FontFlags       = "OUTLINE",
                         XOffset         = 0,
                         YOffset         = 3,
                         AnchorFrom      = "BOTTOMRIGHT",
@@ -581,6 +590,8 @@ MilaUIAddon.Defaults = {
                     GrowthY             = "DOWN",
                     Count               = {
                         FontSize        = 12,
+                        Font            = "Friz Quadrata TT",
+                        FontFlags       = "OUTLINE",
                         XOffset         = 0,
                         YOffset         = 3,
                         AnchorFrom     = "BOTTOMRIGHT",
@@ -603,12 +614,15 @@ MilaUIAddon.Defaults = {
                     AnchorFrom          = "TOPLEFT",
                     AnchorTo            = "BOTTOMLEFT",
                     AnchorFrame         = "Buffs",
+                    SmartAnchoring      = true,
                     XOffset             = 0,
                     YOffset             = 0,
                     GrowthX             = "LEFT",
                     GrowthY             = "UP",
                     Count               = {
                         FontSize        = 12,
+                        Font            = "Friz Quadrata TT",
+                        FontFlags       = "OUTLINE",
                         XOffset         = 0,
                         YOffset         = 3,
                         AnchorFrom     = "BOTTOMRIGHT",
@@ -786,6 +800,8 @@ MilaUIAddon.Defaults = {
                     GrowthY             = "UP",
                     Count               = {
                         FontSize        = 12,
+                        Font            = "Friz Quadrata TT",
+                        FontFlags       = "OUTLINE",
                         XOffset         = 0,
                         YOffset         = 3,
                         AnchorFrom     = "BOTTOMRIGHT",
@@ -808,12 +824,15 @@ MilaUIAddon.Defaults = {
                     AnchorFrom          = "LEFT",
                     AnchorTo            = "RIGHT",
                     AnchorFrame         = "MilaUI_TargetTarget",
+                    SmartAnchoring      = false,
                     XOffset             = 0,
                     YOffset             = 0,
                     GrowthX             = "RIGHT",
                     GrowthY             = "UP",
                     Count               = {
                         FontSize        = 12,
+                        Font            = "Friz Quadrata TT",
+                        FontFlags       = "OUTLINE",
                         XOffset         = 0,
                         YOffset         = 3,
                         AnchorFrom     = "BOTTOMRIGHT",
@@ -1034,6 +1053,8 @@ MilaUIAddon.Defaults = {
                     GrowthY             = "UP",
                     Count               = {
                         FontSize        = 12,
+                        Font            = "Friz Quadrata TT",
+                        FontFlags       = "OUTLINE",
                         XOffset         = 0,
                         YOffset         = 3,
                         AnchorFrom     = "BOTTOMRIGHT",
@@ -1056,12 +1077,15 @@ MilaUIAddon.Defaults = {
                     AnchorFrom          = "LEFT",
                     AnchorTo            = "RIGHT",
                     AnchorFrame         = "MilaUI_Focus",
+                    SmartAnchoring      = false,
                     XOffset             = 0,
                     YOffset             = 0,
                     GrowthX             = "RIGHT",
                     GrowthY             = "UP",
                     Count               = {
                         FontSize        = 12,
+                        Font            = "Friz Quadrata TT",
+                        FontFlags       = "OUTLINE",
                         XOffset         = 0,
                         YOffset         = 3,
                         AnchorFrom     = "BOTTOMRIGHT",
@@ -1231,6 +1255,8 @@ MilaUIAddon.Defaults = {
                     GrowthY             = "UP",
                     Count               = {
                         FontSize        = 12,
+                        Font            = "Friz Quadrata TT",
+                        FontFlags       = "OUTLINE",
                         XOffset         = 0,
                         YOffset         = 3,
                         AnchorFrom     = "BOTTOMRIGHT",
@@ -1253,12 +1279,15 @@ MilaUIAddon.Defaults = {
                     AnchorFrom          = "LEFT",
                     AnchorTo            = "RIGHT",
                     AnchorFrame         = "MilaUI_FocusTarget",
+                    SmartAnchoring      = false,
                     XOffset             = 0,
                     YOffset             = 0,
                     GrowthX             = "RIGHT",
                     GrowthY             = "UP",
                     Count               = {
                         FontSize        = 12,
+                        Font            = "Friz Quadrata TT",
+                        FontFlags       = "OUTLINE",
                         XOffset         = 0,
                         YOffset         = 3,
                         AnchorFrom     = "BOTTOMRIGHT",
@@ -1482,6 +1511,8 @@ MilaUIAddon.Defaults = {
                     GrowthY             = "DOWN",
                     Count               = {
                         FontSize        = 12,
+                        Font            = "Friz Quadrata TT",
+                        FontFlags       = "OUTLINE",
                         XOffset         = 0,
                         YOffset         = 3,
                         AnchorFrom     = "BOTTOMRIGHT",
@@ -1504,12 +1535,15 @@ MilaUIAddon.Defaults = {
                     AnchorFrom          = "TOPLEFT",
                     AnchorTo            = "BOTTOMLEFT",
                     AnchorFrame         = "MilaUI_Pet",
+                    SmartAnchoring      = false,
                     XOffset             = 0,
                     YOffset             = -1,
                     GrowthX             = "RIGHT",
                     GrowthY             = "DOWN",
                     Count               = {
                         FontSize        = 12,
+                        Font            = "Friz Quadrata TT",
+                        FontFlags       = "OUTLINE",
                         XOffset         = 0,
                         YOffset         = 3,
                         AnchorFrom     = "BOTTOMRIGHT",
@@ -1734,6 +1768,8 @@ MilaUIAddon.Defaults = {
                     GrowthY             = "UP",
                     Count               = {
                         FontSize        = 12,
+                        Font            = "Friz Quadrata TT",
+                        FontFlags       = "OUTLINE",
                         XOffset         = 0,
                         YOffset         = 3,
                         AnchorFrom     = "BOTTOMRIGHT",
@@ -1756,12 +1792,15 @@ MilaUIAddon.Defaults = {
                     AnchorFrom          = "RIGHT",
                     AnchorTo            = "LEFT",
                     AnchorFrame         = "MilaUI_Boss",
+                    SmartAnchoring      = false,
                     XOffset             = -1,
                     YOffset             = 0,
                     GrowthX             = "LEFT",
                     GrowthY             = "UP",
                     Count               = {
                         FontSize        = 12,
+                        Font            = "Friz Quadrata TT",
+                        FontFlags       = "OUTLINE",
                         XOffset         = 0,
                         YOffset         = 3,
                         AnchorFrom     = "BOTTOMRIGHT",
@@ -2337,6 +2376,10 @@ function MilaUIAddon:OnInitialize()
 end
 
 function MilaUI:SetupSlashCommands()
+    local pink = MilaUI.DB.global.Colors.pink
+    local lavender = MilaUI.DB.global.Colors.lavender
+    local white = MilaUI.DB.global.Colors.white
+    
     SLASH_MilaUI1 = "/MilaUI"
     SLASH_MilaUI2 = "/mui"
     SLASH_MilaUI3 = "/Mila"
@@ -2349,6 +2392,10 @@ function MilaUI:SetupSlashCommands()
             print(pink .. "♥MILA UI ♥:  " .. lavender .. " Slash Commands.")
             print(pink .. "/MilaUI or /MUI:" .. lavender .. " Opens the GUI")
             print(pink .. "/MilaUI reset or /MUI reset:" .. lavender .. " Resets To Default")
+            print(pink .. "/MilaUI debug or /MUI debug:" .. lavender .. " Toggle debug mode")
+        elseif msg == "debug" then
+            MilaUI.DB.global.DebugMode = not MilaUI.DB.global.DebugMode
+            print(pink .. "MilaUI Debug Mode: " .. lavender .. (MilaUI.DB.global.DebugMode and "Enabled" or "Disabled"))
         end
     end
     SLASH_MILAUIPRINT1 = "/muiprint"
@@ -2408,6 +2455,9 @@ function MilaUI:SetupSlashCommands()
 end
 
 function MilaUIAddon:OnEnable()
+    local pink = MilaUI.DB.global.Colors.pink
+    local lavender = MilaUI.DB.global.Colors.lavender
+    local white = MilaUI.DB.global.Colors.white
     if MilaUI.DB.global.UIScaleEnabled then UIParent:SetScale(MilaUI.DB.global.UIScale) end
     if MilaUI.DB.profile.TestMode then MilaUI.DB.profile.TestMode = false end
     -- Check if CursorMod module exists and handle its state

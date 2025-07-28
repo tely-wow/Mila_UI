@@ -16,6 +16,8 @@ function MilaUI:DrawBuffsContainer(dbUnitName, contentFrame)
     BuffsOptions:SetLayout("Flow")
     BuffsOptions:SetTitle(pink .. "General")
     BuffsOptions:SetRelativeWidth(0.5)
+    BuffsOptions:SetHeight(200)
+    BuffsOptions:SetAutoAdjustHeight(false)
     contentFrame:AddChild(BuffsOptions)
 
     --Size Container
@@ -23,20 +25,26 @@ function MilaUI:DrawBuffsContainer(dbUnitName, contentFrame)
     sizeGroup:SetLayout("Flow")
     sizeGroup:SetRelativeWidth(0.5)
     sizeGroup:SetTitle(pink .. "Size")
+    sizeGroup:SetHeight(200)
+    sizeGroup:SetAutoAdjustHeight(false)
     contentFrame:AddChild(sizeGroup)
     
-    --Position Container
+    --Icon Position Container
     local positionGroup = GUI:Create("InlineGroup")
     positionGroup:SetLayout("Flow")
     positionGroup:SetRelativeWidth(0.5)
-    positionGroup:SetTitle(pink .. "Position")
+    positionGroup:SetTitle(pink .. "Icon Position")
+    positionGroup:SetHeight(200)
+    positionGroup:SetAutoAdjustHeight(false)
     contentFrame:AddChild(positionGroup)
     
-    --Anchor Container
+    --Icon Anchor Container
     local anchorGroup = GUI:Create("InlineGroup")
     anchorGroup:SetLayout("Flow")
     anchorGroup:SetRelativeWidth(0.5)
-    anchorGroup:SetTitle(pink .. "Anchor")
+    anchorGroup:SetTitle(pink .. "Icon Anchor")
+    anchorGroup:SetHeight(200)
+    anchorGroup:SetAutoAdjustHeight(false)
     contentFrame:AddChild(anchorGroup)
     
     -- Enable Buffs
@@ -186,14 +194,14 @@ function MilaUI:DrawBuffsContainer(dbUnitName, contentFrame)
     local countanchorGroup = GUI:Create("InlineGroup")
     countanchorGroup:SetLayout("Flow")
     countanchorGroup:SetRelativeWidth(0.5)
-    countanchorGroup:SetTitle(pink .. "Anchoring Options")
+    countanchorGroup:SetTitle(pink .. "Count Text Anchor")
     contentFrame:AddChild(countanchorGroup)
 
     -- Buff Count Position Container
     local countpositionGroup = GUI:Create("InlineGroup")
     countpositionGroup:SetLayout("Flow")
     countpositionGroup:SetRelativeWidth(0.5)
-    countpositionGroup:SetTitle(pink .. "Position Options")
+    countpositionGroup:SetTitle(pink .. "Count Text Position")
     contentFrame:AddChild(countpositionGroup)
     
     -- Count Anchor From
@@ -291,6 +299,8 @@ function MilaUI:DrawDebuffsContainer(dbUnitName, contentFrame)
     DebuffsOptions:SetLayout("Flow")
     DebuffsOptions:SetTitle(pink .. "General")
     DebuffsOptions:SetRelativeWidth(0.5)
+    DebuffsOptions:SetHeight(200)
+    DebuffsOptions:SetAutoAdjustHeight(false)
     contentFrame:AddChild(DebuffsOptions)
 
     --Size Container
@@ -298,20 +308,26 @@ function MilaUI:DrawDebuffsContainer(dbUnitName, contentFrame)
     sizeGroup:SetLayout("Flow")
     sizeGroup:SetRelativeWidth(0.5)
     sizeGroup:SetTitle(pink .. "Size")
+    sizeGroup:SetHeight(200)
+    sizeGroup:SetAutoAdjustHeight(false)
     contentFrame:AddChild(sizeGroup)
     
-    --Position Container
+    --Icon Position Container
     local positionGroup = GUI:Create("InlineGroup")
     positionGroup:SetLayout("Flow")
     positionGroup:SetRelativeWidth(0.5)
-    positionGroup:SetTitle(pink .. "Position")
+    positionGroup:SetTitle(pink .. "Icon Position")
+    positionGroup:SetHeight(200)
+    positionGroup:SetAutoAdjustHeight(false)
     contentFrame:AddChild(positionGroup)
     
-    --Anchor Container
+    --Icon Anchor Container
     local anchorGroup = GUI:Create("InlineGroup")
     anchorGroup:SetLayout("Flow")
     anchorGroup:SetRelativeWidth(0.5)
-    anchorGroup:SetTitle(pink .. "Anchor")
+    anchorGroup:SetTitle(pink .. "Icon Anchor")
+    anchorGroup:SetHeight(200)
+    anchorGroup:SetAutoAdjustHeight(false)
     contentFrame:AddChild(anchorGroup)
     
     -- Enable Debuffs
@@ -329,6 +345,14 @@ function MilaUI:DrawDebuffsContainer(dbUnitName, contentFrame)
     OnlyShowPlayer:SetCallback("OnValueChanged", function(widget, event, value) Debuffs.OnlyShowPlayer = value MilaUI:UpdateFrames() end)
     OnlyShowPlayer:SetRelativeWidth(0.5)
     DebuffsOptions:AddChild(OnlyShowPlayer)
+
+    -- Smart Anchoring
+    local SmartAnchoring = GUI:Create("CheckBox")
+    SmartAnchoring:SetLabel("Smart Anchoring")
+    SmartAnchoring:SetValue(Debuffs.SmartAnchoring)
+    SmartAnchoring:SetCallback("OnValueChanged", function(widget, event, value) Debuffs.SmartAnchoring = value MilaUI:UpdateFrames() end)
+    SmartAnchoring:SetRelativeWidth(0.5)
+    DebuffsOptions:AddChild(SmartAnchoring)
 
     -- Spacing
     local DebuffSpacing = GUI:Create("Slider")
@@ -466,14 +490,14 @@ function MilaUI:DrawDebuffsContainer(dbUnitName, contentFrame)
     local countanchorGroup = GUI:Create("InlineGroup")
     countanchorGroup:SetLayout("Flow")
     countanchorGroup:SetRelativeWidth(0.5)
-    countanchorGroup:SetTitle(pink .. "Anchoring Options")
+    countanchorGroup:SetTitle(pink .. "Count Text Anchor")
     contentFrame:AddChild(countanchorGroup)
 
     -- Debuff Count Position Container
     local countpositionGroup = GUI:Create("InlineGroup")
     countpositionGroup:SetLayout("Flow")
     countpositionGroup:SetRelativeWidth(0.5)
-    countpositionGroup:SetTitle(pink .. "Position Options")
+    countpositionGroup:SetTitle(pink .. "Count Text Position")
     contentFrame:AddChild(countpositionGroup)
     
     -- Count Anchor From
