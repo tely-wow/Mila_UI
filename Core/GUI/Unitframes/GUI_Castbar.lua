@@ -935,6 +935,39 @@ function MilaUI:DrawCleanCastbarContainer(dbUnitName, contentFrame)
     enabledCB:SetRelativeWidth(0.5)
     generalGroup:AddChild(enabledCB)
     
+    -- Frame Strata Settings
+    local strataDD = GUI:Create("Dropdown")
+    strataDD:SetLabel(lavender .. "Frame Strata")
+    -- Set list in proper order from lowest to highest
+    strataDD:SetList({
+        ["BACKGROUND"] = "1. Background",
+        ["LOW"] = "2. Low",
+        ["MEDIUM"] = "3. Medium",
+        ["HIGH"] = "4. High",
+        ["DIALOG"] = "5. Dialog",
+        ["FULLSCREEN"] = "6. Fullscreen",
+        ["FULLSCREEN_DIALOG"] = "7. Fullscreen Dialog",
+        ["TOOLTIP"] = "8. Tooltip"
+    })
+    strataDD:SetValue(castbarSettings.strata or "MEDIUM")
+    strataDD:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, "strata", value)
+        UpdateCastBarForUnit(unitKey)
+    end)
+    strataDD:SetRelativeWidth(0.5)
+    generalGroup:AddChild(strataDD)
+    
+    local strataLevelSlider = GUI:Create("Slider")
+    strataLevelSlider:SetLabel(lavender .. "Strata Level")
+    strataLevelSlider:SetSliderValues(0, 10000, 1)
+    strataLevelSlider:SetValue(castbarSettings.strataLevel or 1)
+    strataLevelSlider:SetCallback("OnValueChanged", function(widget, event, value)
+        UpdateCleanCastbarSetting(unitKey, "strataLevel", value)
+        UpdateCastBarForUnit(unitKey)
+    end)
+    strataLevelSlider:SetRelativeWidth(0.5)
+    generalGroup:AddChild(strataLevelSlider)
+    
     -- Size Settings
     MilaUI:CreateLargeHeading("Size Settings", contentFrame)
     MilaUI:CreateVerticalSpacer(20, contentFrame)

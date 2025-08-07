@@ -431,6 +431,7 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
         { text = "Castbar", value = "Castbar" },
         { text = "Buffs", value = "Buffs" },
         { text = "Debuffs", value = "Debuffs" },
+        { text = "Aura Filters", value = "AuraFilters" },
         { text = "Indicators", value = "Indicators" },
         { text = "Text", value = "Text" },
     }
@@ -1009,6 +1010,8 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
 
         elseif tabKey == "Debuffs" then
             MilaUI:DrawDebuffsContainer(dbUnitName, contentFrame)
+        elseif tabKey == "AuraFilters" then
+            MilaUI:DrawAuraBlacklistContainer(contentFrame)
         elseif tabKey == "Indicators" then
             MilaUI:DrawIndicatorContainer(dbUnitName, contentFrame)
         elseif tabKey == "Text" then

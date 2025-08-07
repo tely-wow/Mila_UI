@@ -254,6 +254,14 @@ function module.CreateCleanCastBar(parent, unit, options)
     
     castBar:SetPoint(anchorPoint, anchorFrame, anchorTo, xOffset, yOffset)
     
+    -- Set frame strata and level from options
+    if options.strata then
+        castBar:SetFrameStrata(options.strata)
+    end
+    if options.strataLevel then
+        castBar:SetFrameLevel(options.strataLevel)
+    end
+    
     -- Get texture from LSM with fallback
     local mainTexture = GetTexture("statusbar", (options.textures and options.textures.main), "Interface\\Buttons\\WHITE8X8")
     castBar:SetStatusBarTexture(mainTexture)
@@ -1423,6 +1431,14 @@ function module.UpdateCastBarPosition(unit)
     
     castBar:ClearAllPoints()
     castBar:SetPoint(anchorPoint, parent, anchorTo, xOffset, yOffset)
+    
+    -- Update frame strata and level
+    if settings.strata then
+        castBar:SetFrameStrata(settings.strata)
+    end
+    if settings.strataLevel then
+        castBar:SetFrameLevel(settings.strataLevel)
+    end
     
     -- Update all holder frames
     local holders = {

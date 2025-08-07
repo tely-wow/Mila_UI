@@ -4,36 +4,58 @@ local oUF = MilaUI.oUF
 function MilaUI:SpawnPlayerFrame()
     if not MilaUI.DB.profile.Unitframes.Player.Frame.Enabled then return end
     local Frame = MilaUI.DB.profile.Unitframes.Player.Frame
-    print("[Mila_UI] Begin SpawnPlayerFrame")
+    if MilaUI.DB.global.DebugMode then
+        print("[Mila_UI] Begin SpawnPlayerFrame")
+    end
     oUF:RegisterStyle("MilaUI_Player", function(self) MilaUI.CreateUnitFrame(self, "Player") end)
     oUF:SetActiveStyle("MilaUI_Player")
     self.PlayerFrame = oUF:Spawn("player", "MilaUI_Player")
-    print("[Mila_UI] PlayerFrame spawned:", self.PlayerFrame and self.PlayerFrame:GetName() or tostring(self.PlayerFrame))
+    if MilaUI.DB.global.DebugMode then
+        print("[Mila_UI] PlayerFrame spawned:", self.PlayerFrame and self.PlayerFrame:GetName() or tostring(self.PlayerFrame))
+    end
     local AnchorParent = (_G[Frame.AnchorParent] and _G[Frame.AnchorParent]:IsObjectType("Frame")) and _G[Frame.AnchorParent] or UIParent
     self.PlayerFrame:SetPoint(Frame.AnchorFrom, AnchorParent, Frame.AnchorTo, Frame.XPosition, Frame.YPosition)
-    print("[Mila_UI] PlayerFrame positioned at", Frame.AnchorFrom, Frame.AnchorTo, Frame.XPosition, Frame.YPosition)
+    if MilaUI.DB.global.DebugMode then
+        print("[Mila_UI] PlayerFrame positioned at", Frame.AnchorFrom, Frame.AnchorTo, Frame.XPosition, Frame.YPosition)
+    end
     if Frame.CustomScale then
         self.PlayerFrame:SetScale(Frame.Scale)
-        print("[Mila_UI] PlayerFrame scaled to", Frame.Scale)
+        if MilaUI.DB.global.DebugMode then
+            print("[Mila_UI] PlayerFrame scaled to", Frame.Scale)
+        end
     end
-
+    if MilaUI.DB.global.DebugMode then
+        print("[Mila_UI] PlayerFrame created.")
+    end
     -- Mila_UI: Dual castbar system integration
     local castbarSettings = MilaUI.DB.profile.castBars and MilaUI.DB.profile.castBars.player
     if castbarSettings and castbarSettings.enabled then
-        print("[Mila_UI] Spawning new castbar for player frame.")
+        if MilaUI.DB.global.DebugMode then
+            print("[Mila_UI] Spawning new castbar for player frame.")
+        end
         if MilaUI.NewCastbarSystem and MilaUI.NewCastbarSystem.CreateCleanCastBar then
             local result = MilaUI.NewCastbarSystem.CreateCleanCastBar(self.PlayerFrame, "player", castbarSettings)
-            print("[Mila_UI] CreateCleanCastBar result:", result or "(no return value)")
+            if MilaUI.DB.global.DebugMode then
+                print("[Mila_UI] CreateCleanCastBar result:", result or "(no return value)")
+            end
             if self.PlayerFrame.Castbar then
-                print("[Mila_UI] Hiding oUF castbar for player frame.")
+                if MilaUI.DB.global.DebugMode then
+                    print("[Mila_UI] Hiding oUF castbar for player frame.")
+                end
                 self.PlayerFrame.Castbar:Hide()
             else
-                print("[Mila_UI] No oUF castbar found on player frame.")
+                if MilaUI.DB.global.DebugMode then
+                    print("[Mila_UI] No oUF castbar found on player frame.")
+                end
             end
         else
-            print("[Mila_UI] ERROR: NewCastbarSystem or CreateCleanCastBar missing!")
+            if MilaUI.DB.global.DebugMode then
+                print("[Mila_UI] ERROR: NewCastbarSystem or CreateCleanCastBar missing!")
+            end
         end
     end
-    print("[Mila_UI] End SpawnPlayerFrame")
+    if MilaUI.DB.global.DebugMode then
+        print("[Mila_UI] End SpawnPlayerFrame")
+    end
 
 end

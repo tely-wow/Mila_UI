@@ -40,6 +40,8 @@ unitframesTabs = nil
 function MilaUI:InitGUI()
   if not MilaUI.DB then return end
   isOpen = true
+  local LSMFonts = LSM:HashTable(LSM.MediaType.FONT)
+  local LSMTextures = LSM:HashTable(LSM.MediaType.STATUSBAR)
 
 local Global = MilaUI.DB.global
 local General = MilaUI.DB.profile.Unitframes.General
@@ -48,32 +50,43 @@ local cursorMod = MilaUI.DB.profile.CursorMod
   -- Main frame
   mainFrame = GUI:Create("Window")
   mainFrame:SetTitle(pink .. GUI_TITLE)
-  mainFrame:SetLayout("Manual")
+  mainFrame:SetLayout("Manual")  -- Manual layout allows SetPoint positioning
   mainFrame:SetWidth(GUI_WIDTH)
   mainFrame:SetHeight(GUI_HEIGHT)
   mainFrame:EnableResize(true)
 
-  -- Background with padding
-  local bg = mainFrame.frame:CreateTexture(nil, "BACKGROUND")
-  bg:SetPoint("TOPLEFT", 6, -6)
-  bg:SetPoint("BOTTOMRIGHT", -6, 6)
-
   mainFrame:SetCallback("OnClose", function(widget)
     GUI:Release(widget)
     isOpen = false
+    -- Clean up our escape key handler reference
+    MilaUI.mainFrame = nil
   end)
-  -- Register with the UI escape key handler
-  _G["MilaUI_MainFrame"] = mainFrame.frame
-  tinsert(UISpecialFrames, "MilaUI_MainFrame")
+  
+  -- Store reference for escape key handling without accessing internal frame
+  MilaUI.mainFrame = mainFrame
+  
+  -- Create a proxy frame for ESC key handling that doesn't violate AceGUI
+  if not MilaUI.escapeHandler then
+    MilaUI.escapeHandler = CreateFrame("Frame", "MilaUI_EscapeHandler", UIParent)
+    MilaUI.escapeHandler:SetScript("OnHide", function()
+      if MilaUI.mainFrame and MilaUI.mainFrame.Hide then
+        MilaUI.mainFrame:Hide()
+      end
+    end)
+    tinsert(UISpecialFrames, "MilaUI_EscapeHandler")
+  end
+  
+  -- Show the escape handler when GUI is shown
+  MilaUI.escapeHandler:Show()
 
-  -- Create logo using Icon widget (AceGUI best practice)
+  -- Create logo using proper AceGUI Icon widget
   local logo = GUI:Create("Icon")
   logo:SetImage("Interface\\Addons\\Mila_UI\\Media\\logo.tga")
   logo:SetImageSize(150, 150)
-  logo:SetPoint("TOPLEFT", mainFrame.frame, "TOPLEFT", 8, -25)
   logo:SetWidth(150)
   logo:SetHeight(150)
   logo:SetLabel("")  -- No label for the logo
+  logo.frame:SetPoint("TOPLEFT", mainFrame.frame, "TOPLEFT", 8, -25)
   mainFrame:AddChild(logo)
 
   -- Create a label for the lock/unlock button
@@ -160,6 +173,7 @@ local cursorMod = MilaUI.DB.profile.CursorMod
   mainTree.frame:SetPoint("BOTTOMRIGHT", mainFrame.frame, "BOTTOMRIGHT", -20, 20)
   mainFrame:AddChild(mainTree)
   
+  
   -- Define the tree structure
   local treeData = {
     { value = "General", text = "General Settings" },
@@ -173,6 +187,13 @@ local cursorMod = MilaUI.DB.profile.CursorMod
         { value = "TargetTarget", text = L.TargetTarget },
         { value = "FocusTarget", text = L.FocusTarget },
         { value = "Boss", text = L.Boss },
+        {
+          value = "Auras", text = "Auras",
+          children = {
+            { value = "BuffFilter", text = "Buff Filter" },
+            { value = "DebuffFilter", text = "Debuff Filter" },
+          }
+        },
       },
       expanded = true
     },
@@ -180,33 +201,41 @@ local cursorMod = MilaUI.DB.profile.CursorMod
     { value = "Profiles", text = "Profiles" },
   }
   
+  -- Set the tree data
   mainTree:SetTree(treeData)
+  
   -- Set the status table to keep the Units group expanded
   local statusTable = {
     groups = {
       ["Units"] = true  -- This keeps the Units group expanded
-    }
+    },
   }
   mainTree:SetStatusTable(statusTable)
-  mainTree:SetCallback("OnClick", function(widget, uniquevalue)
-  end)
   
-  -- Select General by default
-  C_Timer.After(0.1, function()
-    mainTree:SelectByValue("General")
+  -- Force a layout refresh after setting up the tree
+  mainTree:DoLayout()
+  
+  mainTree:SetCallback("OnClick", function(widget, uniquevalue)
   end)
   
   -- Handle tree selection
   mainTree:SetCallback("OnGroupSelected", function(container, _, selection)
+    -- Debug output
+    if MilaUI.DB.global.DebugMode then
+        print("OnGroupSelected called with selection: " .. (selection or "nil"))
+    end
+    
     -- If this is the initial load and no selection is made, select General
+    if initialLoad and (not selection or selection == "") then
+      initialLoad = false
+      mainTree:SelectByPath("General")
+      return
+    end
     if initialLoad then
       initialLoad = false
-      if not selection or selection == "" then
-        mainTree:SelectByPath("General")
-        return
-      end
     end
     container:ReleaseChildren()
+    container:SetLayout("Fill")
     
     -- Create a scroll frame for the content
     local contentFrame = GUI:Create("ScrollFrame")
@@ -216,7 +245,14 @@ local cursorMod = MilaUI.DB.profile.CursorMod
     container:AddChild(contentFrame)
     
     -- Parse the selection path
-    local main, sub = strsplit("\001", selection)
+    local parts = {strsplit("\001", selection)}
+    if MilaUI.DB.global.DebugMode then
+        print("Selection parts: " .. table.concat(parts, " -> "))
+    end
+    
+    local main = parts[1]
+    local sub = parts[2]
+    local subsub = parts[3]
     
     -- General Settings
     if main == "General" then
@@ -230,10 +266,8 @@ local cursorMod = MilaUI.DB.profile.CursorMod
     elseif main == "Profiles" then
       MilaUI:DrawProfileContainer(contentFrame)
       C_Timer.After(0.1, function()
-        local p = parent
-        while p and p.DoLayout do
-            p:DoLayout()
-            p = p.parent
+        if contentFrame and contentFrame.DoLayout and not contentFrame.released then
+            contentFrame:DoLayout()
         end
     end)
     
@@ -248,32 +282,79 @@ local cursorMod = MilaUI.DB.profile.CursorMod
         contentFrame:AddChild(label)
       end
     elseif main == "Units" and sub then
-      -- Directly call DrawUnitContainer to handle the unit settings
-      if MilaUI.DrawUnitContainer then
-        MilaUI:DrawUnitContainer(contentFrame, sub)
+      -- Check if this is an Aura filter selection
+      if sub == "Auras" and subsub == "BuffFilter" then
+        print("Loading Buff Filter")
+        if MilaUI.DrawBuffFilterContainer then
+          MilaUI:DrawBuffFilterContainer(contentFrame)
+        else
+          print("DrawBuffFilterContainer function not found")
+        end
+      elseif sub == "Auras" and subsub == "DebuffFilter" then
+        print("Loading Debuff Filter")
+        if MilaUI.DrawDebuffFilterContainer then
+          MilaUI:DrawDebuffFilterContainer(contentFrame)
+        else
+          print("DrawDebuffFilterContainer function not found")
+        end
+      elseif sub == "Auras" and not subsub then
+        if MilaUI.DB.global.DebugMode then
+            print("Showing Auras overview")
+        end
+        -- When clicking on "Auras" parent, show info about the children
+        local container = GUI:Create("SimpleGroup")
+        container:SetLayout("Flow")
+        container:SetFullWidth(true)
+        container:SetFullHeight(true)
+        contentFrame:AddChild(container)
+        
+        MilaUI:CreateLargeHeading("Aura Filters", container)
+        
+        local info = GUI:Create("Label")
+        info:SetText("Select a filter type from the menu:\n\n• Buff Filter - Hide specific buffs from all unit frames\n• Debuff Filter - Hide specific debuffs from all unit frames")
+        info:SetFullWidth(true)
+        container:AddChild(info)
       else
-        local label = GUI:Create("Label")
-        label:SetText("Unit settings are currently unavailable.")
-        label:SetFullWidth(true)
-        contentFrame:AddChild(label)
+        -- Directly call DrawUnitContainer to handle the unit settings
+        if MilaUI.DrawUnitContainer then
+          MilaUI:DrawUnitContainer(contentFrame, sub)
+        else
+          local label = GUI:Create("Label")
+          label:SetText("Unit settings are currently unavailable.")
+          label:SetFullWidth(true)
+          contentFrame:AddChild(label)
+        end
       end
     end
     
     -- Force layout update after a short delay
     C_Timer.After(0.1, function()
-      if container and container.frame then
+      if container and container.DoLayout then
         container:DoLayout()
       end
     end)
   end)
   
-  -- Force the Units group to expand after a short delay
+  -- Force the Units group to expand after a short delay (if needed)
   C_Timer.After(0.2, function()
-    if mainTree and mainTree.status and mainTree.status.groups then
-      mainTree.status.groups["Units"] = true
-      mainTree:RefreshTree()
+    if mainTree and mainTree.status and mainTree.status.groups and mainTree.RefreshTree then
+      -- Only update if not already expanded
+      if not mainTree.status.groups["Units"] then
+        mainTree.status.groups["Units"] = true
+        mainTree:RefreshTree()
+      end
     end
   end)
+  
+  -- Select General tab by default after a short delay
+  C_Timer.After(0.1, function()
+    if mainTree and mainTree.SelectByPath then
+      mainTree:SelectByPath("General")
+    end
+  end)
+  
+  -- Force a complete layout refresh after setup
+  mainFrame:DoLayout()
 end
 
 function HandleGeneralTab(parent)
@@ -287,14 +368,8 @@ function HandleGeneralTab(parent)
   container:SetFullHeight(true)
   parent:AddChild(container)
   
-  -- Add the AceConfig GUI for general settings
-  if MilaUI.DrawGeneralTab then
-    MilaUI:DrawGeneralTab(container)
-  else
-    local label = GUI:Create("Label")
-    label:SetFullWidth(true)
-    container:AddChild(label)
-  end
+  -- The general settings content is handled directly in this function
+  -- Remove the check for DrawGeneralTab since we handle everything here
   MilaUI:CreateLargeHeading("Custom UI Scale", container)
   local UIScale = GUI:Create("InlineGroup")
   UIScale:SetLayout("Flow")
@@ -366,13 +441,15 @@ function HandleGeneralTab(parent)
   
   -- Helper function to enable/disable all children of a container
   local function SetGroupEnabled(container, enabled)
-      if not container or not container.children then return end
+      -- Check if container is valid and not released
+      if not container or not container.children or container.released then return end
       for _, child in ipairs(container.children) do
-          if child.SetDisabled then
+          -- Only modify widgets that are still valid
+          if child and not child.released and child.SetDisabled then
               child:SetDisabled(not enabled)
           end
           -- Recursively handle nested containers
-          if child.children then
+          if child and child.children and not child.released then
               SetGroupEnabled(child, enabled)
           end
       end
@@ -573,9 +650,43 @@ function HandleGeneralTab(parent)
   cursormodcolorpicker:SetRelativeWidth(1)
   cursormodcolorcontainer:AddChild(cursormodcolorpicker)
   
-  -- Force layout update to show scrollbar
+  -- Font Options
+  MilaUI:CreateLargeHeading("Font Options", container)
+  local FontOptions = GUI:Create("InlineGroup")
+  FontOptions:SetLayout("Flow")
+  FontOptions:SetFullWidth(true)
+  container:AddChild(FontOptions)
+  
+  local Font = MilaUI_GUI:Create("LSM30_Font")
+  Font:SetLabel(lavender .. "Font")
+  Font:SetList(LSM:HashTable(LSM.MediaType.FONT))
+  Font:SetValue(General.Font)
+  -- NOTE: General.Font now stores the font key (e.g., "Friz Quadrata TT"). Always use LSM:Fetch("font", General.Font) when applying fonts!
+  Font:SetCallback("OnValueChanged", function(widget, event, value)
+    General.Font = value
+    MilaUI:CreateReloadPrompt()
+  end)
+  Font:SetRelativeWidth(0.3)
+  FontOptions:AddChild(Font)
+  
+  local FontFlag = MilaUI_GUI:Create("Dropdown")
+  FontFlag:SetLabel(lavender .. "Font Flag")
+  FontFlag:SetList({
+      ["NONE"] = "None",
+      ["OUTLINE"] = "Outline",
+      ["THICKOUTLINE"] = "Thick Outline",
+      ["MONOCHROME"] = "Monochrome",
+      ["OUTLINE, MONOCHROME"] = "Outline, Monochrome",
+      ["THICKOUTLINE, MONOCHROME"] = "Thick Outline, Monochrome",
+  })
+  FontFlag:SetValue(General.FontFlag)
+  FontFlag:SetCallback("OnValueChanged", function(widget, event, value) General.FontFlag = value MilaUI:UpdateFrames() end)
+  FontFlag:SetRelativeWidth(0.2)
+  FontOptions:AddChild(FontFlag)
+  
+  -- Force layout update to show all content properly
   C_Timer.After(0.1, function()
-    if parent and parent.DoLayout then
+    if parent and parent.DoLayout and not parent.released then
       parent:DoLayout()
     end
   end)
@@ -585,16 +696,15 @@ end
 -- Public open/close
 function MilaUI_OpenGUIMain()
   MilaUI:InitGUI()
-  
-  -- Select General tab after initialization
-  C_Timer.After(0.15, function()
-    if mainTree then
-      mainTree:SelectByValue("General")
-    end
-  end)
 end
 
 function MilaUI_CloseGUIMain()
-  if mainFrame then mainFrame:Hide() end
+  if mainFrame and mainFrame.Hide then 
+    mainFrame:Hide() 
+  end
+  -- Hide the escape handler as well
+  if MilaUI.escapeHandler then
+    MilaUI.escapeHandler:Hide()
+  end
 end
 

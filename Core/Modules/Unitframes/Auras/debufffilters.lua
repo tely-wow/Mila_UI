@@ -1,129 +1,104 @@
-local _, Mila = ...
-local UF = Mila.UnitFrames
+local _, MilaUI = ...
+local oUF = MilaUI.oUF
 
--- Debuff filter lists
-local blacklist = {
-    -- Cosmetic or minor debuffs
-    [95223] = true,  -- Recently Mass Resurrected
-}
-
-local whitelist = {
-    -- Important PvE boss debuffs
-    -- 8% Spell damage taken increase
-    [1490] = true,   -- Curse of the Elements (Warlock)
-    [60433] = true,  -- Earth and Moon (Druid Balance)
-    [93068] = true,  -- Master Poisoner (Rogue Assassination)
-    [65142] = true,  -- Ebon Plague (Death Knight Unholy)
-    [24844] = true,  -- Lightning Breath (Hunter Wind Serpent)
-    [34889] = true,  -- Fire Breath (Hunter Dragonhawk)
-    
-    -- 5% Spell crit increase
-    [22959] = true,  -- Critical Mass (Mage Fire)
-    [17800] = true,  -- Shadow and Flame (Warlock Destruction)
-    
-    -- 4% Physical damage taken increase
-    [30070] = true,  -- Blood Frenzy (Warrior Arms)
-    [58683] = true,  -- Savage Combat (Rogue Combat)
-    [81326] = true,  -- Brittle Bones (Death Knight Frost)
-    [50518] = true,  -- Ravage (Hunter Ravager)
-    [55749] = true,  -- Acid Spit (Hunter Worm)
-    
-    -- 12% Armor reduction
-    [91565] = true,  -- Faerie Fire (Druid)
-    [58567] = true,  -- Sunder Armor (Warrior)
-    [8647] = true,   -- Expose Armor (Rogue)
-    [35387] = true,  -- Corrosive Spit (Hunter Serpent)
-    [50498] = true,  -- Tear Armor (Hunter Raptor)
-}
-
--- Basic blacklist filter (show all except those in list)
-function UF.BlacklistDebuffFilter(icons, unit, icon, name, texture, count, debuffType, duration, expirationTime, source, isStealable, nameplateShowPersonal, spellID)
-    if blacklist[spellID] then
-        return false -- Hide this debuff
+-- Get debuff blacklist from saved variables
+function MilaUI:GetDebuffBlacklist()
+    if not MilaUI or not MilaUI.DB or not MilaUI.DB.profile then
+        return {}
     end
-    return true -- Show all other debuffs
+    if not MilaUI.DB.profile.Unitframes then
+        MilaUI.DB.profile.Unitframes = {}
+    end
+    if not MilaUI.DB.profile.Unitframes.AuraFilters then
+        MilaUI.DB.profile.Unitframes.AuraFilters = {}
+    end
+    if not MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs then
+        MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs = {}
+    end
+    if not MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Blacklist then
+        MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Blacklist = {}
+    end
+    
+        -- Ensure all keys are numbers
+    local blacklist = MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Blacklist
+    local cleanedBlacklist = {}
+    for id, value in pairs(blacklist) do
+        local numId = tonumber(id)
+        if numId then
+            cleanedBlacklist[numId] = true
+        end
+    end
+    MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Blacklist = cleanedBlacklist
+    
+    return cleanedBlacklist
 end
 
--- Basic whitelist filter (show only those in list)
-function UF.WhitelistDebuffFilter(icons, unit, icon, name, texture, count, debuffType, duration, expirationTime, source, isStealable, nameplateShowPersonal, spellID)
-    if whitelist[spellID] then
-        return true -- Show this debuff
+-- Get debuff whitelist from saved variables
+function MilaUI:GetDebuffWhitelist()
+    if not MilaUI or not MilaUI.DB or not MilaUI.DB.profile then
+        return {}
     end
-    return false -- Hide all other debuffs
+    if not MilaUI.DB.profile.Unitframes then
+        MilaUI.DB.profile.Unitframes = {}
+    end
+    if not MilaUI.DB.profile.Unitframes.AuraFilters then
+        MilaUI.DB.profile.Unitframes.AuraFilters = {}
+    end
+    if not MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs then
+        MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs = {}
+    end
+    if not MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Whitelist then
+        MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Whitelist = {}
+    end
+    return MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Whitelist
 end
 
--- Player debuff filter (show only player-cast debuffs)
-function UF.PlayerDebuffFilter(icons, unit, icon, name, texture, count, debuffType, duration, expirationTime, source, isStealable, nameplateShowPersonal, spellID)
-    -- Hide blacklisted debuffs
-    if blacklist[spellID] then
-        return false
+-- Add spell to debuff blacklist
+function MilaUI:AddToDebuffBlacklist(spellID)
+    -- Ensure spellID is a number
+    spellID = tonumber(spellID)
+    if not spellID then
+        print("|cffff0000MilaUI Error:|r Invalid spell ID provided")
+        return
     end
     
-    -- Show player-cast debuffs
-    if source == "player" then
-        return true
+    -- Check if database is available
+    if not MilaUI or not MilaUI.DB or not MilaUI.DB.profile then
+        print("|cffff0000MilaUI Error:|r Database not available")
+        return
     end
     
-    -- Show important debuffs
-    if whitelist[spellID] then
-        return true
+        -- Initialize database structure if needed
+    if not MilaUI.DB.profile.Unitframes then
+        print("|cffff0000MilaUI Error:|r Unitframes profile not found")
+        return
+    end
+    if not MilaUI.DB.profile.Unitframes.AuraFilters then
+        print("|cffff0000MilaUI Error:|r AuraFilters profile not found")
+        return
+    end
+    if not MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs then
+        print("|cffff0000MilaUI Error:|r Debuffs profile not found")
+        return
+    end
+    if not MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Blacklist then
+        print("|cffff0000MilaUI Error:|r Debuffs Blacklist profile not found")
+        return
     end
     
-    return false
+    -- Store with number key
+    MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Blacklist[spellID] = true
+    
+    -- Force unit frame update
+    MilaUI:UpdateAllUnitFrames()
 end
 
--- Target debuff filter (show player debuffs and important ones)
-function UF.TargetDebuffFilter(icons, unit, icon, name, texture, count, debuffType, duration, expirationTime, source, isStealable, nameplateShowPersonal, spellID)
-    -- Hide blacklisted debuffs
-    if blacklist[spellID] then
-        return false
-    end
+-- Remove spell from debuff blacklist
+function MilaUI:RemoveFromDebuffBlacklist(spellID)
+    spellID = tonumber(spellID)
+    if not spellID then return end
     
-    -- Show player-cast debuffs
-    if source == "player" or source == "pet" or source == "vehicle" then
-        return true
-    end
-    
-    -- Show important debuffs
-    if whitelist[spellID] then
-        return true
-    end
-    
-    -- Show boss debuffs
-    if isBossDebuff then
-        return true
-    end
-    
-    return false
+    MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Blacklist[spellID] = nil
+    MilaUI:UpdateAllUnitFrames()
 end
 
--- Boss debuff filter (show all important debuffs)
-function UF.BossDebuffFilter(icons, unit, icon, name, texture, count, debuffType, duration, expirationTime, source, isStealable, nameplateShowPersonal, spellID, canApplyAura, isBossDebuff)
-    -- Hide blacklisted debuffs
-    if blacklist[spellID] then
-        return false
-    end
-    
-    -- Show all boss debuffs
-    if isBossDebuff then
-        return true
-    end
-    
-    -- Show important debuffs
-    if whitelist[spellID] then
-        return true
-    end
-    
-    -- Show player-cast debuffs
-    if source == "player" or source == "pet" or source == "vehicle" then
-        return true
-    end
-    
-    -- Show dispellable debuffs
-    local dispelType = debuffType
-    if dispelType and (dispelType == "Magic" or dispelType == "Curse" or dispelType == "Disease" or dispelType == "Poison") then
-        return true
-    end
-    
-    return false
-end

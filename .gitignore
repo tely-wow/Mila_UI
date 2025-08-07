@@ -1,7 +1,10 @@
-CLAUDE.md
 .vs/slnx.sqlite
 .gitignore
 .vs/VSWorkspaceState.json
 .vs/Mila_UI/v17/DocumentLayout.json
 .vs/Mila_UI/v17/.wsuo
+Documentation/
+.gitignore
+Libs/oUF/.pkgmeta
+CLAUDE.md
 .gitignore

@@ -1,10 +1,10 @@
-## Interface: 110105 
+## Interface: 110200 
 ## Title: |cffFF77B5MilaUI|r
 ## Notes: A custom UI addon.
 ## SavedVariables: MilaUIDB
 ## Author: Mila and Alex
 ## Version: 69
-## OptionalDeps: oUF, Plater
+## OptionalDeps: oUF, Plater, MilaUI_Media
 ## X-oUF: MilaUI
 ## IconTexture: Interface\AddOns\Mila_UI\Media\logo.tga
 

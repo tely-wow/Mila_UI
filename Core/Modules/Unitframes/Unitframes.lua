@@ -75,16 +75,19 @@ end
 
 -- Register the style with oUF
 oUF:RegisterStyle("MilaUI", SharedStyle)
-print("[Mila_UI] oUF MilaUI style registered.")
+if MilaUI.DB.global.DebugMode then
+    print("[Mila_UI] oUF MilaUI style registered.")
+end
 oUF:SetActiveStyle("MilaUI")
-print("[Mila_UI] oUF MilaUI style set active.")
+if MilaUI.DB.global.DebugMode then
+    print("[Mila_UI] oUF MilaUI style set active.")
+end
 
 -- Spawn Header for Boss Frames
 local bossHeader = oUF:SpawnHeader(
     "MilaUI_BossHeader", -
     nil, 
     "boss", -
-print("[Mila_UI] Boss header spawned.")
     "showPlayer", false,
     "showBoss", true,
     "showArena", false,
@@ -98,7 +101,9 @@ print("[Mila_UI] Boss header spawned.")
     "columnSpacing", 10,
     "unitSpacing", 10
 )
-
+if MilaUI.DB.global.DebugMode then
+    print("[Mila_UI] Boss header spawned.")
+end
 -- Load the castbar module
 if not MilaUI.DB.profile.Unitframes.Castbar then
     -- Initialize castbar settings in the DB if they don't exist yet
@@ -113,4 +118,6 @@ end
 -- Load castbar module
 loadfile("Interface\\AddOns\\Mila_UI\\Core\\Modules\\Unitframes\\Castbar.lua")()
 
-MilaUI:print("Unitframe module loaded and style registered.")
+if MilaUI.DB.global.DebugMode then
+    print("[Mila_UI] Unitframe module loaded and style registered.")
+end

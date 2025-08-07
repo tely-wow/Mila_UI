@@ -4,6 +4,7 @@ MilaUI.addon = MilaUIAddon
 MilaUI.NewCastbarSystem = MilaUI.NewCastbarSystem or {}
 MilaUI.modules = MilaUI.modules or {}
 MilaUI.modules.bars = MilaUI.NewCastbarSystem
+MilaUI.UnitFrames = MilaUI.UnitFrames or {}
 MilaUIAddon_GUI = MilaUIAddon_GUI or {}
 MilaUIAddon:SetDefaultModuleState(false)
 
@@ -128,19 +129,19 @@ MilaUIAddon.Defaults = {
             },
             AuraFilters = {
                 Buffs = {
-                    Blacklists = {
-                        
-                    },
-                    Whitelists = {
-                        
+                    Blacklist = {},
+                    Whitelist = {},
+                    DurationFilter = {
+                        Enabled = false,
+                        MinDuration = 60, -- Filter out buffs longer than X seconds
                     },
                 },
                 Debuffs = {
-                    Blacklists = {
-                        
-                    },
-                    Whitelists = {
-                        
+                    Blacklist = {},
+                    Whitelist = {},
+                    DurationFilter = {
+                        Enabled = false,
+                        MinDuration = 60, -- Filter out debuffs longer than X seconds
                     },
                 },
             },
@@ -1871,6 +1872,8 @@ MilaUIAddon.Defaults = {
                     yOffset = -200,
                     anchorFrame = "UIParent"
                 },
+                strata = "MEDIUM",      
+                strataLevel = 1,        
                 display = {
                     icon = {
                         show = true,
@@ -1940,6 +1943,8 @@ MilaUIAddon.Defaults = {
                     yOffset = -20,
                     anchorFrame = "MilaUI_Target"
                 },
+                strata = "MEDIUM",      
+                strataLevel = 1,        
                 display = {
                     icon = {
                         show = true,
@@ -2009,6 +2014,8 @@ MilaUIAddon.Defaults = {
                     yOffset = -20,
                     anchorFrame = "MilaUI_Focus"
                 },
+                strata = "MEDIUM",      
+                strataLevel = 1,        
                 display = {
                     icon = {
                         show = true,
@@ -2078,6 +2085,8 @@ MilaUIAddon.Defaults = {
                     yOffset = -20,
                     anchorFrame = "MilaUI_Boss"
                 },
+                strata = "MEDIUM",      
+                strataLevel = 1,        
                 display = {
                     icon = {
                         show = true,
@@ -2147,6 +2156,8 @@ MilaUIAddon.Defaults = {
                     yOffset = -20,
                     anchorFrame = "MilaUI_Pet"
                 },
+                strata = "MEDIUM",      
+                strataLevel = 1,        
                 display = {
                     icon = {
                         show = true,
@@ -2201,101 +2212,6 @@ MilaUIAddon.Defaults = {
                     uninterruptible = {0.8, 0.8, 0.8, 0.9},
                     interrupt = {1, 1, 1, 1}
                 }
-            },
-             TARGET_CASTBAR_SHOW_ICON = true,
-             TARGET_CASTBAR_SHOW_TEXT = true,
-             TARGET_CASTBAR_SHOW_TIMER = true,
-             TARGET_CASTBAR_WIDTH = 150,
-             TARGET_CASTBAR_HEIGHT = 18,
-             TARGET_CASTBAR_X_OFFSET = 15,
-             TARGET_CASTBAR_Y_OFFSET = -55,
-           
-              FOCUS_CASTBAR_SHOW_ICON = true,
-              FOCUS_CASTBAR_SHOW_TEXT = true,
-              FOCUS_CASTBAR_SHOW_TIMER = true,
-              FOCUS_CASTBAR_WIDTH = 150,
-              FOCUS_CASTBAR_HEIGHT = 18,
-              FOCUS_CASTBAR_X_OFFSET = 15,
-              FOCUS_CASTBAR_Y_OFFSET = -55,
-           
-           
-           -- Player text settings
-           PLAYER_SHOW_HEALTH_TEXT = true,
-           PLAYER_HEALTH_TEXT_SIZE = 11,
-           PLAYER_HEALTH_TEXT_SHOW_PERCENT = true,
-           PLAYER_HEALTH_TEXT_SPLIT = true, -- Set to true for left/right split
-           
-           PLAYER_SHOW_POWER_TEXT = true,
-           PLAYER_POWER_TEXT_SIZE = 9,
-           PLAYER_POWER_TEXT_SHOW_PERCENT = false,
-           
-           PLAYER_SHOW_NAME_TEXT = false, -- Usually don't show player name
-           PLAYER_NAME_TEXT_SIZE = 12,
-           PLAYER_NAME_TEXT_MAX_LENGTH = 20,
-           
-           PLAYER_SHOW_LEVEL_TEXT = false, -- Usually don't show player level
-           PLAYER_LEVEL_TEXT_SIZE = 10,
-           
-           -- Target text settings
-           TARGET_SHOW_HEALTH_TEXT = true,
-           TARGET_HEALTH_TEXT_SIZE = 11,
-           TARGET_HEALTH_TEXT_SHOW_PERCENT = true,
-           TARGET_HEALTH_TEXT_SPLIT = true, -- Enable split positioning for target
-           
-           TARGET_SHOW_POWER_TEXT = true,
-           TARGET_POWER_TEXT_SIZE = 9,
-           TARGET_POWER_TEXT_SHOW_PERCENT = false,
-           
-           TARGET_SHOW_NAME_TEXT = true,
-           TARGET_NAME_TEXT_SIZE = 12,
-           TARGET_NAME_TEXT_MAX_LENGTH = 20,
-           
-           TARGET_SHOW_LEVEL_TEXT = true,
-           TARGET_LEVEL_TEXT_SIZE = 10,
-           
-           -- Focus text settings
-           FOCUS_SHOW_HEALTH_TEXT = true,
-           FOCUS_HEALTH_TEXT_SIZE = 11,
-           FOCUS_HEALTH_TEXT_SHOW_PERCENT = true,
-           FOCUS_HEALTH_TEXT_SPLIT = false, -- Keep focus centered
-           
-           FOCUS_SHOW_POWER_TEXT = true,
-           FOCUS_POWER_TEXT_SIZE = 9,
-           FOCUS_POWER_TEXT_SHOW_PERCENT = false,
-           
-           FOCUS_SHOW_NAME_TEXT = true,
-           FOCUS_NAME_TEXT_SIZE = 12,
-           FOCUS_NAME_TEXT_MAX_LENGTH = 20,
-           
-           FOCUS_SHOW_LEVEL_TEXT = true,
-           FOCUS_LEVEL_TEXT_SIZE = 10,
-           bars = {
-                       -- Player Cast Bar
-                       PLAYER_CASTBAR_ENABLED = true,
-                       PLAYER_CASTBAR_WIDTH = 125,
-                       PLAYER_CASTBAR_HEIGHT = 18,
-                       PLAYER_CASTBAR_SCALE = 1.0,
-                       PLAYER_CASTBAR_X_OFFSET = 0,
-                       PLAYER_CASTBAR_Y_OFFSET = -20,
-                       PLAYER_CASTBAR_SHOW_ICON = true,
-                       PLAYER_CASTBAR_SHOW_TEXT = true,
-                       PLAYER_CASTBAR_SHOW_TIMER = true,
-                       PLAYER_CASTBAR_MASK_TEXTURE = "Interface\\AddOns\\rnxmUI\\Textures\\UIUnitFramePlayerHealthMask2x.tga",
-                       
-                       -- Cast Type Textures
-                       PLAYER_CAST_TEXTURE = "g1",
-                       PLAYER_CHANNEL_TEXTURE = "g1",
-                       PLAYER_UNINTERRUPTIBLE_TEXTURE = "g1",
-                       PLAYER_INTERRUPT_TEXTURE = "g1",
-                       
-                       -- Cast Type Colors (RGBA)
-                       PLAYER_CAST_COLOR = {0, 1, 1, 1},
-                       PLAYER_CHANNEL_COLOR = {0.5, 0.3, 0.9, 1},
-                       PLAYER_UNINTERRUPTIBLE_COLOR = {0.8, 0.8, 0.8, 1},
-                       PLAYER_INTERRUPT_COLOR = {1, 0.2, 0.2, 1},
-                       
-                       -- Copy same structure for TARGET_ and FOCUS_ with appropriate prefixes
-                       -- ... rest of cast bar defaults
             },     
         }
     }
@@ -2303,6 +2219,8 @@ MilaUIAddon.Defaults = {
 
 function MilaUIAddon:MigrateDatabase()
     local db = MilaUI.DB.profile
+    local pink = MilaUI.DB.global.Colors.pink
+    local lavender = MilaUI.DB.global.Colors.lavender
     db.Unitframes = db.Unitframes or {}
     if db.Unitframes.migrated == false then
         local migratedAny = false

@@ -653,33 +653,38 @@ end
 
 -- Helper function to create a large heading with custom font size
 function MilaUI:CreateLargeHeading(text, parent, fontSize)
-    local heading = MilaUI_GUI:Create("SFX-Header")
-    heading:SetText(pink .. text)
-    heading:SetFullWidth(true)
-    heading:SetCenter(true)
-    -- Set font size using the simpler approach
-    fontSize = fontSize or 16 -- Default to 16 if not specified
-    local label = heading.Label
-    if label and label.SetFont then
-        local font, _, flags = label:GetFont()
-        label:SetFont(font, fontSize, flags)
+    -- Try SFX-Header first, fallback to regular Heading if it fails
+    local heading
+    local success = pcall(function()
+        heading = MilaUI_GUI:Create("SFX-Header")
+    end)
+    
+    if not success or not heading then
+        -- Fallback to regular Heading widget
+        heading = MilaUI_GUI:Create("Heading")
+        heading:SetText(pink .. text)
+        heading:SetFullWidth(true)
+    else
+        heading:SetText(pink .. text)
+        heading:SetFullWidth(true)
+        if heading.SetCenter then
+            heading:SetCenter(true)
+        end
+        -- Set font size using the simpler approach
+        fontSize = fontSize or 16 -- Default to 16 if not specified
+        local label = heading.Label
+        if label and label.SetFont then
+            local font, _, flags = label:GetFont()
+            label:SetFont(font, fontSize, flags)
+        end
     end
     
-    -- Create a container to hold both the heading and the spacer
-    local container = MilaUI_GUI:Create("SimpleGroup")
-    container:SetLayout("Flow")
-    container:SetFullWidth(true)
-    
-    -- Add the heading to the container
-    container:AddChild(heading)
-    
-    
-    -- Add the container to the parent if provided
+    -- Add the heading to the parent if provided
     if parent then 
-        parent:AddChild(container) 
+        parent:AddChild(heading) 
     end
     
-    return container
+    return heading
 end
 
 function MilaUI:UpdateEscapeMenuScale()

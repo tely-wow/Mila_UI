@@ -16,7 +16,7 @@ function MilaUI:DrawBuffsContainer(dbUnitName, contentFrame)
     BuffsOptions:SetLayout("Flow")
     BuffsOptions:SetTitle(pink .. "General")
     BuffsOptions:SetRelativeWidth(0.5)
-    BuffsOptions:SetHeight(200)
+    BuffsOptions:SetHeight(170)
     BuffsOptions:SetAutoAdjustHeight(false)
     contentFrame:AddChild(BuffsOptions)
 
@@ -25,7 +25,7 @@ function MilaUI:DrawBuffsContainer(dbUnitName, contentFrame)
     sizeGroup:SetLayout("Flow")
     sizeGroup:SetRelativeWidth(0.5)
     sizeGroup:SetTitle(pink .. "Size")
-    sizeGroup:SetHeight(200)
+    sizeGroup:SetHeight(170)
     sizeGroup:SetAutoAdjustHeight(false)
     contentFrame:AddChild(sizeGroup)
     
@@ -34,7 +34,7 @@ function MilaUI:DrawBuffsContainer(dbUnitName, contentFrame)
     positionGroup:SetLayout("Flow")
     positionGroup:SetRelativeWidth(0.5)
     positionGroup:SetTitle(pink .. "Icon Position")
-    positionGroup:SetHeight(200)
+    positionGroup:SetHeight(130)
     positionGroup:SetAutoAdjustHeight(false)
     contentFrame:AddChild(positionGroup)
     
@@ -43,7 +43,7 @@ function MilaUI:DrawBuffsContainer(dbUnitName, contentFrame)
     anchorGroup:SetLayout("Flow")
     anchorGroup:SetRelativeWidth(0.5)
     anchorGroup:SetTitle(pink .. "Icon Anchor")
-    anchorGroup:SetHeight(200)
+    anchorGroup:SetHeight(130)
     anchorGroup:SetAutoAdjustHeight(false)
     contentFrame:AddChild(anchorGroup)
     
@@ -258,16 +258,10 @@ function MilaUI:DrawBuffsContainer(dbUnitName, contentFrame)
     BuffCountFontSize:SetRelativeWidth(0.5)
     countfontGroup:AddChild(BuffCountFontSize)
     
-    -- Font dropdown
-    local fonts = LSM:HashTable("font")
-    local fontValues = {}
-    for k, v in pairs(fonts) do
-        fontValues[k] = k
-    end
-    
-    local BuffCountFont = GUI:Create("Dropdown")
+    -- Font dropdown with preview
+    local BuffCountFont = GUI:Create("LSM30_Font")
     BuffCountFont:SetLabel(lavender .. "Font")
-    BuffCountFont:SetList(fontValues)
+    BuffCountFont:SetList(LSM:HashTable(LSM.MediaType.FONT))
     BuffCountFont:SetValue(Buffs.Count.Font)
     BuffCountFont:SetCallback("OnValueChanged", function(widget, event, value) Buffs.Count.Font = value MilaUI:UpdateFrames() end)
     BuffCountFont:SetRelativeWidth(0.7)
@@ -290,6 +284,305 @@ function MilaUI:DrawBuffsContainer(dbUnitName, contentFrame)
     countfontGroup:AddChild(BuffCountFontFlags)
 end
 
+function MilaUI:DrawAuraBlacklistContainer(contentFrame)
+    -- Aura Blacklist Container
+    MilaUI:CreateLargeHeading("Aura Blacklist", contentFrame)
+    
+    -- Create buff blacklist section manually
+    local buffBlacklistGroup = GUI:Create("InlineGroup")
+    buffBlacklistGroup:SetLayout("Flow")
+    buffBlacklistGroup:SetTitle(pink .. "Buff Blacklist")
+    buffBlacklistGroup:SetRelativeWidth(0.5)
+    buffBlacklistGroup:SetHeight(350)
+    buffBlacklistGroup:SetAutoAdjustHeight(false)
+    contentFrame:AddChild(buffBlacklistGroup)
+    
+    -- Buff Instructions
+    local buffInstructions = GUI:Create("Label")
+    buffInstructions:SetText("Hide specific buffs from all unit frames.")
+    buffInstructions:SetFullWidth(true)
+    buffBlacklistGroup:AddChild(buffInstructions)
+    
+    -- Buff Add section
+    local buffAddGroup = GUI:Create("InlineGroup")
+    buffAddGroup:SetLayout("Flow")
+    buffAddGroup:SetTitle("Add Buff to Blacklist")
+    buffAddGroup:SetFullWidth(true)
+    buffAddGroup:SetHeight(70)
+    buffAddGroup:SetAutoAdjustHeight(true)
+    buffBlacklistGroup:AddChild(buffAddGroup)
+    
+    -- Buff Input field
+    local buffSpellInput = GUI:Create("EditBox")
+    buffSpellInput:SetLabel("Spell ID or Name")
+    buffSpellInput:SetRelativeWidth(0.7)
+    buffSpellInput:SetText("")
+    buffAddGroup:AddChild(buffSpellInput)
+    
+    -- Buff Add button
+    local buffAddButton = GUI:Create("Button")
+    buffAddButton:SetText("Add")
+    buffAddButton:SetRelativeWidth(0.3)
+    buffAddButton:SetCallback("OnClick", function()
+        MilaUI:HandleAddToBuffBlacklist(buffSpellInput, buffBlacklistGroup)
+    end)
+    buffAddGroup:AddChild(buffAddButton)
+    
+    -- Buff blacklist display
+    local buffListGroup = GUI:Create("InlineGroup")
+    buffListGroup:SetLayout("Fill")
+    buffListGroup:SetTitle("Currently Blacklisted Buffs")
+    buffListGroup:SetFullWidth(true)
+    buffListGroup:SetHeight(200)
+    buffListGroup:SetAutoAdjustHeight(false)
+    buffBlacklistGroup:AddChild(buffListGroup)
+    
+    -- Buff scrollframe
+    local buffScrollFrame = GUI:Create("ScrollFrame")
+    buffScrollFrame:SetLayout("List")
+    buffScrollFrame:SetFullWidth(true)
+    buffScrollFrame:SetFullHeight(true)
+    buffListGroup:AddChild(buffScrollFrame)
+    
+    -- Store buff references
+    buffBlacklistGroup.scrollFrame = buffScrollFrame
+    buffBlacklistGroup.auraType = "buff"
+    
+    -- Create debuff blacklist section manually
+    local debuffBlacklistGroup = GUI:Create("InlineGroup")
+    debuffBlacklistGroup:SetLayout("Flow")
+    debuffBlacklistGroup:SetTitle(pink .. "Debuff Blacklist")
+    debuffBlacklistGroup:SetRelativeWidth(0.5)
+    debuffBlacklistGroup:SetHeight(350)
+    debuffBlacklistGroup:SetAutoAdjustHeight(false)
+    contentFrame:AddChild(debuffBlacklistGroup)
+    
+    -- Debuff Instructions
+    local debuffInstructions = GUI:Create("Label")
+    debuffInstructions:SetText("Hide specific debuffs from all unit frames.")
+    debuffInstructions:SetFullWidth(true)
+    debuffBlacklistGroup:AddChild(debuffInstructions)
+    
+    -- Debuff Add section
+    local debuffAddGroup = GUI:Create("InlineGroup")
+    debuffAddGroup:SetLayout("Flow")
+    debuffAddGroup:SetTitle("Add Debuff to Blacklist")
+    debuffAddGroup:SetFullWidth(true)
+    debuffAddGroup:SetHeight(70)
+    debuffAddGroup:SetAutoAdjustHeight(true)
+    debuffBlacklistGroup:AddChild(debuffAddGroup)
+    
+    -- Debuff Input field
+    local debuffSpellInput = GUI:Create("EditBox")
+    debuffSpellInput:SetLabel("Spell ID or Name")
+    debuffSpellInput:SetRelativeWidth(0.7)
+    debuffSpellInput:SetText("")
+    debuffAddGroup:AddChild(debuffSpellInput)
+    
+    -- Debuff Add button
+    local debuffAddButton = GUI:Create("Button")
+    debuffAddButton:SetText("Add")
+    debuffAddButton:SetRelativeWidth(0.3)
+    debuffAddButton:SetCallback("OnClick", function()
+        MilaUI:HandleAddToDebuffBlacklist(debuffSpellInput, debuffBlacklistGroup)
+    end)
+    debuffAddGroup:AddChild(debuffAddButton)
+    
+    -- Debuff blacklist display
+    local debuffListGroup = GUI:Create("InlineGroup")
+    debuffListGroup:SetLayout("Fill")
+    debuffListGroup:SetTitle("Currently Blacklisted Debuffs")
+    debuffListGroup:SetFullWidth(true)
+    debuffListGroup:SetHeight(200)
+    debuffListGroup:SetAutoAdjustHeight(false)
+    debuffBlacklistGroup:AddChild(debuffListGroup)
+    
+    -- Debuff scrollframe
+    local debuffScrollFrame = GUI:Create("ScrollFrame")
+    debuffScrollFrame:SetLayout("List")
+    debuffScrollFrame:SetFullWidth(true)
+    debuffScrollFrame:SetFullHeight(true)
+    debuffListGroup:AddChild(debuffScrollFrame)
+    
+    -- Store debuff references
+    debuffBlacklistGroup.scrollFrame = debuffScrollFrame
+    debuffBlacklistGroup.auraType = "debuff"
+    
+    -- Initial display for both
+    MilaUI:RefreshBuffBlacklistDisplay(buffBlacklistGroup)
+    MilaUI:RefreshDebuffBlacklistDisplay(debuffBlacklistGroup)
+end
+
+-- Buff blacklist handler
+function MilaUI:HandleAddToBuffBlacklist(spellInput, blacklistGroup)
+    local input = spellInput:GetText()
+    if not input or input == "" then
+        print("|cffff0000MilaUI:|r Please enter a spell name or ID")
+        return
+    end
+    
+    local spellID = tonumber(input)
+    if not spellID then
+        local name, _, _, _, _, _, id = GetSpellInfo(input)
+        if id then
+            spellID = id
+        end
+    end
+    
+    if not spellID or spellID <= 0 then
+        print("|cffff0000MilaUI:|r Invalid input: '" .. input .. "' - must be a valid spell name or ID")
+        return
+    end
+    
+    local spellName = GetSpellInfo(spellID)
+    if not spellName then
+        print("|cffff0000MilaUI:|r Invalid spell ID: " .. spellID .. " - spell does not exist")
+        return
+    end
+    
+    if MilaUI.AddToBuffBlacklist then
+        MilaUI:AddToBuffBlacklist(spellID)
+        spellInput:SetText("")
+        MilaUI:RefreshBuffBlacklistDisplay(blacklistGroup)
+        print("|cff00ff00MilaUI:|r Added " .. spellName .. " (" .. spellID .. ") to buff blacklist")
+    end
+end
+
+-- Debuff blacklist handler
+function MilaUI:HandleAddToDebuffBlacklist(spellInput, blacklistGroup)
+    local input = spellInput:GetText()
+    if not input or input == "" then
+        print("|cffff0000MilaUI:|r Please enter a spell name or ID")
+        return
+    end
+    
+    local spellID = tonumber(input)
+    if not spellID then
+        local name, _, _, _, _, _, id = GetSpellInfo(input)
+        if id then
+            spellID = id
+        end
+    end
+    
+    if not spellID or spellID <= 0 then
+        print("|cffff0000MilaUI:|r Invalid input: '" .. input .. "' - must be a valid spell name or ID")
+        return
+    end
+    
+    local spellName = GetSpellInfo(spellID)
+    if not spellName then
+        print("|cffff0000MilaUI:|r Invalid spell ID: " .. spellID .. " - spell does not exist")
+        return
+    end
+    
+    if MilaUI.AddToDebuffBlacklist then
+        MilaUI:AddToDebuffBlacklist(spellID)
+        spellInput:SetText("")
+        MilaUI:RefreshDebuffBlacklistDisplay(blacklistGroup)
+        print("|cff00ff00MilaUI:|r Added " .. spellName .. " (" .. spellID .. ") to debuff blacklist")
+    end
+end
+
+-- Buff blacklist display refresh
+function MilaUI:RefreshBuffBlacklistDisplay(blacklistGroup)
+    local scrollFrame = blacklistGroup.scrollFrame
+    scrollFrame:ReleaseChildren()
+    
+    local blacklist = {}
+    if MilaUI.GetBuffBlacklist then
+        blacklist = MilaUI:GetBuffBlacklist()
+    end
+    
+    for spellID, _ in pairs(blacklist) do
+        local spellContainer = GUI:Create("InlineGroup")
+        spellContainer:SetLayout("Flow")
+        spellContainer:SetFullWidth(true)
+        spellContainer:SetAutoAdjustHeight(true)
+        spellContainer:SetTitle("")
+        scrollFrame:AddChild(spellContainer)
+        
+        local spellName, _, spellIcon = GetSpellInfo(spellID)
+        if not spellName then
+            spellName = "Unknown Spell"
+            spellIcon = "Interface\\Icons\\INV_Misc_QuestionMark"
+        end
+        
+        local spellLabel = GUI:Create("Label")
+        spellLabel:SetText("|T" .. spellIcon .. ":16|t " .. spellName .. " (" .. spellID .. ")")
+        spellLabel:SetRelativeWidth(0.7)
+        spellContainer:AddChild(spellLabel)
+        
+        local removeButton = GUI:Create("Button")
+        removeButton:SetText("Remove")
+        removeButton:SetRelativeWidth(0.3)
+        removeButton:SetCallback("OnClick", function()
+            if MilaUI.RemoveFromBuffBlacklist then
+                MilaUI:RemoveFromBuffBlacklist(spellID)
+                MilaUI:RefreshBuffBlacklistDisplay(blacklistGroup)
+                print("|cff00ff00MilaUI:|r Removed " .. spellName .. " from buff blacklist")
+            end
+        end)
+        spellContainer:AddChild(removeButton)
+    end
+    
+    if not next(blacklist) then
+        local emptyLabel = GUI:Create("Label")
+        emptyLabel:SetText("No buffs currently blacklisted")
+        emptyLabel:SetFullWidth(true)
+        scrollFrame:AddChild(emptyLabel)
+    end
+end
+
+-- Debuff blacklist display refresh
+function MilaUI:RefreshDebuffBlacklistDisplay(blacklistGroup)
+    local scrollFrame = blacklistGroup.scrollFrame
+    scrollFrame:ReleaseChildren()
+    
+    local blacklist = {}
+    if MilaUI.GetDebuffBlacklist then
+        blacklist = MilaUI:GetDebuffBlacklist()
+    end
+    
+    for spellID, _ in pairs(blacklist) do
+        local spellContainer = GUI:Create("InlineGroup")
+        spellContainer:SetLayout("Flow")
+        spellContainer:SetFullWidth(true)
+        spellContainer:SetAutoAdjustHeight(true)
+        spellContainer:SetTitle("")
+        scrollFrame:AddChild(spellContainer)
+        
+        local spellName, _, spellIcon = GetSpellInfo(spellID)
+        if not spellName then
+            spellName = "Unknown Spell"
+            spellIcon = "Interface\\Icons\\INV_Misc_QuestionMark"
+        end
+        
+        local spellLabel = GUI:Create("Label")
+        spellLabel:SetText("|T" .. spellIcon .. ":16|t " .. spellName .. " (" .. spellID .. ")")
+        spellLabel:SetRelativeWidth(0.7)
+        spellContainer:AddChild(spellLabel)
+        
+        local removeButton = GUI:Create("Button")
+        removeButton:SetText("Remove")
+        removeButton:SetRelativeWidth(0.3)
+        removeButton:SetCallback("OnClick", function()
+            if MilaUI.RemoveFromDebuffBlacklist then
+                MilaUI:RemoveFromDebuffBlacklist(spellID)
+                MilaUI:RefreshDebuffBlacklistDisplay(blacklistGroup)
+                print("|cff00ff00MilaUI:|r Removed " .. spellName .. " from debuff blacklist")
+            end
+        end)
+        spellContainer:AddChild(removeButton)
+    end
+    
+    if not next(blacklist) then
+        local emptyLabel = GUI:Create("Label")
+        emptyLabel:SetText("No debuffs currently blacklisted")
+        emptyLabel:SetFullWidth(true)
+        scrollFrame:AddChild(emptyLabel)
+    end
+end
+
 function MilaUI:DrawDebuffsContainer(dbUnitName, contentFrame)
     local Debuffs = MilaUI.DB.profile.Unitframes[dbUnitName].Debuffs
     
@@ -299,7 +592,7 @@ function MilaUI:DrawDebuffsContainer(dbUnitName, contentFrame)
     DebuffsOptions:SetLayout("Flow")
     DebuffsOptions:SetTitle(pink .. "General")
     DebuffsOptions:SetRelativeWidth(0.5)
-    DebuffsOptions:SetHeight(200)
+    DebuffsOptions:SetHeight(170)
     DebuffsOptions:SetAutoAdjustHeight(false)
     contentFrame:AddChild(DebuffsOptions)
 
@@ -308,7 +601,7 @@ function MilaUI:DrawDebuffsContainer(dbUnitName, contentFrame)
     sizeGroup:SetLayout("Flow")
     sizeGroup:SetRelativeWidth(0.5)
     sizeGroup:SetTitle(pink .. "Size")
-    sizeGroup:SetHeight(200)
+    sizeGroup:SetHeight(170)
     sizeGroup:SetAutoAdjustHeight(false)
     contentFrame:AddChild(sizeGroup)
     
@@ -317,7 +610,7 @@ function MilaUI:DrawDebuffsContainer(dbUnitName, contentFrame)
     positionGroup:SetLayout("Flow")
     positionGroup:SetRelativeWidth(0.5)
     positionGroup:SetTitle(pink .. "Icon Position")
-    positionGroup:SetHeight(200)
+    positionGroup:SetHeight(130)
     positionGroup:SetAutoAdjustHeight(false)
     contentFrame:AddChild(positionGroup)
     
@@ -326,7 +619,7 @@ function MilaUI:DrawDebuffsContainer(dbUnitName, contentFrame)
     anchorGroup:SetLayout("Flow")
     anchorGroup:SetRelativeWidth(0.5)
     anchorGroup:SetTitle(pink .. "Icon Anchor")
-    anchorGroup:SetHeight(200)
+    anchorGroup:SetHeight(130)
     anchorGroup:SetAutoAdjustHeight(false)
     contentFrame:AddChild(anchorGroup)
     
@@ -362,7 +655,6 @@ function MilaUI:DrawDebuffsContainer(dbUnitName, contentFrame)
     DebuffSpacing:SetCallback("OnMouseUp", function(widget, event, value) Debuffs.Spacing = value MilaUI:UpdateFrames() end)
     DebuffSpacing:SetRelativeWidth(0.5)
     DebuffsOptions:AddChild(DebuffSpacing)
-    DebuffsOptions:AddChild(MilaUI:CreateHorizontalSpacer(0.25))
     
     -- Growth Direction X
     local GrowthX = {
@@ -555,16 +847,10 @@ function MilaUI:DrawDebuffsContainer(dbUnitName, contentFrame)
     DebuffCountFontSize:SetRelativeWidth(0.5)
     countfontGroup:AddChild(DebuffCountFontSize)
     
-    -- Font dropdown
-    local fonts = LSM:HashTable("font")
-    local fontValues = {}
-    for k, v in pairs(fonts) do
-        fontValues[k] = k
-    end
-    
-    local DebuffCountFont = GUI:Create("Dropdown")
+    -- Font dropdown with preview
+    local DebuffCountFont = GUI:Create("LSM30_Font")
     DebuffCountFont:SetLabel(lavender .. "Font")
-    DebuffCountFont:SetList(fontValues)
+    DebuffCountFont:SetList(LSM:HashTable(LSM.MediaType.FONT))
     DebuffCountFont:SetValue(Debuffs.Count.Font)
     DebuffCountFont:SetCallback("OnValueChanged", function(widget, event, value) Debuffs.Count.Font = value MilaUI:UpdateFrames() end)
     DebuffCountFont:SetRelativeWidth(0.7)

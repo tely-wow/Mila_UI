@@ -1,72 +1,126 @@
-local _, Mila = ...
-local UF = Mila.UnitFrames
+local _, MilaUI = ...
+local oUF = MilaUI.oUF
 
-
--- Basic blacklist filter (show all except those in list)
-function UF.BlacklistBuffFilter(icons, unit, icon, name, texture, count, debuffType, duration, expirationTime, source, isStealable, nameplateShowPersonal, spellID)
-    if blacklist[spellID] then
-        return false -- Hide this aura
+-- Get buff blacklist from saved variables
+function MilaUI:GetBuffBlacklist()
+    if not MilaUI or not MilaUI.DB or not MilaUI.DB.profile then
+        print("|cffff0000MilaUI Error:|r Database not available")
+        return {}
     end
-    return true -- Show all other auras
+    if not MilaUI.DB.profile.Unitframes then
+        print("|cffff0000MilaUI Error:|r Unitframes profile not found")
+        return {}
+    end
+    if not MilaUI.DB.profile.Unitframes.AuraFilters then
+        print("|cffff0000MilaUI Error:|r AuraFilters profile not found")
+        return {}
+    end
+    if not MilaUI.DB.profile.Unitframes.AuraFilters.Buffs then
+        print("|cffff0000MilaUI Error:|r Buffs profile not found")
+        return {}
+    end
+    if not MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Blacklist then
+        print("|cffff0000MilaUI Error:|r Buffs Blacklist profile not found")
+        return {}
+    end
+    
+    -- Ensure all keys are numbers
+    local blacklist = MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Blacklist
+    local cleanedBlacklist = {}
+    for id, value in pairs(blacklist) do
+        local numId = tonumber(id)
+        if numId then
+            cleanedBlacklist[numId] = true
+        end
+    end
+    MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Blacklist = cleanedBlacklist
+    
+    return cleanedBlacklist
 end
 
--- Basic whitelist filter (show only those in list)
-function UF.WhitelistBuffFilter(icons, unit, icon, name, texture, count, debuffType, duration, expirationTime, source, isStealable, nameplateShowPersonal, spellID)
-    if whitelist[spellID] then
-        return true -- Show this aura
+-- Get buff whitelist from saved variables
+function MilaUI:GetBuffWhitelist()
+    if not MilaUI or not MilaUI.DB or not MilaUI.DB.profile then
+        print("|cffff0000MilaUI Error:|r Database not available")
+        return {}
     end
-    return false -- Hide all other auras
+    if not MilaUI.DB.profile.Unitframes then
+        print("|cffff0000MilaUI Error:|r Unitframes profile not found")
+        return {}
+    end
+    if not MilaUI.DB.profile.Unitframes.AuraFilters then
+        print("|cffff0000MilaUI Error:|r AuraFilters profile not found")
+        return {}
+    end
+    if not MilaUI.DB.profile.Unitframes.AuraFilters.Buffs then
+        print("|cffff0000MilaUI Error:|r Buffs profile not found")
+        return {}
+    end
+    if not MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Whitelist then
+        print("|cffff0000MilaUI Error:|r Buffs Whitelist profile not found")
+        return {}
+    end
+    return MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Whitelist
 end
 
--- Player buff filter (show only player buffs, except blacklisted ones)
-function UF.PlayerBuffFilter(icons, unit, icon, name, texture, count, debuffType, duration, expirationTime, source, isStealable, nameplateShowPersonal, spellID)
-    -- Hide blacklisted buffs
-    if blacklist[spellID] then
-        return false
+-- Add spell to buff blacklist
+function MilaUI:AddToBuffBlacklist(spellID)
+    -- Ensure spellID is a number
+    spellID = tonumber(spellID)
+    if not spellID then
+        print("|cffff0000MilaUI Error:|r Invalid spell ID provided")
+        return
     end
     
-    -- Only show player buffs
-    if source == "player" then
-        return true
+    -- Check if database is available
+    if not MilaUI or not MilaUI.DB or not MilaUI.DB.profile then
+        print("|cffff0000MilaUI Error:|r Database not available")
+        return
     end
     
-    -- Show important buffs from others
-    if whitelist[spellID] then
-        return true
+    -- Initialize database structure if needed
+    if not MilaUI.DB.profile.Unitframes then
+        print("|cffff0000MilaUI Error:|r Unitframes profile not found")
+        return
+    end
+    if not MilaUI.DB.profile.Unitframes.AuraFilters then
+        print("|cffff0000MilaUI Error:|r AuraFilters profile not found")
+        return
+    end
+    if not MilaUI.DB.profile.Unitframes.AuraFilters.Buffs then
+        print("|cffff0000MilaUI Error:|r Buffs profile not found")
+        return
+    end
+    if not MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Blacklist then
+        print("|cffff0000MilaUI Error:|r Buffs Blacklist profile not found")
+        return
     end
     
-    return false
+    -- Store with number key
+    MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Blacklist[spellID] = true
+    
+    -- Force unit frame update
+    MilaUI:UpdateAllUnitFrames()
 end
 
--- Target buff filter (more selective)
-function UF.TargetBuffFilter(icons, unit, icon, name, texture, count, debuffType, duration, expirationTime, source, isStealable, nameplateShowPersonal, spellID)
-    -- Hide blacklisted buffs
-    if blacklist[spellID] then
-        return false
-    end
+-- Remove spell from buff blacklist
+function MilaUI:RemoveFromBuffBlacklist(spellID)
+    spellID = tonumber(spellID)
+    if not spellID then return end
     
-    -- Show stealable buffs
-    if isStealable then
-        return true
-    end
-    
-    -- Show important buffs
-    if whitelist[spellID] then
-        return true
-    end
-    
-    -- Show player-cast buffs
-    if source == "player" then
-        return true
-    end
-    
-    return false
+    MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Blacklist[spellID] = nil
+    MilaUI:UpdateAllUnitFrames()
 end
 
--- Boss buff filter (show all except cosmetic)
-function UF.BossBuffFilter(icons, unit, icon, name, texture, count, debuffType, duration, expirationTime, source, isStealable, nameplateShowPersonal, spellID)
-    if blacklist[spellID] then
-        return false
+-- Helper function to update all unit frames
+function MilaUI:UpdateAllUnitFrames()
+    -- Force update all frames
+    if oUF and oUF.objects then
+        for _, frame in pairs(oUF.objects) do
+            if frame.unit and frame:IsShown() then
+                frame:UpdateAllElements("ForceUpdate")
+            end
+        end
     end
-    return true
 end
+

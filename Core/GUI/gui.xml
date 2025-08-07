@@ -7,15 +7,7 @@
   <Script file="Unitframes/GUI_UFTags.lua"/>
   <Script file="Unitframes/GUI_UFText.lua"/>
   <Script file="Unitframes/GUI_UFBuffs.lua"/>
+  <Script file="Unitframes/GUI_AuraFilters.lua"/>
   <Script file="Unitframes/GUI_UFIndicator.lua"/>
   <Script file="Unitframes/GUI_Castbar.lua"/>
-  <Script file="Castbars/GUI_CleanCastbar.lua"/>
-  <!-- Abstract Framework GUI -->
-  <Script file="GUI_AF_Utility.lua"/>
-  <Script file="GUI_AF_General.lua"/>
-  <Script file="GUI_AF_UnitFrames.lua"/>
-  <Script file="GUI_AF_CastBars.lua"/>
-  <Script file="GUI_AF_CursorMod.lua"/>
-  <Script file="GUI_AF_Profiles.lua"/>
-  <Script file="GUI_AF_Main.lua"/>
 </Ui>
