@@ -2397,5 +2397,19 @@ function MilaUIAddon:OnEnable()
     MilaUI:SpawnPetFrame()
     MilaUI:SpawnBossFrames()
     MilaUI:SetupSlashCommands()
+    
+    -- Schedule a delayed update to ensure optional dependency fonts are loaded
+    local eventFrame = CreateFrame("Frame")
+    eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    eventFrame:SetScript("OnEvent", function(self, event, isLogin, isReload)
+        if isLogin or isReload then
+            -- Delay UpdateFrames by 3 seconds to ensure all addons (including MilaUI_Media) have loaded their fonts
+            C_Timer.After(3, function()
+                MilaUI:UpdateFrames()
+            end)
+        end
+        self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+    end)
+    
     print(pink .. "♥MILA UI ♥:  " .. lavender .. "Type: " .. pink .. "/MUI" .. lavender .. " for in-game configuration.")
 end

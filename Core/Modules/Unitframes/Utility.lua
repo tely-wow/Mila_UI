@@ -1,6 +1,21 @@
 local _, MilaUI = ...
 local LSM = LibStub:GetLibrary("LibSharedMedia-3.0") or LibStub("LibSharedMedia-3.0")
 local oUF = MilaUI.oUF
+
+-- Helper function to safely fetch fonts with fallback
+local function SafeFetchFont(fontName)
+    local fontPath = LSM:Fetch("font", fontName)
+    if not fontPath then
+        -- Fallback to Expressway (our included font) if the requested font isn't available yet
+        fontPath = LSM:Fetch("font", "Expressway")
+        if not fontPath then
+            -- Ultimate fallback to Blizzard default font
+            fontPath = "Fonts\\FRIZQT__.TTF"
+        end
+    end
+    return fontPath
+end
+
 MilaUI.TargetHighlightEvtFrames = {}
 MilaUI.Frames = {
     ["player"] = "Player",
@@ -90,7 +105,7 @@ local function PostCreateButton(_, button, Unit, AuraType)
     if AuraType == "HELPFUL" then
         auraCount:ClearAllPoints()
         auraCount:SetPoint(BuffCount.AnchorFrom, button, BuffCount.AnchorTo, BuffCount.XOffset, BuffCount.YOffset)
-        local buffFont = BuffCount.Font and LSM:Fetch("font", BuffCount.Font) or LSM:Fetch("font", General.Font)
+        local buffFont = BuffCount.Font and SafeFetchFont(BuffCount.Font) or SafeFetchFont(General.Font)
         local buffFontFlags = BuffCount.FontFlags or "OUTLINE"
         auraCount:SetFont(buffFont, BuffCount.FontSize, buffFontFlags)
         auraCount:SetJustifyH("CENTER")
@@ -98,7 +113,7 @@ local function PostCreateButton(_, button, Unit, AuraType)
     elseif AuraType == "HARMFUL" then
         auraCount:ClearAllPoints()
         auraCount:SetPoint(DebuffCount.AnchorFrom, button, DebuffCount.AnchorTo, DebuffCount.XOffset, DebuffCount.YOffset)
-        local debuffFont = DebuffCount.Font and LSM:Fetch("font", DebuffCount.Font) or LSM:Fetch("font", General.Font)
+        local debuffFont = DebuffCount.Font and SafeFetchFont(DebuffCount.Font) or SafeFetchFont(General.Font)
         local debuffFontFlags = DebuffCount.FontFlags or "OUTLINE"
         auraCount:SetFont(debuffFont, DebuffCount.FontSize, debuffFontFlags)
         auraCount:SetJustifyH("CENTER")
@@ -119,7 +134,7 @@ local function PostUpdateButton(_, button, Unit, AuraType)
     if AuraType == "HELPFUL" then
         auraCount:ClearAllPoints()
         auraCount:SetPoint(BuffCount.AnchorFrom, button, BuffCount.AnchorTo, BuffCount.XOffset, BuffCount.YOffset)
-        local buffFont = BuffCount.Font and LSM:Fetch("font", BuffCount.Font) or LSM:Fetch("font", General.Font)
+        local buffFont = BuffCount.Font and SafeFetchFont(BuffCount.Font) or SafeFetchFont(General.Font)
         local buffFontFlags = BuffCount.FontFlags or "OUTLINE"
         auraCount:SetFont(buffFont, BuffCount.FontSize, buffFontFlags)
         auraCount:SetJustifyH("CENTER")
@@ -127,7 +142,7 @@ local function PostUpdateButton(_, button, Unit, AuraType)
     elseif AuraType == "HARMFUL" then
         auraCount:ClearAllPoints()
         auraCount:SetPoint(DebuffCount.AnchorFrom, button, DebuffCount.AnchorTo, DebuffCount.XOffset, DebuffCount.YOffset)
-        local debuffFont = DebuffCount.Font and LSM:Fetch("font", DebuffCount.Font) or LSM:Fetch("font", General.Font)
+        local debuffFont = DebuffCount.Font and SafeFetchFont(DebuffCount.Font) or SafeFetchFont(General.Font)
         local debuffFontFlags = DebuffCount.FontFlags or "OUTLINE"
         auraCount:SetFont(debuffFont, DebuffCount.FontSize, debuffFontFlags)
         auraCount:SetJustifyH("CENTER")
@@ -850,8 +865,8 @@ local function CreateTextFields(self, Unit)
         self.unitHighLevelFrame:SetPoint("CENTER", 0, 0)
         self.unitHighLevelFrame:SetFrameLevel(self.unitHealthBar:GetFrameLevel() + 20)
 
-        -- Fetch font path and flag once
-        local fontPath = LSM:Fetch("font", General.Font)
+        -- Fetch font path and flag once with fallback handling
+        local fontPath = SafeFetchFont(General.Font)
         local fontFlag = General.FontFlag
 
         if not self.unitFirstText then
@@ -1459,16 +1474,20 @@ local function UpdateBuffs(FrameName)
             local filters = MilaUI.DB.profile.Unitframes.AuraFilters
             if filters and filters.Buffs then
                 -- Check duration filter
-                if filters.Buffs.DurationFilter and filters.Buffs.DurationFilter.Enabled and MilaUI.DB.global.DebugMode then
-                    print("|cffff0000[DURATION CHECK]|r Filter enabled, checking buff: " .. (data.name or "nil"))
-                    -- Debug: print buff details
-                    if data.name and data.spellId then
-                        print("|cff00ffff[DURATION]|r " .. data.name .. " dur=" .. (data.duration or "nil") .. " thresh=" .. filters.Buffs.DurationFilter.MinDuration)
+                if filters.Buffs.DurationFilter and filters.Buffs.DurationFilter.Enabled then
+                    if MilaUI.DB.global.DebugMode then
+                        print("|cffff0000[DURATION CHECK]|r Filter enabled, checking buff: " .. (data.name or "nil"))
+                        -- Debug: print buff details
+                        if data.name and data.spellId then
+                            print("|cff00ffff[DURATION]|r " .. data.name .. " dur=" .. (data.duration or "nil") .. " thresh=" .. filters.Buffs.DurationFilter.MinDuration)
+                        end
                     end
                     
                     -- Filter out buffs with duration longer than threshold
-                    if data.duration and (data.duration == 0 or data.duration > filters.Buffs.DurationFilter.MinDuration) and MilaUI.DB.global.DebugMode then
-                        print("|cffff0000[FILTERED]|r Hiding " .. data.name .. " - duration " .. data.duration .. " > " .. filters.Buffs.DurationFilter.MinDuration)
+                    if data.duration and (data.duration == 0 or data.duration > filters.Buffs.DurationFilter.MinDuration) then
+                        if MilaUI.DB.global.DebugMode then
+                            print("|cffff0000[FILTERED]|r Hiding " .. data.name .. " - duration " .. data.duration .. " > " .. filters.Buffs.DurationFilter.MinDuration)
+                        end
                         return false -- Hide buffs with duration longer than threshold
                     end
                 end
@@ -1681,8 +1700,8 @@ local function UpdateTextFields(FrameName)
         FrameName.unitHighLevelFrame:SetPoint("CENTER", 0, 0)
         FrameName.unitHighLevelFrame:SetFrameLevel(FrameName.unitHealthBar:GetFrameLevel() + 20)
 
-        -- Fetch font path and flag once
-        local fontPath = LSM:Fetch("font", General.Font)
+        -- Fetch font path and flag once with fallback handling
+        local fontPath = SafeFetchFont(General.Font)
         local fontFlag = General.FontFlag
 
         if FrameName.unitFirstText then
