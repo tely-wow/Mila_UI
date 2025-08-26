@@ -16,7 +16,7 @@ function MilaUI:DrawBuffFilterContainer(contentFrame)
         if MilaUI.DB.global.DebugMode then
             print("|cff00ff00[GUI DEBUG]|r Database exists")
         end
-        local filters = MilaUI.DB.profile.Unitframes.AuraFilters
+        local filters = MilaUI.DB.profile.AuraFilters
         if filters and filters.Buffs then
             if MilaUI.DB.global.DebugMode then
                 print("|cff00ff00[GUI DEBUG]|r Buff filters exist")
@@ -59,9 +59,9 @@ function MilaUI:DrawBuffFilterContainer(contentFrame)
     -- Duration filter enabled checkbox
     local durationEnabled = GUI:Create("CheckBox")
     durationEnabled:SetLabel("Enable Duration Filter")
-    durationEnabled:SetValue(MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.DurationFilter.Enabled)
+    durationEnabled:SetValue(MilaUI.DB.profile.AuraFilters.Buffs.DurationFilter.Enabled)
     durationEnabled:SetCallback("OnValueChanged", function(widget, event, value)
-        MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.DurationFilter.Enabled = value
+        MilaUI.DB.profile.AuraFilters.Buffs.DurationFilter.Enabled = value
         MilaUI:UpdateAllUnitFrames()
     end)
     durationEnabled:SetRelativeWidth(0.5)
@@ -70,16 +70,16 @@ function MilaUI:DrawBuffFilterContainer(contentFrame)
     -- Duration threshold input
     local durationInput = GUI:Create("EditBox")
     durationInput:SetLabel("Max Duration (seconds)")
-    durationInput:SetText(tostring(MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.DurationFilter.MinDuration))
+    durationInput:SetText(tostring(MilaUI.DB.profile.AuraFilters.Buffs.DurationFilter.MinDuration))
     durationInput:SetCallback("OnEnterPressed", function(widget, event, value)
         local duration = tonumber(value)
         if duration and duration > 0 then
-            MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.DurationFilter.MinDuration = duration
+            MilaUI.DB.profile.AuraFilters.Buffs.DurationFilter.MinDuration = duration
             MilaUI:UpdateAllUnitFrames()
             print("|cff00ff00MilaUI:|r Buff duration filter set to " .. duration .. " seconds")
         else
             print("|cffff0000MilaUI:|r Invalid duration value")
-            widget:SetText(tostring(MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.DurationFilter.MinDuration))
+            widget:SetText(tostring(MilaUI.DB.profile.AuraFilters.Buffs.DurationFilter.MinDuration))
         end
     end)
     durationInput:SetRelativeWidth(0.5)
@@ -171,9 +171,9 @@ function MilaUI:DrawDebuffFilterContainer(contentFrame)
     -- Duration filter enabled checkbox
     local durationEnabled = GUI:Create("CheckBox")
     durationEnabled:SetLabel("Enable Duration Filter")
-    durationEnabled:SetValue(MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.DurationFilter.Enabled)
+    durationEnabled:SetValue(MilaUI.DB.profile.AuraFilters.Debuffs.DurationFilter.Enabled)
     durationEnabled:SetCallback("OnValueChanged", function(widget, event, value)
-        MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.DurationFilter.Enabled = value
+        MilaUI.DB.profile.AuraFilters.Debuffs.DurationFilter.Enabled = value
         MilaUI:UpdateAllUnitFrames()
     end)
     durationEnabled:SetRelativeWidth(0.5)
@@ -182,16 +182,16 @@ function MilaUI:DrawDebuffFilterContainer(contentFrame)
     -- Duration threshold input
     local durationInput = GUI:Create("EditBox")
     durationInput:SetLabel("Max Duration (seconds)")
-    durationInput:SetText(tostring(MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.DurationFilter.MinDuration))
+    durationInput:SetText(tostring(MilaUI.DB.profile.AuraFilters.Debuffs.DurationFilter.MinDuration))
     durationInput:SetCallback("OnEnterPressed", function(widget, event, value)
         local duration = tonumber(value)
         if duration and duration > 0 then
-            MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.DurationFilter.MinDuration = duration
+            MilaUI.DB.profile.AuraFilters.Debuffs.DurationFilter.MinDuration = duration
             MilaUI:UpdateAllUnitFrames()
             print("|cff00ff00MilaUI:|r Debuff duration filter set to " .. duration .. " seconds")
         else
             print("|cffff0000MilaUI:|r Invalid duration value")
-            widget:SetText(tostring(MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.DurationFilter.MinDuration))
+            widget:SetText(tostring(MilaUI.DB.profile.AuraFilters.Debuffs.DurationFilter.MinDuration))
         end
     end)
     durationInput:SetRelativeWidth(0.5)

@@ -81,8 +81,8 @@ local function PostCreateButton(_, button, Unit, AuraType)
     local General = MilaUI.DB.profile.Unitframes.General
     local BuffCount = MilaUI.DB.profile.Unitframes[Unit].Buffs.Count
     local DebuffCount = MilaUI.DB.profile.Unitframes[Unit].Debuffs.Count
-    local BuffBlacklist = MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Blacklist
-    local BuffWhitelist = MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Whitelist
+    local BuffBlacklist = MilaUI.DB.profile.AuraFilters.Buffs.Blacklist
+    local BuffWhitelist = MilaUI.DB.profile.AuraFilters.Buffs.Whitelist
     local LSM = LibStub("LibSharedMedia-3.0")
     
     -- Icon Options
@@ -121,16 +121,25 @@ local function PostCreateButton(_, button, Unit, AuraType)
     end
 end
 
-local function PostUpdateButton(_, button, Unit, AuraType)
+local function PostUpdateButton(element, button, unit, data, position, Unit, AuraType)
     local General = MilaUI.DB.profile.Unitframes.General
     local BuffCount = MilaUI.DB.profile.Unitframes[Unit].Buffs.Count
     local DebuffCount = MilaUI.DB.profile.Unitframes[Unit].Debuffs.Count
     local LSM = LibStub("LibSharedMedia-3.0")
-    local BuffBlacklist = MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Blacklist
-    local BuffWhitelist = MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Whitelist
-    local DebuffBlacklist = MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Blacklist
-    local DebuffWhitelist = MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Whitelist
+    local BuffBlacklist = MilaUI.DB.profile.AuraFilters.Buffs.Blacklist
+    local BuffWhitelist = MilaUI.DB.profile.AuraFilters.Buffs.Whitelist
+    local DebuffBlacklist = MilaUI.DB.profile.AuraFilters.Debuffs.Blacklist
+    local DebuffWhitelist = MilaUI.DB.profile.AuraFilters.Debuffs.Whitelist
     local auraCount = button.Count
+    
+    -- Apply filter-based size if available
+    if data and data._milaSize then
+        local size = data._milaSize
+        button:SetSize(size, size)
+        if MilaUI.DB.global.DebugMode then
+            print("|cff00ffff[SIZE]|r Setting " .. (data.name or "unknown") .. " to size: " .. size)
+        end
+    end
     if AuraType == "HELPFUL" then
         auraCount:ClearAllPoints()
         auraCount:SetPoint(BuffCount.AnchorFrom, button, BuffCount.AnchorTo, BuffCount.XOffset, BuffCount.YOffset)
@@ -649,49 +658,25 @@ local function CreateBuffs(self, Unit)
         -- Custom filter function for buffs
         self.unitBuffs.FilterAura = function(element, unit, data)
             if MilaUI.DB.global.DebugMode then
-                print("|cff00ff00[DEBUG]|r Buff FilterAura called for spell: " .. (data.name or "nil"))
+                print("|cff00ff00[DEBUG]|r Buff FilterAura called for " .. Unit .. " spell: " .. (data.name or "nil"))
             end
             
-            -- Get filters from DB
-            local filters = MilaUI.DB.profile.Unitframes.AuraFilters
-            if filters and filters.Buffs then
-                -- Check duration filter FIRST
-                if filters.Buffs.DurationFilter and filters.Buffs.DurationFilter.Enabled then
-                    if MilaUI.DB.global.DebugMode then print("|cffff0000[DURATION CHECK]|r Filter enabled, checking buff: " .. (data.name or "nil")) end
-                    if data.duration then
-                        if MilaUI.DB.global.DebugMode then print("|cff00ffff[DURATION]|r " .. data.name .. " dur=" .. (data.duration or "nil") .. " thresh=" .. filters.Buffs.DurationFilter.MinDuration) end
-                        -- Hide permanent auras (duration = 0) and long-duration auras
-                        if data.duration == 0 or data.duration > filters.Buffs.DurationFilter.MinDuration then
-                            local reasonText = data.duration == 0 and "permanent (0)" or ("duration " .. data.duration .. " > " .. filters.Buffs.DurationFilter.MinDuration)
-                            if MilaUI.DB.global.DebugMode then print("|cffff0000[FILTERED]|r Hiding " .. data.name .. " - " .. reasonText) end
-                            return false -- Hide buffs with duration longer than threshold or permanent auras
-                        end
-                    end
-                end
+            -- Use new FilterEngine
+            local shouldShow, size = MilaUI:FilterAuraWithEngine(unit, Unit, "HELPFUL", data)
+            
+            -- Store size in data for PostCreateButton to use
+            if shouldShow and size then
+                data._milaSize = size
             end
             
-            -- Get blacklist and whitelist
-            local blacklist = MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Blacklist
-            local whitelist = MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Whitelist
-            
-            -- Check blacklist
-            if blacklist and blacklist[data.spellId] then
-                return false
+            if MilaUI.DB.global.DebugMode then
+                print("|cff00ff00[FILTER]|r " .. (data.name or "nil") .. " -> " .. tostring(shouldShow) .. " (size: " .. tostring(size) .. ")")
             end
             
-            -- If whitelist exists and is not empty, only show whitelisted buffs
-            if whitelist and next(whitelist) then
-                return whitelist[data.spellId] == true
-            end
-            
-            -- Default filtering based on onlyShowPlayer option
-            if element.onlyShowPlayer then
-                return data.isPlayerAura
-            end
-            
-            return true
+            return shouldShow
         end
         self.unitBuffs.PostCreateButton = function(_, button) PostCreateButton(_, button, Unit, "HELPFUL") end
+        self.unitBuffs.PostUpdateButton = function(element, button, unit, data, position) PostUpdateButton(element, button, unit, data, position, Unit, "HELPFUL") end
         
         -- Add PostUpdate to handle smart anchoring updates
         self.unitBuffs.PostUpdate = function(element, unit)
@@ -737,47 +722,26 @@ local function CreateDebuffs(self, Unit)
         self.unitDebuffs.filter = "HARMFUL"
         -- Custom filter function for debuffs
         self.unitDebuffs.FilterAura = function(element, unit, data)
-            if MilaUI.DB.global.DebugMode then print("|cffff0000[DEBUG]|r Debuff FilterAura called for spell: " .. (data.name or "nil")) end
-            -- Get filters from DB
-            local filters = MilaUI.DB.profile.Unitframes.AuraFilters
-            if filters and filters.Debuffs then
-                -- Check duration filter
-                if filters.Debuffs.DurationFilter and filters.Debuffs.DurationFilter.Enabled then
-                    -- Filter out debuffs with duration longer than threshold
-                    -- Debug: print duration values
-                    if data.spellId then
-                        local spellName = GetSpellInfo(data.spellId) or "Unknown"
-                        if MilaUI.DB.global.DebugMode then print("|cff00ffff[DEBUG]|r Debuff: " .. spellName .. " (" .. data.spellId .. ") Duration: " .. (data.duration or "nil") .. " Threshold: " .. filters.Debuffs.DurationFilter.MinDuration) end
-                    end
-                    if data.duration and (data.duration == 0 or data.duration > filters.Debuffs.DurationFilter.MinDuration) then
-                        return false -- Hide debuffs with duration longer than threshold
-                    end
-                end
-                
-                -- Check blacklist
-                if filters.Debuffs.Blacklist and filters.Debuffs.Blacklist[data.spellId] then
-                    return false
-                end
-                
-                -- If whitelist exists and is not empty, only show whitelisted debuffs
-                if filters.Debuffs.Whitelist and next(filters.Debuffs.Whitelist) then
-                    return filters.Debuffs.Whitelist[data.spellId] == true
-                end
+            if MilaUI.DB.global.DebugMode then
+                print("|cffff0000[DEBUG]|r Debuff FilterAura called for " .. Unit .. " spell: " .. (data.name or "nil"))
             end
             
-            -- Always show debuffs you can dispel
-            if data.dispelName and UnitIsUnit("player", unit) then
-                return true
+            -- Use new FilterEngine
+            local shouldShow, size = MilaUI:FilterAuraWithEngine(unit, Unit, "HARMFUL", data)
+            
+            -- Store size in data for PostCreateButton to use
+            if shouldShow and size then
+                data._milaSize = size
             end
             
-            -- Default filtering based on onlyShowPlayer option
-            if element.onlyShowPlayer then
-                return data.isPlayerAura
+            if MilaUI.DB.global.DebugMode then
+                print("|cffff0000[FILTER]|r " .. (data.name or "nil") .. " -> " .. tostring(shouldShow) .. " (size: " .. tostring(size) .. ")")
             end
             
-            return true
+            return shouldShow
         end
         self.unitDebuffs.PostCreateButton = function(_, button) PostCreateButton(_, button, Unit, "HARMFUL") end
+        self.unitDebuffs.PostUpdateButton = function(element, button, unit, data, position) PostUpdateButton(element, button, unit, data, position, Unit, "HARMFUL") end
         
         -- Add PostUpdate if needed
         self.unitDebuffs.PostUpdate = function(element, unit)
@@ -1454,65 +1418,25 @@ local function UpdateBuffs(FrameName)
         FrameName.unitBuffs.filter = "HELPFUL"
         FrameName.unitBuffs.FilterAura = function(element, unit, data)
             if MilaUI.DB.global.DebugMode then
-                print("|cff00ffff[DEBUG2]|r Buff FilterAura called for spell: " .. (data.name or "nil"))
-            end
-            if data.name and MilaUI.DB.global.DebugMode then
-                print("|cffff00ff[BUFF FILTER]|r Called for: " .. data.name)
+                print("|cff00ff00[DEBUG]|r Update Buff FilterAura called for " .. Unit .. " spell: " .. (data.name or "nil"))
             end
             
-            -- Check if we have valid data
-            if not data.name or not data.spellId then
-                return false -- Hide invalid buffs
+            -- Use new FilterEngine
+            local shouldShow, size = MilaUI:FilterAuraWithEngine(unit, Unit, "HELPFUL", data)
+            
+            -- Store size in data for PostCreateButton to use
+            if shouldShow and size then
+                data._milaSize = size
             end
             
-            -- Check if database is available
-            if not MilaUI or not MilaUI.DB or not MilaUI.DB.profile then
-                return true -- Show all if DB not available
+            if MilaUI.DB.global.DebugMode then
+                print("|cff00ff00[FILTER]|r " .. (data.name or "nil") .. " -> " .. tostring(shouldShow) .. " (size: " .. tostring(size) .. ")")
             end
             
-            -- Get filters directly from DB
-            local filters = MilaUI.DB.profile.Unitframes.AuraFilters
-            if filters and filters.Buffs then
-                -- Check duration filter
-                if filters.Buffs.DurationFilter and filters.Buffs.DurationFilter.Enabled then
-                    if MilaUI.DB.global.DebugMode then
-                        print("|cffff0000[DURATION CHECK]|r Filter enabled, checking buff: " .. (data.name or "nil"))
-                        -- Debug: print buff details
-                        if data.name and data.spellId then
-                            print("|cff00ffff[DURATION]|r " .. data.name .. " dur=" .. (data.duration or "nil") .. " thresh=" .. filters.Buffs.DurationFilter.MinDuration)
-                        end
-                    end
-                    
-                    -- Filter out buffs with duration longer than threshold
-                    if data.duration and (data.duration == 0 or data.duration > filters.Buffs.DurationFilter.MinDuration) then
-                        if MilaUI.DB.global.DebugMode then
-                            print("|cffff0000[FILTERED]|r Hiding " .. data.name .. " - duration " .. data.duration .. " > " .. filters.Buffs.DurationFilter.MinDuration)
-                        end
-                        return false -- Hide buffs with duration longer than threshold
-                    end
-                end
-                
-                -- Check blacklist
-                if filters.Buffs.Blacklist and filters.Buffs.Blacklist[data.spellId] then
-                    return false -- Hide blacklisted buffs
-                end
-                
-                -- Check whitelist if it has entries
-                if filters.Buffs.Whitelist and next(filters.Buffs.Whitelist) then
-                    -- Whitelist mode: only show whitelisted buffs
-                    return filters.Buffs.Whitelist[data.spellId] == true
-                end
-            end
-            
-            -- Respect onlyShowPlayer setting
-            if element.onlyShowPlayer then
-                return data.isPlayerAura
-            end
-            
-            return true
+            return shouldShow
         end
         FrameName.unitBuffs:Show()
-        FrameName.unitBuffs.PostUpdateButton = function(_, button) PostUpdateButton(_, button, Unit, "HELPFUL") end
+        FrameName.unitBuffs.PostUpdateButton = function(element, button, unit, data, position) PostUpdateButton(element, button, unit, data, position, Unit, "HELPFUL") end
         
         -- Add PostUpdate to handle smart anchoring updates
         FrameName.unitBuffs.PostUpdate = function(element, unit)
@@ -1564,52 +1488,25 @@ local function UpdateDebuffs(FrameName)
         -- Custom filter function for debuffs
         FrameName.unitDebuffs.FilterAura = function(element, unit, data)
             if MilaUI.DB.global.DebugMode then
-                print("|cffff00ff[DEBUG3]|r Debuff FilterAura called for spell: " .. (data.name or "nil"))
-            end
-            -- Get filters from DB
-            local filters = MilaUI.DB.profile.Unitframes.AuraFilters
-            if filters and filters.Debuffs then
-                -- Check duration filter
-                if filters.Debuffs.DurationFilter and filters.Debuffs.DurationFilter.Enabled then
-                    -- Filter out debuffs with duration longer than threshold
-                    -- Debug: print duration values
-                    if data.spellId then
-                        local spellName = GetSpellInfo(data.spellId) or "Unknown"
-                        if MilaUI.DB.global.DebugMode then
-                            print("|cff00ffff[DEBUG2]|r Debuff: " .. spellName .. " (" .. data.spellId .. ") Duration: " .. (data.duration or "nil") .. " Threshold: " .. filters.Debuffs.DurationFilter.MinDuration)
-                        end
-                        
-                    end
-                    if data.duration and (data.duration == 0 or data.duration > filters.Debuffs.DurationFilter.MinDuration) then
-                        return false -- Hide debuffs with duration longer than threshold
-                    end
-                end
-                
-                -- Check blacklist
-                if filters.Debuffs.Blacklist and filters.Debuffs.Blacklist[data.spellId] then
-                    return false
-                end
-                
-                -- If whitelist exists and is not empty, only show whitelisted debuffs
-                if filters.Debuffs.Whitelist and next(filters.Debuffs.Whitelist) then
-                    return filters.Debuffs.Whitelist[data.spellId] == true
-                end
+                print("|cffff0000[DEBUG]|r Update Debuff FilterAura called for " .. Unit .. " spell: " .. (data.name or "nil"))
             end
             
-            -- Always show debuffs you can dispel
-            if data.dispelName and UnitIsUnit("player", unit) then
-                return true
+            -- Use new FilterEngine
+            local shouldShow, size = MilaUI:FilterAuraWithEngine(unit, Unit, "HARMFUL", data)
+            
+            -- Store size in data for PostCreateButton to use
+            if shouldShow and size then
+                data._milaSize = size
             end
             
-            -- Default filtering based on onlyShowPlayer option
-            if element.onlyShowPlayer then
-                return data.isPlayerAura
+            if MilaUI.DB.global.DebugMode then
+                print("|cffff0000[FILTER]|r " .. (data.name or "nil") .. " -> " .. tostring(shouldShow) .. " (size: " .. tostring(size) .. ")")
             end
             
-            return true
+            return shouldShow
         end
         FrameName.unitDebuffs:Show()
-        FrameName.unitDebuffs.PostUpdateButton = function(_, button) PostUpdateButton(_, button, Unit, "HARMFUL") end
+        FrameName.unitDebuffs.PostUpdateButton = function(element, button, unit, data, position) PostUpdateButton(element, button, unit, data, position, Unit, "HARMFUL") end
         
         -- Add PostUpdate if needed
         FrameName.unitDebuffs.PostUpdate = function(element, unit)

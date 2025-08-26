@@ -18,7 +18,7 @@ function CursorMod:OnInitialize()
 end
 
 function CursorMod:InitializeDefaults()
-    local defaults = MilaUIAddon.Defaults.profile.CursorMod
+    local defaults = MilaUI.Defaults.CursorMod
     
     for key, value in pairs(defaults) do
         if config[key] == nil then

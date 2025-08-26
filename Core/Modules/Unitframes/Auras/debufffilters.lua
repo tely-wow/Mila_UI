@@ -7,20 +7,22 @@ function MilaUI:GetDebuffBlacklist()
         return {}
     end
     if not MilaUI.DB.profile.Unitframes then
-        MilaUI.DB.profile.Unitframes = {}
+        print("|cffff0000MilaUI Error:|r Unitframes profile not found")
+        return {}
     end
-    if not MilaUI.DB.profile.Unitframes.AuraFilters then
-        MilaUI.DB.profile.Unitframes.AuraFilters = {}
+    if not MilaUI.DB.profile.AuraFilters then
+        print("|cffff0000MilaUI Error:|r AuraFilters profile not found")
+        return {}
     end
-    if not MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs then
-        MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs = {}
+    if not MilaUI.DB.profile.AuraFilters.Debuffs then
+        MilaUI.DB.profile.AuraFilters.Debuffs = {}
     end
-    if not MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Blacklist then
-        MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Blacklist = {}
+    if not MilaUI.DB.profile.AuraFilters.Debuffs.Blacklist then
+        MilaUI.DB.profile.AuraFilters.Debuffs.Blacklist = {}
     end
     
         -- Ensure all keys are numbers
-    local blacklist = MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Blacklist
+    local blacklist = MilaUI.DB.profile.AuraFilters.Debuffs.Blacklist
     local cleanedBlacklist = {}
     for id, value in pairs(blacklist) do
         local numId = tonumber(id)
@@ -28,7 +30,7 @@ function MilaUI:GetDebuffBlacklist()
             cleanedBlacklist[numId] = true
         end
     end
-    MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Blacklist = cleanedBlacklist
+    MilaUI.DB.profile.AuraFilters.Debuffs.Blacklist = cleanedBlacklist
     
     return cleanedBlacklist
 end
@@ -39,18 +41,20 @@ function MilaUI:GetDebuffWhitelist()
         return {}
     end
     if not MilaUI.DB.profile.Unitframes then
-        MilaUI.DB.profile.Unitframes = {}
+        print("|cffff0000MilaUI Error:|r Unitframes profile not found")
+        return {}
     end
-    if not MilaUI.DB.profile.Unitframes.AuraFilters then
-        MilaUI.DB.profile.Unitframes.AuraFilters = {}
+    if not MilaUI.DB.profile.AuraFilters then
+        print("|cffff0000MilaUI Error:|r AuraFilters profile not found")
+        return {}
     end
-    if not MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs then
-        MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs = {}
+    if not MilaUI.DB.profile.AuraFilters.Debuffs then
+        MilaUI.DB.profile.AuraFilters.Debuffs = {}
     end
-    if not MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Whitelist then
-        MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Whitelist = {}
+    if not MilaUI.DB.profile.AuraFilters.Debuffs.Whitelist then
+        MilaUI.DB.profile.AuraFilters.Debuffs.Whitelist = {}
     end
-    return MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Whitelist
+    return MilaUI.DB.profile.AuraFilters.Debuffs.Whitelist
 end
 
 -- Add spell to debuff blacklist
@@ -73,21 +77,21 @@ function MilaUI:AddToDebuffBlacklist(spellID)
         print("|cffff0000MilaUI Error:|r Unitframes profile not found")
         return
     end
-    if not MilaUI.DB.profile.Unitframes.AuraFilters then
+    if not MilaUI.DB.profile.AuraFilters then
         print("|cffff0000MilaUI Error:|r AuraFilters profile not found")
         return
     end
-    if not MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs then
+    if not MilaUI.DB.profile.AuraFilters.Debuffs then
         print("|cffff0000MilaUI Error:|r Debuffs profile not found")
         return
     end
-    if not MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Blacklist then
+    if not MilaUI.DB.profile.AuraFilters.Debuffs.Blacklist then
         print("|cffff0000MilaUI Error:|r Debuffs Blacklist profile not found")
         return
     end
     
     -- Store with number key
-    MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Blacklist[spellID] = true
+    MilaUI.DB.profile.AuraFilters.Debuffs.Blacklist[spellID] = true
     
     -- Force unit frame update
     MilaUI:UpdateAllUnitFrames()
@@ -98,7 +102,7 @@ function MilaUI:RemoveFromDebuffBlacklist(spellID)
     spellID = tonumber(spellID)
     if not spellID then return end
     
-    MilaUI.DB.profile.Unitframes.AuraFilters.Debuffs.Blacklist[spellID] = nil
+    MilaUI.DB.profile.AuraFilters.Debuffs.Blacklist[spellID] = nil
     MilaUI:UpdateAllUnitFrames()
 end
 

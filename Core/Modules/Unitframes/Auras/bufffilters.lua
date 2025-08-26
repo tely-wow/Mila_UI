@@ -11,21 +11,21 @@ function MilaUI:GetBuffBlacklist()
         print("|cffff0000MilaUI Error:|r Unitframes profile not found")
         return {}
     end
-    if not MilaUI.DB.profile.Unitframes.AuraFilters then
+    if not MilaUI.DB.profile.AuraFilters then
         print("|cffff0000MilaUI Error:|r AuraFilters profile not found")
         return {}
     end
-    if not MilaUI.DB.profile.Unitframes.AuraFilters.Buffs then
+    if not MilaUI.DB.profile.AuraFilters.Buffs then
         print("|cffff0000MilaUI Error:|r Buffs profile not found")
         return {}
     end
-    if not MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Blacklist then
+    if not MilaUI.DB.profile.AuraFilters.Buffs.Blacklist then
         print("|cffff0000MilaUI Error:|r Buffs Blacklist profile not found")
         return {}
     end
     
     -- Ensure all keys are numbers
-    local blacklist = MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Blacklist
+    local blacklist = MilaUI.DB.profile.AuraFilters.Buffs.Blacklist
     local cleanedBlacklist = {}
     for id, value in pairs(blacklist) do
         local numId = tonumber(id)
@@ -33,7 +33,7 @@ function MilaUI:GetBuffBlacklist()
             cleanedBlacklist[numId] = true
         end
     end
-    MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Blacklist = cleanedBlacklist
+    MilaUI.DB.profile.AuraFilters.Buffs.Blacklist = cleanedBlacklist
     
     return cleanedBlacklist
 end
@@ -48,19 +48,19 @@ function MilaUI:GetBuffWhitelist()
         print("|cffff0000MilaUI Error:|r Unitframes profile not found")
         return {}
     end
-    if not MilaUI.DB.profile.Unitframes.AuraFilters then
+    if not MilaUI.DB.profile.AuraFilters then
         print("|cffff0000MilaUI Error:|r AuraFilters profile not found")
         return {}
     end
-    if not MilaUI.DB.profile.Unitframes.AuraFilters.Buffs then
+    if not MilaUI.DB.profile.AuraFilters.Buffs then
         print("|cffff0000MilaUI Error:|r Buffs profile not found")
         return {}
     end
-    if not MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Whitelist then
+    if not MilaUI.DB.profile.AuraFilters.Buffs.Whitelist then
         print("|cffff0000MilaUI Error:|r Buffs Whitelist profile not found")
         return {}
     end
-    return MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Whitelist
+    return MilaUI.DB.profile.AuraFilters.Buffs.Whitelist
 end
 
 -- Add spell to buff blacklist
@@ -83,21 +83,21 @@ function MilaUI:AddToBuffBlacklist(spellID)
         print("|cffff0000MilaUI Error:|r Unitframes profile not found")
         return
     end
-    if not MilaUI.DB.profile.Unitframes.AuraFilters then
+    if not MilaUI.DB.profile.AuraFilters then
         print("|cffff0000MilaUI Error:|r AuraFilters profile not found")
         return
     end
-    if not MilaUI.DB.profile.Unitframes.AuraFilters.Buffs then
+    if not MilaUI.DB.profile.AuraFilters.Buffs then
         print("|cffff0000MilaUI Error:|r Buffs profile not found")
         return
     end
-    if not MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Blacklist then
+    if not MilaUI.DB.profile.AuraFilters.Buffs.Blacklist then
         print("|cffff0000MilaUI Error:|r Buffs Blacklist profile not found")
         return
     end
     
     -- Store with number key
-    MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Blacklist[spellID] = true
+    MilaUI.DB.profile.AuraFilters.Buffs.Blacklist[spellID] = true
     
     -- Force unit frame update
     MilaUI:UpdateAllUnitFrames()
@@ -108,7 +108,7 @@ function MilaUI:RemoveFromBuffBlacklist(spellID)
     spellID = tonumber(spellID)
     if not spellID then return end
     
-    MilaUI.DB.profile.Unitframes.AuraFilters.Buffs.Blacklist[spellID] = nil
+    MilaUI.DB.profile.AuraFilters.Buffs.Blacklist[spellID] = nil
     MilaUI:UpdateAllUnitFrames()
 end
 

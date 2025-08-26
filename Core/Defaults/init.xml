@@ -1,0 +1,6 @@
+<Ui xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+	<Script file="Core.lua"/>
+	<Script file="Unitframes.lua"/>
+	<Script file="Castbars.lua"/>
+	<Script file="AuraFilters.lua"/>
+</Ui>

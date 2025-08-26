@@ -11,7 +11,7 @@ local unitSettingsContainer = nil
 
 function MilaUI:DrawUnitframesGeneralTab(parent)
     parent:ReleaseChildren()
-    local General = MilaUI.DB.profile.UnitframesGeneral or MilaUI.DB.profile.Unitframes.General -- fallback if not split
+    local General = MilaUI.DB.profile.Unitframes.General
     local LSM = LibStub:GetLibrary("LibSharedMedia-3.0")
     local LSMTextures = LSM and LSM:HashTable(LSM.MediaType.STATUSBAR) or {}
     local white = MilaUI.DB.global.Colors.white

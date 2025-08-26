@@ -431,10 +431,18 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
         { text = "Castbar", value = "Castbar" },
         { text = "Buffs", value = "Buffs" },
         { text = "Debuffs", value = "Debuffs" },
-        { text = "Aura Filters", value = "AuraFilters" },
-        { text = "Indicators", value = "Indicators" },
-        { text = "Text", value = "Text" },
     }
+    
+    -- Only add Aura Filters tab for units that support it
+    if dbUnitName == "Player" or dbUnitName == "Target" or 
+       dbUnitName == "Focus" or dbUnitName == "Pet" or 
+       dbUnitName == "Boss" then
+        table.insert(tabNames, { text = "Aura Filters", value = "AuraFilters" })
+    end
+    
+    -- Continue with other tabs
+    table.insert(tabNames, { text = "Indicators", value = "Indicators" })
+    table.insert(tabNames, { text = "Text", value = "Text" })
     
     -- Check if this unit has a clean castbar defined in the database
     local unitKey = dbUnitName:lower()
@@ -1011,7 +1019,17 @@ function MilaUI:DrawUnitContainer(container, unitName, tabKey)
         elseif tabKey == "Debuffs" then
             MilaUI:DrawDebuffsContainer(dbUnitName, contentFrame)
         elseif tabKey == "AuraFilters" then
-            MilaUI:DrawAuraBlacklistContainer(contentFrame)
+            -- Only show filter UI for units that support filters
+            if dbUnitName == "Player" or dbUnitName == "Target" or 
+               dbUnitName == "Focus" or dbUnitName == "Pet" or 
+               dbUnitName == "Boss" then
+                MilaUI:DrawAuraFiltersTab(contentFrame, dbUnitName)
+            else
+                local label = GUI:Create("Label")
+                label:SetText("|cff888888Aura filters are not available for " .. dbUnitName .. "|r")
+                label:SetFullWidth(true)
+                contentFrame:AddChild(label)
+            end
         elseif tabKey == "Indicators" then
             MilaUI:DrawIndicatorContainer(dbUnitName, contentFrame)
         elseif tabKey == "Text" then
