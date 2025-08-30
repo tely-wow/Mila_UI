@@ -4,6 +4,21 @@ local _, MilaUI = ...
 local FilterEngine = {}
 MilaUI.FilterEngine = FilterEngine
 
+-- Cache for sorted rules (key: "unitType_auraType")
+local ruleCache = {}
+local cacheHits = 0
+local cacheMisses = 0
+
+-- Stats for aura unchanged detection
+local auraUnchangedHits = 0
+local auraChangedMisses = 0
+
+-- Cache for boss unit checks (cleared each frame)
+local bossUnitCache = {}
+local bossUnitCacheFrame = 0
+
+-- Aura unchanged detection will be done on buttons directly, no global cache needed
+
 -- Cache for player's class and spec abilities
 local playerClass = select(2, UnitClass("player"))
 local canDispelMagic = false
@@ -49,12 +64,114 @@ local function UpdateDispelCapabilities()
     end
 end
 
--- Initialize on PLAYER_LOGIN
+-- Cache management functions
+function FilterEngine:InvalidateCache(unitType, auraType)
+    if unitType and auraType then
+        local key = unitType .. "_" .. auraType
+        ruleCache[key] = nil
+        if MilaUI.DB.global.DebugMode then
+            print("|cffFFFF00[FilterEngine]|r Cache invalidated for", key)
+        end
+    else
+        -- Invalidate all caches
+        wipe(ruleCache)
+        if MilaUI.DB.global.DebugMode then
+            print("|cffFFFF00[FilterEngine]|r All caches invalidated")
+        end
+    end
+end
+
+function FilterEngine:GetCachedRules(unitType, auraType)
+    local key = unitType .. "_" .. auraType
+    
+    -- Check if we have cached rules
+    if ruleCache[key] then
+        cacheHits = cacheHits + 1
+        return ruleCache[key]
+    end
+    
+    cacheMisses = cacheMisses + 1
+    
+    -- Get the unit's filter configuration
+    local filters = MilaUI.DB.profile.AuraFilters
+    if not filters or not filters.UnitFilters then 
+        return nil
+    end
+    
+    local unitConfig = filters.UnitFilters[unitType]
+    if not unitConfig then
+        return nil
+    end
+    
+    -- Get buff or debuff filter config
+    local filterConfig = nil
+    if auraType == "HELPFUL" then
+        filterConfig = unitConfig.Buffs
+    elseif auraType == "HARMFUL" then
+        filterConfig = unitConfig.Debuffs
+    end
+    
+    if not filterConfig or not filterConfig.enabled or not filterConfig.rules then
+        return nil
+    end
+    
+    -- Sort rules by order and cache them
+    local sortedRules = {}
+    for _, rule in ipairs(filterConfig.rules) do
+        if rule.enabled and not rule.deleted then
+            table.insert(sortedRules, rule)
+        end
+    end
+    table.sort(sortedRules, function(a, b) return (a.order or 999) < (b.order or 999) end)
+    
+    -- Cache the sorted rules
+    ruleCache[key] = sortedRules
+    
+    if MilaUI.DB.global.DebugMode then
+        print("|cff00FF00[FilterEngine]|r Cached", #sortedRules, "rules for", key)
+    end
+    
+    return sortedRules
+end
+
+function FilterEngine:CacheAllRules()
+    -- Pre-cache all unit/aura type combinations
+    local unitTypes = {"Player", "Target", "Boss", "Focus", "Pet"}
+    local auraTypes = {"HELPFUL", "HARMFUL"}
+    
+    for _, unitType in ipairs(unitTypes) do
+        for _, auraType in ipairs(auraTypes) do
+            self:GetCachedRules(unitType, auraType)
+        end
+    end
+    
+    if MilaUI.DB.global.DebugMode then
+        print("|cff00FF00[FilterEngine]|r Pre-cached all filter rules")
+    end
+end
+
+function FilterEngine:GetCacheStats()
+    local hitRate = 0
+    if (cacheHits + cacheMisses) > 0 then
+        hitRate = (cacheHits / (cacheHits + cacheMisses)) * 100
+    end
+    return cacheHits, cacheMisses, hitRate
+end
+
+-- Initialize on PLAYER_ENTERING_WORLD
 local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("PLAYER_LOGIN")
+eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 eventFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 eventFrame:SetScript("OnEvent", function(self, event)
     UpdateDispelCapabilities()
+    if event == "PLAYER_ENTERING_WORLD" then
+        -- Cache all rules when entering world
+        C_Timer.After(0.5, function()
+            FilterEngine:CacheAllRules()
+        end)
+        
+        -- No cleanup needed - buttons are recycled by oUF automatically
+    end
 end)
 
 -- Rule evaluation functions
@@ -83,22 +200,44 @@ RuleEvaluators.duration = function(data, params)
     return true
 end
 
--- Blacklist filter
-RuleEvaluators.blacklist = function(data, params)
-    if not params.spellIds then return true end
-    
-    -- Check if spell is in blacklist
-    return not params.spellIds[data.spellId]
-end
-
--- Whitelist filter
-RuleEvaluators.whitelist = function(data, params)
+-- Spell List filter
+RuleEvaluators.spellList = function(data, params)
     if not params.spellIds or not next(params.spellIds) then 
-        return true -- If no whitelist, allow all
+        return false -- No spells in list, don't match
     end
     
-    -- Check if spell is in whitelist
+    -- Check if spell is in the list
     return params.spellIds[data.spellId] == true
+end
+
+-- Helper function to check if unit is a boss (with caching)
+local function IsBossUnit(unit)
+    if not unit then return false end
+    
+    -- Check cache validity (new frame = clear cache)
+    local currentFrame = GetTime()
+    if currentFrame ~= bossUnitCacheFrame then
+        wipe(bossUnitCache)
+        bossUnitCacheFrame = currentFrame
+    end
+    
+    -- Check cache
+    if bossUnitCache[unit] ~= nil then
+        return bossUnitCache[unit]
+    end
+    
+    -- Check if unit is a boss
+    local isBoss = false
+    for i = 1, 8 do
+        if UnitExists("boss" .. i) and UnitIsUnit(unit, "boss" .. i) then
+            isBoss = true
+            break
+        end
+    end
+    
+    -- Cache the result
+    bossUnitCache[unit] = isBoss
+    return isBoss
 end
 
 -- Caster filter
@@ -106,8 +245,16 @@ RuleEvaluators.caster = function(data, params)
     local sourceUnit = data.sourceUnit
     if not sourceUnit then return params.others end
     
+    -- Cache unit comparisons for efficiency
+    local isPlayer = UnitIsUnit(sourceUnit, "player")
+    
     -- Check player
-    if params.player and UnitIsUnit(sourceUnit, "player") then
+    if params.player and isPlayer then
+        return true
+    end
+    
+    -- Early exit for others if not player and no boss check needed
+    if params.others and not isPlayer and not params.boss then
         return true
     end
     
@@ -121,26 +268,14 @@ RuleEvaluators.caster = function(data, params)
         return true
     end
     
-    -- Check boss
-    if params.boss then
-        for i = 1, 8 do
-            if UnitIsUnit(sourceUnit, "boss" .. i) then
-                return true
-            end
-        end
+    -- Check boss (using cached function)
+    if params.boss and IsBossUnit(sourceUnit) then
+        return true
     end
     
-    -- Check others (anyone else)
-    if params.others and not UnitIsUnit(sourceUnit, "player") and not UnitIsUnit(sourceUnit, "pet") and not UnitIsUnit(sourceUnit, "vehicle") then
-        -- Also check it's not a boss
-        local isBoss = false
-        for i = 1, 8 do
-            if UnitIsUnit(sourceUnit, "boss" .. i) then
-                isBoss = true
-                break
-            end
-        end
-        if not isBoss then
+    -- Check others (anyone else who isn't a boss)
+    if params.others and not isPlayer and not UnitIsUnit(sourceUnit, "pet") and not UnitIsUnit(sourceUnit, "vehicle") then
+        if not IsBossUnit(sourceUnit) then
             return true
         end
     end
@@ -191,16 +326,10 @@ end
 
 -- Boss auras filter
 RuleEvaluators.boss = function(data, params)
-    if not data.sourceUnit then return false end
+    if not data.sourceUnit then return data.isBossAura or false end
     
-    -- Check if source is a boss unit
-    for i = 1, 8 do
-        if UnitIsUnit(data.sourceUnit, "boss" .. i) then
-            return true
-        end
-    end
-    
-    return data.isBossAura or false
+    -- Use cached boss check
+    return IsBossUnit(data.sourceUnit) or data.isBossAura or false
 end
 
 -- No duration (permanent) filter
@@ -213,58 +342,67 @@ RuleEvaluators.any = function(data, params)
     return true -- Always matches - use for cleanup rules
 end
 
--- Main filter function
+-- Check if aura has changed (button-based like ElvUI)
+function FilterEngine:AuraUnchanged(button, data)
+    -- Check if button has cached aura info
+    if not button.milaAuraInfo then
+        button.milaAuraInfo = {}
+    end
+    
+    local cached = button.milaAuraInfo
+    
+    -- Check if aura data has changed (only stable properties like ElvUI)
+    if cached.name == data.name and 
+       cached.icon == data.icon and 
+       cached.count == data.applications and
+       cached.duration == data.duration and
+       cached.dispelName == data.dispelName then
+        -- Aura unchanged, return cached result
+        auraUnchangedHits = auraUnchangedHits + 1
+        return true, cached.result, cached.size
+    end
+    
+    -- Aura changed or new, will need to process
+    auraChangedMisses = auraChangedMisses + 1
+    return false
+end
+
+-- Store aura result on button (button-based like ElvUI)
+function FilterEngine:CacheAuraResult(button, data, result, size)
+    if not button.milaAuraInfo then
+        button.milaAuraInfo = {}
+    end
+    
+    button.milaAuraInfo.name = data.name
+    button.milaAuraInfo.icon = data.icon
+    button.milaAuraInfo.count = data.applications
+    button.milaAuraInfo.duration = data.duration
+    button.milaAuraInfo.dispelName = data.dispelName
+    button.milaAuraInfo.result = result
+    button.milaAuraInfo.size = size
+end
+
+-- Main filter function (optimized with rule caching)
 function FilterEngine:ProcessAura(unit, unitType, auraType, data)
-    -- Get the unit's filter configuration
-    local filters = MilaUI.DB.profile.AuraFilters
-    if not filters or not filters.UnitFilters then 
-        return true, 32 -- Allow if no filters configured, default size
+    -- Get cached sorted rules
+    local sortedRules = self:GetCachedRules(unitType, auraType)
+    
+    -- If no rules or disabled, allow by default
+    if not sortedRules then
+        return true, 32
     end
     
-    local unitConfig = filters.UnitFilters[unitType]
-    if not unitConfig then
-        return true, 32 -- Allow if unit not configured, default size
-    end
-    
-    -- Get buff or debuff filter config
-    local filterConfig = nil
-    if auraType == "HELPFUL" then
-        filterConfig = unitConfig.Buffs
-    elseif auraType == "HARMFUL" then
-        filterConfig = unitConfig.Debuffs
-    end
-    
-    if not filterConfig or not filterConfig.enabled then
-        return true, 32 -- Allow if filter not enabled, default size
-    end
-    
-    -- Process rules in order
-    if filterConfig.rules then
-        -- Sort rules by order
-        local sortedRules = {}
-        for _, rule in ipairs(filterConfig.rules) do
-            table.insert(sortedRules, rule)
-        end
-        table.sort(sortedRules, function(a, b) return (a.order or 999) < (b.order or 999) end)
-        
-        -- Evaluate each rule
-        for _, rule in ipairs(sortedRules) do
-            if rule.enabled and not rule.deleted then
-                local evaluator = RuleEvaluators[rule.type]
-                if evaluator then
-                    local result = evaluator(data, rule.params or {})
-                    
-                    -- Apply action based on rule result
-                    if rule.action == "allow" then
-                        if result then
-                            return true, rule.size or 32 -- Allow and stop processing with rule size
-                        end
-                    elseif rule.action == "deny" then
-                        if result then
-                            return false, rule.size or 32 -- Deny and stop processing
-                        end
-                    end
-                end
+    -- Process rules with early exit on first match
+    for _, rule in ipairs(sortedRules) do
+        local evaluator = RuleEvaluators[rule.type]
+        if evaluator then
+            local result = evaluator(data, rule.params or {})
+            
+            -- Early exit on first matching rule
+            if rule.action == "allow" and result then
+                return true, rule.size or 32
+            elseif rule.action == "deny" and result then
+                return false, rule.size or 32
             end
         end
     end
@@ -273,55 +411,119 @@ function FilterEngine:ProcessAura(unit, unitType, auraType, data)
     return true, 32
 end
 
--- Helper function to migrate legacy blacklist/whitelist
-function FilterEngine:MigrateLegacyFilters()
-    local filters = MilaUI.DB.profile.AuraFilters
-    if not filters then return end
-    
-    -- Migrate buff blacklist
-    if filters.Buffs and filters.Buffs.Blacklist and next(filters.Buffs.Blacklist) then
-        for unitType, unitConfig in pairs(filters.UnitFilters or {}) do
-            if unitConfig.Buffs and unitConfig.Buffs.rules then
-                for _, rule in ipairs(unitConfig.Buffs.rules) do
-                    if rule.type == "blacklist" then
-                        rule.params = rule.params or {}
-                        rule.params.spellIds = rule.params.spellIds or {}
-                        -- Merge legacy blacklist
-                        for spellId, _ in pairs(filters.Buffs.Blacklist) do
-                            rule.params.spellIds[spellId] = true
-                        end
-                    end
-                end
-            end
-        end
+-- Enhanced filter function with button-based unchanged detection
+function FilterEngine:FilterAuraWithButton(element, button, unit, unitType, auraType, data)
+    -- Check if aura is unchanged (ElvUI style)
+    local unchanged, cachedResult, cachedSize = self:AuraUnchanged(button, data)
+    if unchanged then
+        return cachedResult, cachedSize
     end
     
-    -- Migrate debuff blacklist
-    if filters.Debuffs and filters.Debuffs.Blacklist and next(filters.Debuffs.Blacklist) then
-        for unitType, unitConfig in pairs(filters.UnitFilters or {}) do
-            if unitConfig.Debuffs and unitConfig.Debuffs.rules then
-                for _, rule in ipairs(unitConfig.Debuffs.rules) do
-                    if rule.type == "blacklist" then
-                        rule.params = rule.params or {}
-                        rule.params.spellIds = rule.params.spellIds or {}
-                        -- Merge legacy blacklist
-                        for spellId, _ in pairs(filters.Debuffs.Blacklist) do
-                            rule.params.spellIds[spellId] = true
-                        end
-                    end
-                end
-            end
-        end
-    end
+    -- Process aura with rules
+    local result, size = self:ProcessAura(unit, unitType, auraType, data)
+    
+    -- Cache result on button
+    self:CacheAuraResult(button, data, result, size)
+    
+    return result, size
 end
 
--- Export the filter function for use in FilterAura callbacks
+-- Global cache for FilterAura when we don't have buttons yet
+local tempAuraCache = {}
+
+-- Temporary unchanged detection for FilterAura (until button is available)
+function FilterEngine:TempAuraUnchanged(unit, data)
+    local key = unit .. "_" .. data.spellId .. "_" .. (data.auraInstanceID or 0)
+    local cached = tempAuraCache[key]
+    
+    if cached and 
+       cached.name == data.name and 
+       cached.icon == data.icon and 
+       cached.count == data.applications and
+       cached.duration == data.duration and
+       cached.dispelName == data.dispelName then
+        auraUnchangedHits = auraUnchangedHits + 1
+        return true, cached.result, cached.size
+    end
+    
+    auraChangedMisses = auraChangedMisses + 1
+    return false
+end
+
+-- Store temp cache result
+function FilterEngine:CacheTempResult(unit, data, result, size)
+    local key = unit .. "_" .. data.spellId .. "_" .. (data.auraInstanceID or 0)
+    tempAuraCache[key] = {
+        name = data.name,
+        icon = data.icon,
+        count = data.applications,
+        duration = data.duration,
+        dispelName = data.dispelName,
+        result = result,
+        size = size
+    }
+end
+
+
+-- Export the filter function for use in FilterAura callbacks (with temp caching)
 function MilaUI:FilterAuraWithEngine(unit, unitType, auraType, data)
+    -- Check temporary cache first
+    local unchanged, cachedResult, cachedSize = FilterEngine:TempAuraUnchanged(unit, data)
+    if unchanged then
+        return cachedResult, cachedSize
+    end
+    
+    -- Process aura with rules
     local shouldShow, size = FilterEngine:ProcessAura(unit, unitType, auraType, data)
+    
+    -- Cache result temporarily
+    FilterEngine:CacheTempResult(unit, data, shouldShow, size)
+    
     return shouldShow, size
 end
 
--- Initialize migration on load
-C_Timer.After(1, function()
-    FilterEngine:MigrateLegacyFilters()
-end)
+
+-- Add slash command for cache stats (debug)
+SLASH_MILAUI_FILTER_CACHE1 = "/muicache"
+SlashCmdList["MILAUI_FILTER_CACHE"] = function()
+    local hits, misses, rate = FilterEngine:GetCacheStats()
+    print("|cffFFD700[MilaUI Filter Cache Stats]|r")
+    print(string.format("  Rule Cache Hits: |cff00FF00%d|r", hits))
+    print(string.format("  Rule Cache Misses: |cffFF0000%d|r", misses))
+    print(string.format("  Rule Hit Rate: |cffFFFF00%.1f%%|r", rate))
+    
+    -- Count cached rule entries
+    local ruleCacheCount = 0
+    for _ in pairs(ruleCache) do
+        ruleCacheCount = ruleCacheCount + 1
+    end
+    print(string.format("  Rule Cache Entries: |cff00FFFF%d|r", ruleCacheCount))
+    
+    -- Aura unchanged stats
+    local auraTotal = auraUnchangedHits + auraChangedMisses
+    local auraRate = 0
+    if auraTotal > 0 then
+        auraRate = (auraUnchangedHits / auraTotal) * 100
+    end
+    print(string.format("  Aura Unchanged Hits: |cff00FF00%d|r", auraUnchangedHits))
+    print(string.format("  Aura Changed Misses: |cffFF0000%d|r", auraChangedMisses))
+    print(string.format("  Aura Unchanged Rate: |cffFFFF00%.1f%%|r", auraRate))
+    
+    -- Count temp cache entries
+    local tempCacheCount = 0
+    for _ in pairs(tempAuraCache) do
+        tempCacheCount = tempCacheCount + 1
+    end
+    print(string.format("  Temp Aura Cache: |cff00FFFF%d|r entries", tempCacheCount))
+    print("|cffFFD700Button cache used in PostUpdateButton (ElvUI style)|r")
+    
+    -- Show cached rule counts
+    if MilaUI.DB.global.DebugMode then
+        print("|cffFFD700Rule Details:|r")
+        for key, rules in pairs(ruleCache) do
+            if rules then
+                print(string.format("  %s: %d rules", key, #rules))
+            end
+        end
+    end
+end

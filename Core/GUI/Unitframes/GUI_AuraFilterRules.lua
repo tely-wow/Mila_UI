@@ -2,12 +2,9 @@ local _, MilaUI = ...
 local GUI = LibStub("AceGUI-3.0")
 local LSM = LibStub:GetLibrary("LibSharedMedia-3.0") or LibStub("LibSharedMedia-3.0")
 
--- Helper function to create consistent labels with explicit font reset
+-- Helper function to create consistent labels using proper AceGUI APIs
 local function CreateLabel(text, width)
     local label = GUI:Create("Label")
-    
-    -- Explicitly reset any inherited properties
-    label:SetText("")
     label:SetText(text or "")
     
     if width then
@@ -18,14 +15,6 @@ local function CreateLabel(text, width)
         end
     else
         label:SetFullWidth(true)
-    end
-    
-    -- Force font consistency by accessing the underlying fontstring if available
-    if label.label and label.label.SetFont then
-        local font, size, flags = label.label:GetFont()
-        if font then
-            label.label:SetFont(font, 12, flags or "")
-        end
     end
     
     return label
@@ -92,6 +81,8 @@ function MilaUI:DrawAuraFiltersTab(container, unitName)
         
         -- Draw the filter configuration for this aura type
         MilaUI:DrawFilterConfig(scrollFrame, unitName, auraType, filterConfig)
+        
+        -- Layout handled automatically
     end)
     
     container:AddChild(tabGroup)
@@ -114,27 +105,6 @@ function MilaUI:DrawFilterConfig(container, unitName, auraType, filterConfig)
     end)
     container:AddChild(enableCheck)
     
-    -- Default action dropdown
-    local defaultActionGroup = GUI:Create("SimpleGroup")
-    defaultActionGroup:SetLayout("Flow")
-    defaultActionGroup:SetFullWidth(true)
-    container:AddChild(defaultActionGroup)
-    
-    local defaultActionLabel = CreateLabel(lavender .. "Default Action (if no rules match):", 0.5)
-    defaultActionGroup:AddChild(defaultActionLabel)
-    
-    local defaultActionDropdown = GUI:Create("Dropdown")
-    defaultActionDropdown:SetList({
-        ["allow"] = "Allow (Show)",
-        ["deny"] = "Deny (Hide)"
-    })
-    defaultActionDropdown:SetValue(filterConfig.defaultAction or "allow")
-    defaultActionDropdown:SetRelativeWidth(0.5)
-    defaultActionDropdown:SetCallback("OnValueChanged", function(widget, event, value)
-        filterConfig.defaultAction = value
-        MilaUI:UpdateFrames()
-    end)
-    defaultActionGroup:AddChild(defaultActionDropdown)
     
     -- Rules section header
     MilaUI:CreateLargeHeading("Filter Rules (Priority Order)", container, 14)
@@ -155,6 +125,8 @@ function MilaUI:DrawFilterConfig(container, unitName, auraType, filterConfig)
         MilaUI:ShowAddRuleDialog(unitName, auraType, filterConfig)
     end)
     container:AddChild(addRuleButton)
+    
+    -- Layout handled automatically
 end
 
 -- Draw the list of rules
@@ -217,6 +189,10 @@ function MilaUI:DrawRulesList(container, unitName, auraType, filterConfig)
                         break
                     end
                 end
+                -- Invalidate cache for this specific unit/aura type
+                if MilaUI.FilterEngine then
+                    MilaUI.FilterEngine:InvalidateCache(unitName, auraType)
+                end
                 MilaUI:UpdateFrames()
                 -- Just redraw the rules list since we clear children in DrawRulesList now
                 MilaUI:DrawRulesList(container, unitName, auraType, filterConfig)
@@ -238,6 +214,10 @@ function MilaUI:DrawRulesList(container, unitName, auraType, filterConfig)
                         break
                     end
                 end
+                -- Invalidate cache for this specific unit/aura type
+                if MilaUI.FilterEngine then
+                    MilaUI.FilterEngine:InvalidateCache(unitName, auraType)
+                end
                 MilaUI:UpdateFrames()
                 -- Just redraw the rules list since we clear children in DrawRulesList now
                 MilaUI:DrawRulesList(container, unitName, auraType, filterConfig)
@@ -252,6 +232,10 @@ function MilaUI:DrawRulesList(container, unitName, auraType, filterConfig)
         enableCheck:SetRelativeWidth(0.15) -- Increased for full word
         enableCheck:SetCallback("OnValueChanged", function(widget, event, value)
             rule.enabled = value
+            -- Invalidate cache for this specific unit/aura type
+            if MilaUI.FilterEngine then
+                MilaUI.FilterEngine:InvalidateCache(unitName, auraType)
+            end
             MilaUI:UpdateFrames()
         end)
         ruleGroup:AddChild(enableCheck)
@@ -289,6 +273,10 @@ function MilaUI:DrawRulesList(container, unitName, auraType, filterConfig)
                 print("|cffff0000[FILTER DELETE]|r Marked rule '" .. (rule.name or "unnamed") .. "' as deleted")
             end
             
+            -- Invalidate cache for this specific unit/aura type
+            if MilaUI.FilterEngine then
+                MilaUI.FilterEngine:InvalidateCache(unitName, auraType)
+            end
             MilaUI:UpdateFrames()
             -- Just redraw the rules list since we clear children in DrawRulesList now
             MilaUI:DrawRulesList(container, unitName, auraType, filterConfig)
@@ -297,6 +285,8 @@ function MilaUI:DrawRulesList(container, unitName, auraType, filterConfig)
         
         end -- End of if not rule.deleted
     end
+    
+    -- Layout handled automatically
 end
 
 -- Show dialog to add a new rule
@@ -320,7 +310,7 @@ function MilaUI:ShowAddRuleDialog(unitName, auraType, filterConfig)
     
     local ruleTypes = MilaUI.DB.profile.AuraFilters.RuleTypes
     local typeList = {}
-    local typeOrder = {"duration", "blacklist", "whitelist", "caster", "dispellable", "stealable", "personal", "boss", "noDuration", "any"}
+    local typeOrder = {"duration", "spellList", "caster", "dispellable", "stealable", "any"}
     
     for _, typeName in ipairs(typeOrder) do
         local typeInfo = ruleTypes[typeName]
@@ -377,6 +367,7 @@ function MilaUI:ShowAddRuleDialog(unitName, auraType, filterConfig)
         if value then
             nameInput:SetText(ruleTypes[value].name or value)
             MilaUI:DrawRuleParameters(paramsGroup, value, {})
+            -- Layout handled automatically
         end
     end)
     
@@ -434,6 +425,10 @@ function MilaUI:ShowAddRuleDialog(unitName, auraType, filterConfig)
             print("|cff00ff00[FILTER SAVE]|r Added rule '" .. newRule.name .. "' to " .. unitName .. " " .. auraType .. ". Total rules: " .. #filterConfig.rules)
         end
         
+        -- Invalidate cache for this specific unit/aura type
+        if MilaUI.FilterEngine then
+            MilaUI.FilterEngine:InvalidateCache(unitName, auraType)
+        end
         MilaUI:UpdateFrames()
         frame:Release()
     end)
@@ -512,6 +507,8 @@ function MilaUI:ShowEditRuleDialog(unitName, auraType, filterConfig, ruleIndex, 
     paramsWithSize.size = rule.size
     MilaUI:DrawRuleParameters(paramsGroup, rule.type, paramsWithSize)
     
+    -- Layout handled automatically
+    
     -- Buttons
     local buttonGroup = GUI:Create("SimpleGroup")
     buttonGroup:SetLayout("Flow")
@@ -541,6 +538,10 @@ function MilaUI:ShowEditRuleDialog(unitName, auraType, filterConfig, ruleIndex, 
             print("|cff00ffff[FILTER EDIT]|r Updated rule '" .. rule.name .. "'")
         end
         
+        -- Invalidate cache for this specific unit/aura type
+        if MilaUI.FilterEngine then
+            MilaUI.FilterEngine:InvalidateCache(unitName, auraType)
+        end
         MilaUI:UpdateFrames()
         frame:Release()
     end)
@@ -571,8 +572,10 @@ function MilaUI:DrawRuleParameters(container, ruleType, currentParams)
         return
     end
     
-    -- Store getter functions for parameters
-    container.paramGetters = {}
+    -- Store getter functions for parameters (cleared on widget release)
+    if not container.paramGetters then
+        container.paramGetters = {}
+    end
     
     -- Draw controls based on rule type
     if ruleType == "duration" then
@@ -611,7 +614,7 @@ function MilaUI:DrawRuleParameters(container, ruleType, currentParams)
         container.paramGetters.maxDuration = function() return maxSlider:GetValue() end
         container.paramGetters.includePermanent = function() return permCheck:GetValue() end
         
-    elseif ruleType == "blacklist" or ruleType == "whitelist" then
+    elseif ruleType == "spellList" then
         -- Spell ID management
         local spellLabel = GUI:Create("Label")
         spellLabel:SetText(lavender .. "Spell IDs (one per line):")
@@ -762,6 +765,8 @@ function MilaUI:DrawRuleParameters(container, ruleType, currentParams)
     container:AddChild(sizeSlider)
     
     -- Store getter for size parameter
-    container.paramGetters = container.paramGetters or {}
+    if not container.paramGetters then
+        container.paramGetters = {}
+    end
     container.paramGetters.size = function() return sizeSlider:GetValue() end
 end

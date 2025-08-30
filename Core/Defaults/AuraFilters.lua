@@ -5,23 +5,6 @@ MilaUI.Defaults = MilaUI.Defaults or {}
 
 -- AuraFilters defaults with new ACL-style system
 MilaUI.Defaults.AuraFilters = {
-    -- Legacy filter system (for backward compatibility)
-    Buffs = {
-        Blacklist = {},
-        Whitelist = {},
-        DurationFilter = {
-            Enabled = false,
-            MinDuration = 60, -- Filter out buffs longer than X seconds
-        },
-    },
-    Debuffs = {
-        Blacklist = {},
-        Whitelist = {},
-        DurationFilter = {
-            Enabled = false,
-            MinDuration = 60, -- Filter out debuffs longer than X seconds
-        },
-    },
     
     -- Available filter rule types and their configurations
     RuleTypes = {
@@ -35,19 +18,11 @@ MilaUI.Defaults.AuraFilters = {
             },
             size = {type = "number", default = 32, min = 8, max = 64, step = 1, description = "Aura size in pixels"}
         },
-        blacklist = {
-            name = "Spell Blacklist",
-            description = "Hide specific spells by ID",
+        spellList = {
+            name = "Spell List",
+            description = "Filter specific spells by ID (use with Allow/Deny action)",
             params = {
-                spellIds = {type = "table", default = {}, description = "List of spell IDs to hide"}
-            },
-            size = {type = "number", default = 32, min = 8, max = 64, step = 1, description = "Aura size in pixels"}
-        },
-        whitelist = {
-            name = "Spell Whitelist", 
-            description = "Show only specific spells by ID",
-            params = {
-                spellIds = {type = "table", default = {}, description = "List of spell IDs to show"}
+                spellIds = {type = "table", default = {}, description = "List of spell IDs to match"}
             },
             size = {type = "number", default = 32, min = 8, max = 64, step = 1, description = "Aura size in pixels"}
         },
@@ -130,9 +105,9 @@ MilaUI.Defaults.AuraFilters = {
                     {
                         order = 2,
                         enabled = true,
-                        type = "blacklist",
+                        type = "spellList",
                         action = "deny",
-                        name = "Blacklisted Buffs",
+                        name = "Blocked Buff Spells",
                         params = {
                             spellIds = {}
                         },
@@ -155,9 +130,9 @@ MilaUI.Defaults.AuraFilters = {
                     {
                         order = 1,
                         enabled = true,
-                        type = "blacklist",
+                        type = "spellList",
                         action = "deny",
-                        name = "Blacklisted Debuffs",
+                        name = "Blocked Debuff Spells",
                         params = {
                             spellIds = {}
                         },
@@ -220,9 +195,9 @@ MilaUI.Defaults.AuraFilters = {
                     {
                         order = 4,
                         enabled = true,
-                        type = "blacklist",
+                        type = "spellList",
                         action = "deny",
-                        name = "Blacklisted Buffs",
+                        name = "Blocked Buff Spells",
                         params = {
                             spellIds = {}
                         },
@@ -274,9 +249,9 @@ MilaUI.Defaults.AuraFilters = {
                     {
                         order = 3,
                         enabled = true,
-                        type = "blacklist",
+                        type = "spellList",
                         action = "deny",
-                        name = "Blacklisted Debuffs",
+                        name = "Blocked Debuff Spells",
                         params = {
                             spellIds = {}
                         },
@@ -301,9 +276,9 @@ MilaUI.Defaults.AuraFilters = {
                     {
                         order = 1,
                         enabled = true,
-                        type = "blacklist",
+                        type = "spellList",
                         action = "deny",
-                        name = "Blacklisted Buffs",
+                        name = "Blocked Buff Spells",
                         params = {
                             spellIds = {}
                         },
@@ -326,9 +301,9 @@ MilaUI.Defaults.AuraFilters = {
                     {
                         order = 1,
                         enabled = true,
-                        type = "blacklist",
+                        type = "spellList",
                         action = "deny",
-                        name = "Blacklisted Debuffs",
+                        name = "Blocked Debuff Spells",
                         params = {
                             spellIds = {}
                         },

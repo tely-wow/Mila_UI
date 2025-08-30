@@ -81,8 +81,6 @@ local function PostCreateButton(_, button, Unit, AuraType)
     local General = MilaUI.DB.profile.Unitframes.General
     local BuffCount = MilaUI.DB.profile.Unitframes[Unit].Buffs.Count
     local DebuffCount = MilaUI.DB.profile.Unitframes[Unit].Debuffs.Count
-    local BuffBlacklist = MilaUI.DB.profile.AuraFilters.Buffs.Blacklist
-    local BuffWhitelist = MilaUI.DB.profile.AuraFilters.Buffs.Whitelist
     local LSM = LibStub("LibSharedMedia-3.0")
     
     -- Icon Options
@@ -122,14 +120,18 @@ local function PostCreateButton(_, button, Unit, AuraType)
 end
 
 local function PostUpdateButton(element, button, unit, data, position, Unit, AuraType)
+    if MilaUI.FilterEngine and MilaUI.FilterEngine.AuraUnchanged then
+        local unchanged = MilaUI.FilterEngine:AuraUnchanged(button, data)
+        if unchanged then
+            return
+        end
+        MilaUI.FilterEngine:CacheAuraResult(button, data, true, data._milaSize or 32)
+    end
+    
     local General = MilaUI.DB.profile.Unitframes.General
     local BuffCount = MilaUI.DB.profile.Unitframes[Unit].Buffs.Count
     local DebuffCount = MilaUI.DB.profile.Unitframes[Unit].Debuffs.Count
     local LSM = LibStub("LibSharedMedia-3.0")
-    local BuffBlacklist = MilaUI.DB.profile.AuraFilters.Buffs.Blacklist
-    local BuffWhitelist = MilaUI.DB.profile.AuraFilters.Buffs.Whitelist
-    local DebuffBlacklist = MilaUI.DB.profile.AuraFilters.Debuffs.Blacklist
-    local DebuffWhitelist = MilaUI.DB.profile.AuraFilters.Debuffs.Whitelist
     local auraCount = button.Count
     
     -- Apply filter-based size if available
@@ -1764,6 +1766,11 @@ function MilaUI:UpdateUnitFrame(FrameName)
 end
 
 function MilaUI:UpdateFrames()
+    -- Invalidate filter cache when frames are updated (likely due to config change)
+    if MilaUI.FilterEngine then
+        MilaUI.FilterEngine:InvalidateCache()
+    end
+    
     -- Update all unit frames
     for _, unitName in ipairs(MilaUI.UnitList) do
         local frame = MilaUI:GetFrameForUnit(unitName)
