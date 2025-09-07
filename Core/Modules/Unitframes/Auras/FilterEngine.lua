@@ -4,8 +4,9 @@ local _, MilaUI = ...
 local FilterEngine = {}
 MilaUI.FilterEngine = FilterEngine
 
--- Cache for sorted rules (key: "unitType_auraType")
+-- Cache for sorted rules using table-based keys for better performance
 local ruleCache = {}
+local ruleCacheKeys = {} -- Pre-computed cache keys to avoid string concatenation
 local cacheHits = 0
 local cacheMisses = 0
 
@@ -16,6 +17,7 @@ local auraChangedMisses = 0
 -- Cache for boss unit checks (cleared each frame)
 local bossUnitCache = {}
 local bossUnitCacheFrame = 0
+local frameCount = 0 -- Use frame counter instead of GetTime()
 
 -- Aura unchanged detection will be done on buttons directly, no global cache needed
 
@@ -26,63 +28,128 @@ local canDispelDisease = false
 local canDispelPoison = false
 local canDispelCurse = false
 local canSteal = false
+local isDebugMode = false -- Local cache for debug mode
 
--- Update dispel capabilities based on class/spec
+-- Spell IDs for dispel abilities by class
+local dispelSpells = {
+    PRIEST = {
+        [527] = {"Magic", "Disease"}, -- Purify
+        [32375] = {"Magic"}, -- Mass Dispel
+        [528] = {"Magic"} -- Dispel Magic (offensive)
+    },
+    PALADIN = {
+        [4987] = {"Magic", "Disease", "Poison"}, -- Cleanse
+        [213644] = {"Disease", "Poison"} -- Cleanse Toxins
+    },
+    SHAMAN = {
+        [51886] = {"Curse"}, -- Cleanse Spirit
+        [77130] = {"Magic", "Curse"}, -- Purify Spirit (Restoration)
+        [370] = {"Magic"} -- Purge (offensive)
+    },
+    MAGE = {
+        [475] = {"Curse"}, -- Remove Curse
+        [30449] = {"Magic"} -- Spellsteal
+    },
+    DRUID = {
+        [2782] = {"Curse", "Poison"}, -- Remove Corruption
+        [88423] = {"Magic", "Curse", "Poison"} -- Nature's Cure (Restoration)
+    },
+    MONK = {
+        [115450] = {"Magic", "Disease", "Poison"}, -- Detox
+        [122783] = {"Magic"} -- Diffuse Magic
+    },
+    DEMONHUNTER = {
+        [278326] = {"Magic"} -- Consume Magic
+    },
+    EVOKER = {
+        [365585] = {"Poison"}, -- Expunge
+        [360823] = {"Magic", "Poison"}, -- Naturalize
+        [374251] = {"Curse", "Disease", "Magic", "Poison"} -- Cauterizing Flame
+    },
+    WARLOCK = {
+        [119905] = {"Magic"}, -- Singe Magic (Imp)
+        [89808] = {"Magic"} -- Singe Magic (Command Demon)
+    },
+    HUNTER = {
+        [212638] = {"Magic"} -- Tranquilizing Shot (Dispel Enrage)
+    }
+}
+
+-- Update dispel capabilities based on known spells
 local function UpdateDispelCapabilities()
-    -- This would need to be expanded based on class/spec
-    -- For now, basic class-based detection
-    if playerClass == "PRIEST" then
-        canDispelMagic = true
-        canDispelDisease = true
-    elseif playerClass == "PALADIN" then
-        canDispelMagic = true
-        canDispelDisease = true
-        canDispelPoison = true
-    elseif playerClass == "SHAMAN" then
-        canDispelMagic = false
-        canDispelCurse = true
-        canDispelPoison = true
-        canDispelDisease = true
-    elseif playerClass == "MAGE" then
-        canDispelCurse = true
-        canSteal = true
-    elseif playerClass == "DRUID" then
-        canDispelCurse = true
-        canDispelPoison = true
-        canDispelMagic = IsPlayerSpell(88423) -- Nature's Cure (Restoration)
-    elseif playerClass == "MONK" then
-        canDispelMagic = true
-        canDispelDisease = true
-        canDispelPoison = true
-    elseif playerClass == "DEMONHUNTER" then
-        canDispelMagic = true -- Consume Magic
-    elseif playerClass == "EVOKER" then
-        canDispelMagic = true
-        canDispelDisease = true
-        canDispelPoison = true
-        canDispelCurse = true
+    canDispelMagic = false
+    canDispelDisease = false
+    canDispelPoison = false
+    canDispelCurse = false
+    canSteal = false
+    
+    local classSpells = dispelSpells[playerClass]
+    if not classSpells then return end
+    
+    for spellId, types in pairs(classSpells) do
+        if IsPlayerSpell(spellId) or IsSpellKnown(spellId) then
+            for _, dispelType in ipairs(types) do
+                if dispelType == "Magic" then
+                    if spellId == 30449 then -- Spellsteal
+                        canSteal = true
+                    else
+                        canDispelMagic = true
+                    end
+                elseif dispelType == "Disease" then
+                    canDispelDisease = true
+                elseif dispelType == "Poison" then
+                    canDispelPoison = true
+                elseif dispelType == "Curse" then
+                    canDispelCurse = true
+                end
+            end
+        end
     end
 end
 
 -- Cache management functions
+-- Get or create cache key (avoids string concatenation)
+local function GetCacheKey(unitType, auraType)
+    if not ruleCacheKeys[unitType] then
+        ruleCacheKeys[unitType] = {}
+    end
+    if not ruleCacheKeys[unitType][auraType] then
+        ruleCacheKeys[unitType][auraType] = {unitType, auraType}
+    end
+    return ruleCacheKeys[unitType][auraType]
+end
+
 function FilterEngine:InvalidateCache(unitType, auraType)
     if unitType and auraType then
-        local key = unitType .. "_" .. auraType
+        local key = GetCacheKey(unitType, auraType)
         ruleCache[key] = nil
-        if MilaUI.DB.global.DebugMode then
-            print("|cffFFFF00[FilterEngine]|r Cache invalidated for", key)
+        if isDebugMode then
+            print("|cffFFFF00[FilterEngine]|r Cache invalidated for", unitType, auraType)
         end
     else
         -- Invalidate all caches
         wipe(ruleCache)
-        if MilaUI.DB.global.DebugMode then
+        wipe(ruleCacheKeys)
+        if isDebugMode then
             print("|cffFFFF00[FilterEngine]|r All caches invalidated")
         end
     end
 end
 
+-- Table pool for sorted rules to avoid allocations
+local sortedRulesPool = {}
+local function GetSortedRulesTable()
+    local t = table.remove(sortedRulesPool) or {}
+    return t
+end
+
+local function ReleaseSortedRulesTable(t)
+    wipe(t)
+    table.insert(sortedRulesPool, t)
+end
+
 function FilterEngine:GetCachedRules(unitType, auraType)
-    local key = unitType .. "_" .. auraType
+    local key = GetCacheKey(unitType, auraType)
     
     -- Check if we have cached rules
     if ruleCache[key] then
@@ -115,8 +182,8 @@ function FilterEngine:GetCachedRules(unitType, auraType)
         return nil
     end
     
-    -- Sort rules by order and cache them
-    local sortedRules = {}
+    -- Sort rules by order and cache them (use table pool)
+    local sortedRules = GetSortedRulesTable()
     for _, rule in ipairs(filterConfig.rules) do
         if rule.enabled and not rule.deleted then
             table.insert(sortedRules, rule)
@@ -127,8 +194,8 @@ function FilterEngine:GetCachedRules(unitType, auraType)
     -- Cache the sorted rules
     ruleCache[key] = sortedRules
     
-    if MilaUI.DB.global.DebugMode then
-        print("|cff00FF00[FilterEngine]|r Cached", #sortedRules, "rules for", key)
+    if isDebugMode then
+        print("|cff00FF00[FilterEngine]|r Cached", #sortedRules, "rules for", unitType, auraType)
     end
     
     return sortedRules
@@ -145,7 +212,7 @@ function FilterEngine:CacheAllRules()
         end
     end
     
-    if MilaUI.DB.global.DebugMode then
+    if isDebugMode then
         print("|cff00FF00[FilterEngine]|r Pre-cached all filter rules")
     end
 end
@@ -158,19 +225,27 @@ function FilterEngine:GetCacheStats()
     return cacheHits, cacheMisses, hitRate
 end
 
+-- Frame counter for boss cache invalidation
+local frameUpdateFrame = CreateFrame("Frame")
+frameUpdateFrame:SetScript("OnUpdate", function()
+    frameCount = frameCount + 1
+end)
+
 -- Initialize on PLAYER_ENTERING_WORLD
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 eventFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+eventFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
+eventFrame:RegisterEvent("SPELLS_CHANGED")
 eventFrame:SetScript("OnEvent", function(self, event)
     UpdateDispelCapabilities()
     if event == "PLAYER_ENTERING_WORLD" then
+        -- Update debug mode cache
+        isDebugMode = MilaUI.DB and MilaUI.DB.global and MilaUI.DB.global.DebugMode or false
         -- Cache all rules when entering world
         C_Timer.After(0.5, function()
             FilterEngine:CacheAllRules()
         end)
-        
-        -- No cleanup needed - buttons are recycled by oUF automatically
     end
 end)
 
@@ -215,10 +290,9 @@ local function IsBossUnit(unit)
     if not unit then return false end
     
     -- Check cache validity (new frame = clear cache)
-    local currentFrame = GetTime()
-    if currentFrame ~= bossUnitCacheFrame then
+    if frameCount ~= bossUnitCacheFrame then
         wipe(bossUnitCache)
-        bossUnitCacheFrame = currentFrame
+        bossUnitCacheFrame = frameCount
     end
     
     -- Check cache
@@ -428,58 +502,11 @@ function FilterEngine:FilterAuraWithButton(element, button, unit, unitType, aura
     return result, size
 end
 
--- Global cache for FilterAura when we don't have buttons yet
-local tempAuraCache = {}
-
--- Temporary unchanged detection for FilterAura (until button is available)
-function FilterEngine:TempAuraUnchanged(unit, data)
-    local key = unit .. "_" .. data.spellId .. "_" .. (data.auraInstanceID or 0)
-    local cached = tempAuraCache[key]
-    
-    if cached and 
-       cached.name == data.name and 
-       cached.icon == data.icon and 
-       cached.count == data.applications and
-       cached.duration == data.duration and
-       cached.dispelName == data.dispelName then
-        auraUnchangedHits = auraUnchangedHits + 1
-        return true, cached.result, cached.size
-    end
-    
-    auraChangedMisses = auraChangedMisses + 1
-    return false
-end
-
--- Store temp cache result
-function FilterEngine:CacheTempResult(unit, data, result, size)
-    local key = unit .. "_" .. data.spellId .. "_" .. (data.auraInstanceID or 0)
-    tempAuraCache[key] = {
-        name = data.name,
-        icon = data.icon,
-        count = data.applications,
-        duration = data.duration,
-        dispelName = data.dispelName,
-        result = result,
-        size = size
-    }
-end
-
-
--- Export the filter function for use in FilterAura callbacks (with temp caching)
+-- Export the filter function for use in FilterAura callbacks (no temp cache needed)
 function MilaUI:FilterAuraWithEngine(unit, unitType, auraType, data)
-    -- Check temporary cache first
-    local unchanged, cachedResult, cachedSize = FilterEngine:TempAuraUnchanged(unit, data)
-    if unchanged then
-        return cachedResult, cachedSize
-    end
-    
-    -- Process aura with rules
-    local shouldShow, size = FilterEngine:ProcessAura(unit, unitType, auraType, data)
-    
-    -- Cache result temporarily
-    FilterEngine:CacheTempResult(unit, data, shouldShow, size)
-    
-    return shouldShow, size
+    -- Process aura with rules directly
+    -- Button-based caching will handle unchanged detection in PostUpdateButton
+    return FilterEngine:ProcessAura(unit, unitType, auraType, data)
 end
 
 
@@ -509,21 +536,17 @@ SlashCmdList["MILAUI_FILTER_CACHE"] = function()
     print(string.format("  Aura Changed Misses: |cffFF0000%d|r", auraChangedMisses))
     print(string.format("  Aura Unchanged Rate: |cffFFFF00%.1f%%|r", auraRate))
     
-    -- Count temp cache entries
-    local tempCacheCount = 0
-    for _ in pairs(tempAuraCache) do
-        tempCacheCount = tempCacheCount + 1
-    end
-    print(string.format("  Temp Aura Cache: |cff00FFFF%d|r entries", tempCacheCount))
-    print("|cffFFD700Button cache used in PostUpdateButton (ElvUI style)|r")
+    print("|cffFFD700Button cache used in PostUpdateButton for unchanged detection|r")
     
     -- Show cached rule counts
-    if MilaUI.DB.global.DebugMode then
+    if isDebugMode then
         print("|cffFFD700Rule Details:|r")
+        local ruleCount = 0
         for key, rules in pairs(ruleCache) do
             if rules then
-                print(string.format("  %s: %d rules", key, #rules))
+                ruleCount = ruleCount + 1
             end
         end
+        print(string.format("  Total cached rule sets: %d", ruleCount))
     end
 end

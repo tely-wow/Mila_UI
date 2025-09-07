@@ -336,16 +336,16 @@ MilaUI.Defaults.AuraFilters = {
                             includePermanent = true
                         },
                         size = 32
+                    },
+                    {
+                        order = 2,
+                        enabled = true,
+                        type = "any",
+                        action = "allow",
+                        name = "Allow Everything Else",
+                        params = {},
+                        size = 32
                     }
-                },
-                {
-                    order = 2,
-                    enabled = true,
-                    type = "any",
-                    action = "allow",
-                    name = "Allow Everything Else",
-                    params = {},
-                    size = 1.0
                 }
             },
             Debuffs = {
@@ -363,17 +363,18 @@ MilaUI.Defaults.AuraFilters = {
                             poison = true,
                             curse = true,
                             onlyIfCanDispel = true
-                        }
+                        },
+                        size = 32
+                    },
+                    {
+                        order = 2,
+                        enabled = true,
+                        type = "any",
+                        action = "allow",
+                        name = "Allow Everything Else",
+                        params = {},
+                        size = 32
                     }
-                },
-                {
-                    order = 2,
-                    enabled = true,
-                    type = "any",
-                    action = "allow",
-                    name = "Allow Everything Else",
-                    params = {},
-                    size = 1.0
                 }
             }
         },
@@ -473,17 +474,18 @@ MilaUI.Defaults.AuraFilters = {
                         type = "any",
                         action = "deny",
                         name = "Hide Everything Else",
-                        params = {}
+                        params = {},
+                        size = 32
+                    },
+                    {
+                        order = 2,
+                        enabled = true,
+                        type = "any",
+                        action = "allow",
+                        name = "Allow Everything Else",
+                        params = {},
+                        size = 32
                     }
-                },
-                {
-                    order = 2,
-                    enabled = true,
-                    type = "any",
-                    action = "allow",
-                    name = "Allow Everything Else",
-                    params = {},
-                    size = 1.0
                 }
             },
             Debuffs = {
@@ -515,17 +517,18 @@ MilaUI.Defaults.AuraFilters = {
                             poison = true,
                             curse = true,
                             onlyIfCanDispel = true
-                        }
+                        },
+                        size = 32
+                    },
+                    {
+                        order = 3,
+                        enabled = true,
+                        type = "any",
+                        action = "deny",
+                        name = "Hide Everything Else",
+                        params = {},
+                        size = 32
                     }
-                },
-                {
-                    order = 3,
-                    enabled = true,
-                    type = "any",
-                    action = "deny",
-                    name = "Hide Everything Else",
-                    params = {},
-                    size = 1.0
                 }
             }
         }
