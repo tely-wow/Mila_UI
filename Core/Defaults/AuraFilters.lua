@@ -139,7 +139,7 @@ MilaUI.Defaults.AuraFilters = {
                         size = 32
                     },
                     {
-                        order = 3,
+                        order = 2,
                         enabled = true,
                         type = "any",
                         action = "allow",
@@ -204,7 +204,7 @@ MilaUI.Defaults.AuraFilters = {
                         size = 32
                     },
                     {
-                        order = 3,
+                        order = 5,
                         enabled = true,
                         type = "any",
                         action = "allow",
@@ -258,7 +258,7 @@ MilaUI.Defaults.AuraFilters = {
                         size = 32
                     },
                     {
-                        order = 3,
+                        order = 4,
                         enabled = true,
                         type = "any",
                         action = "allow",
@@ -285,7 +285,7 @@ MilaUI.Defaults.AuraFilters = {
                         size = 32
                     },
                     {
-                        order = 3,
+                        order = 2,
                         enabled = true,
                         type = "any",
                         action = "allow",
@@ -310,7 +310,7 @@ MilaUI.Defaults.AuraFilters = {
                         size = 32
                     },
                     {
-                        order = 3,
+                        order = 2,
                         enabled = true,
                         type = "any",
                         action = "allow",
@@ -478,7 +478,7 @@ MilaUI.Defaults.AuraFilters = {
                         size = 32
                     },
                     {
-                        order = 2,
+                        order = 4,
                         enabled = true,
                         type = "any",
                         action = "allow",

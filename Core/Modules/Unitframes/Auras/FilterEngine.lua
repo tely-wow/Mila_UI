@@ -425,13 +425,25 @@ function FilterEngine:AuraUnchanged(button, data)
     
     local cached = button.milaAuraInfo
     
-    -- Check if aura data has changed (only stable properties like ElvUI)
+    -- CRITICAL: Check if this button is being reused for a different aura
+    -- Compare auraInstanceID or spellId to detect button reuse
+    if cached.auraInstanceID ~= data.auraInstanceID then
+        -- Button is being reused for a different aura, treat as changed
+        if isDebugMode then
+            print("|cffFF00FF[BUTTON REUSE]|r Button reassigned from", cached.name or "nil", "to", data.name or "nil")
+        end
+        auraChangedMisses = auraChangedMisses + 1
+        return false
+    end
+    
+    -- Check if aura data has changed (only stable properties, ignore expiration for refresh detection)
+    -- Note: duration stays the same on refresh, only expirationTime changes
     if cached.name == data.name and 
        cached.icon == data.icon and 
        cached.count == data.applications and
        cached.duration == data.duration and
        cached.dispelName == data.dispelName then
-        -- Aura unchanged, return cached result
+        -- Aura unchanged or just refreshed, return cached result
         auraUnchangedHits = auraUnchangedHits + 1
         return true, cached.result, cached.size
     end
@@ -447,6 +459,7 @@ function FilterEngine:CacheAuraResult(button, data, result, size)
         button.milaAuraInfo = {}
     end
     
+    button.milaAuraInfo.auraInstanceID = data.auraInstanceID  -- Store this to detect button reuse
     button.milaAuraInfo.name = data.name
     button.milaAuraInfo.icon = data.icon
     button.milaAuraInfo.count = data.applications

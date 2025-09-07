@@ -120,12 +120,38 @@ local function PostCreateButton(_, button, Unit, AuraType)
 end
 
 local function PostUpdateButton(element, button, unit, data, position, Unit, AuraType)
+    local debugMode = MilaUI.DB.global.DebugMode
+    
+    if debugMode then
+        print(string.format("|cffFFFF00[PostUpdate]|r %s - data._milaSize: %s, cached size: %s", 
+            data.name or "unknown", 
+            tostring(data._milaSize), 
+            button.milaAuraInfo and tostring(button.milaAuraInfo.size) or "nil"))
+    end
+    
     if MilaUI.FilterEngine and MilaUI.FilterEngine.AuraUnchanged then
         local unchanged = MilaUI.FilterEngine:AuraUnchanged(button, data)
         if unchanged then
+            -- Apply cached size for unchanged auras before returning
+            if button.milaAuraInfo and button.milaAuraInfo.size then
+                local cachedSize = button.milaAuraInfo.size
+                button:SetSize(cachedSize, cachedSize)
+                if debugMode then
+                    print("|cff00FF00[UNCHANGED]|r Applying cached size:", cachedSize, "for", data.name)
+                end
+            else
+                if debugMode then
+                    print("|cffFF0000[UNCHANGED]|r No cached size for", data.name)
+                end
+            end
             return
         end
-        MilaUI.FilterEngine:CacheAuraResult(button, data, true, data._milaSize or 32)
+        -- Get the size to cache - prefer data._milaSize, fall back to cached size, then default
+        local sizeToCache = data._milaSize or (button.milaAuraInfo and button.milaAuraInfo.size) or 32
+        if debugMode then
+            print("|cffFF8800[CHANGED]|r Aura changed, caching new result for", data.name, "with size:", sizeToCache)
+        end
+        MilaUI.FilterEngine:CacheAuraResult(button, data, true, sizeToCache)
     end
     
     local General = MilaUI.DB.profile.Unitframes.General
@@ -135,12 +161,27 @@ local function PostUpdateButton(element, button, unit, data, position, Unit, Aur
     local auraCount = button.Count
     
     -- Apply filter-based size if available
+    -- First try data._milaSize (set by FilterAura for new auras)
+    -- Then fall back to cached size (for refreshed auras where FilterAura isn't called)
+    local size = nil
     if data and data._milaSize then
-        local size = data._milaSize
-        button:SetSize(size, size)
-        if MilaUI.DB.global.DebugMode then
-            print("|cff00ffff[SIZE]|r Setting " .. (data.name or "unknown") .. " to size: " .. size)
+        size = data._milaSize
+        if debugMode then
+            print("|cff00FFFF[SIZE]|r Using data._milaSize:", size, "for", data.name)
         end
+    elseif button.milaAuraInfo and button.milaAuraInfo.size then
+        size = button.milaAuraInfo.size
+        if debugMode then
+            print("|cff00FFFF[SIZE]|r Using cached size:", size, "for", data.name)
+        end
+    else
+        if debugMode then
+            print("|cffFF0000[SIZE]|r No size found for", data.name, "- will use default")
+        end
+    end
+    
+    if size then
+        button:SetSize(size, size)
     end
     if AuraType == "HELPFUL" then
         auraCount:ClearAllPoints()
@@ -660,7 +701,8 @@ local function CreateBuffs(self, Unit)
         -- Custom filter function for buffs
         self.unitBuffs.FilterAura = function(element, unit, data)
             if MilaUI.DB.global.DebugMode then
-                print("|cff00ff00[DEBUG]|r Buff FilterAura called for " .. Unit .. " spell: " .. (data.name or "nil"))
+                print("|cff00ff00[FilterAura]|r Called for " .. Unit .. " spell: " .. (data.name or "nil") .. 
+                      " instanceID: " .. tostring(data.auraInstanceID))
             end
             
             -- Use new FilterEngine
@@ -669,6 +711,9 @@ local function CreateBuffs(self, Unit)
             -- Store size in data for PostCreateButton to use
             if shouldShow and size then
                 data._milaSize = size
+                if MilaUI.DB.global.DebugMode then
+                    print("|cff00ff00[FilterAura]|r Set _milaSize to", size, "for", data.name)
+                end
             end
             
             if MilaUI.DB.global.DebugMode then
