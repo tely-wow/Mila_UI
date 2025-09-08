@@ -258,8 +258,8 @@ RuleEvaluators.duration = function(data, params)
     local expirationTime = data.expirationTime or 0
     
     -- Handle permanent auras (duration = 0)
-    if duration == 0 and params.includePermanent then
-        return false -- Deny permanent auras if includePermanent is true
+    if duration == 0 and not params.includePermanent then
+        return false -- Deny permanent auras if includePermanent is false
     end
     
     -- Check min duration

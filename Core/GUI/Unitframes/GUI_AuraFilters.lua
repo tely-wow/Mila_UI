@@ -136,7 +136,7 @@ function MilaUI:DrawBuffFilterContainer(contentFrame)
     
     -- Buff scrollframe
     local buffScrollFrame = GUI:Create("ScrollFrame")
-    buffScrollFrame:SetLayout("List")
+    buffScrollFrame:SetLayout("Flow")
     buffScrollFrame:SetFullWidth(true)
     buffScrollFrame:SetFullHeight(true)
     buffListGroup:AddChild(buffScrollFrame)
@@ -248,7 +248,7 @@ function MilaUI:DrawDebuffFilterContainer(contentFrame)
     
     -- Debuff scrollframe
     local debuffScrollFrame = GUI:Create("ScrollFrame")
-    debuffScrollFrame:SetLayout("List")
+    debuffScrollFrame:SetLayout("Flow")
     debuffScrollFrame:SetFullWidth(true)
     debuffScrollFrame:SetFullHeight(true)
     debuffListGroup:AddChild(debuffScrollFrame)

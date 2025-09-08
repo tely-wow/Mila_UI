@@ -58,7 +58,7 @@ function MilaUI:DrawAuraFiltersTab(container, unitName)
     
     -- Create tab group for Buffs and Debuffs
     local tabGroup = GUI:Create("TabGroup")
-    tabGroup:SetLayout("Flow")
+    tabGroup:SetLayout("Fill")  -- Changed to Fill for ScrollFrame compatibility
     tabGroup:SetFullWidth(true)
     tabGroup:SetFullHeight(true)
     tabGroup:SetTabs({
@@ -72,20 +72,30 @@ function MilaUI:DrawAuraFiltersTab(container, unitName)
         local auraType = group == "buffs" and "Buffs" or "Debuffs"
         local filterConfig = unitFilters[auraType]
         
+        -- Create container for ScrollFrame (required by AceGUI docs)
+        local scrollContainer = GUI:Create("SimpleGroup")
+        scrollContainer:SetFullWidth(true)
+        scrollContainer:SetFullHeight(true)
+        scrollContainer:SetLayout("Fill")  -- MUST be Fill for ScrollFrame
+        widget:AddChild(scrollContainer)
+        
         -- Create scrollable container for the content
         local scrollFrame = GUI:Create("ScrollFrame")
         scrollFrame:SetLayout("Flow")
         scrollFrame:SetFullWidth(true)
         scrollFrame:SetFullHeight(true)
-        widget:AddChild(scrollFrame)
+        scrollContainer:AddChild(scrollFrame)
         
         -- Draw the filter configuration for this aura type
         MilaUI:DrawFilterConfig(scrollFrame, unitName, auraType, filterConfig)
         
-        -- Layout handled automatically
+        -- Force layout update for tab content - only call on outermost container
+        widget:DoLayout()
     end)
     
     container:AddChild(tabGroup)
+    
+    -- Select default tab
     tabGroup:SelectTab("buffs")
 end
 
@@ -116,6 +126,7 @@ function MilaUI:DrawFilterConfig(container, unitName, auraType, filterConfig)
     
     -- Draw existing rules
     MilaUI:DrawRulesList(rulesGroup, unitName, auraType, filterConfig)
+    -- Don't call DoLayout here - it's called at the end of DrawFilterConfig
     
     -- Add new rule button
     local addRuleButton = GUI:Create("Button")
@@ -126,7 +137,12 @@ function MilaUI:DrawFilterConfig(container, unitName, auraType, filterConfig)
     end)
     container:AddChild(addRuleButton)
     
-    -- Layout handled automatically
+    -- Force layout update only if not called from within a resize
+    if not container:GetUserData("isLayouting") then
+        container:SetUserData("isLayouting", true)
+        container:DoLayout()
+        container:SetUserData("isLayouting", false)
+    end
 end
 
 -- Draw the list of rules
@@ -196,6 +212,7 @@ function MilaUI:DrawRulesList(container, unitName, auraType, filterConfig)
                 MilaUI:UpdateFrames()
                 -- Just redraw the rules list since we clear children in DrawRulesList now
                 MilaUI:DrawRulesList(container, unitName, auraType, filterConfig)
+                -- Don't call DoLayout here - DrawRulesList already does it
             end
         end)
         ruleGroup:AddChild(upButton)
@@ -221,6 +238,7 @@ function MilaUI:DrawRulesList(container, unitName, auraType, filterConfig)
                 MilaUI:UpdateFrames()
                 -- Just redraw the rules list since we clear children in DrawRulesList now
                 MilaUI:DrawRulesList(container, unitName, auraType, filterConfig)
+                -- Don't call DoLayout here - DrawRulesList already does it
             end
         end)
         ruleGroup:AddChild(downButton)
@@ -280,13 +298,19 @@ function MilaUI:DrawRulesList(container, unitName, auraType, filterConfig)
             MilaUI:UpdateFrames()
             -- Just redraw the rules list since we clear children in DrawRulesList now
             MilaUI:DrawRulesList(container, unitName, auraType, filterConfig)
+            -- Don't call DoLayout here - DrawRulesList already does it
         end)
         ruleGroup:AddChild(deleteButton)
         
         end -- End of if not rule.deleted
     end
     
-    -- Layout handled automatically
+    -- Force layout update after drawing all rules only if not already layouting
+    if not container:GetUserData("isLayouting") then
+        container:SetUserData("isLayouting", true)
+        container:DoLayout()
+        container:SetUserData("isLayouting", false)
+    end
 end
 
 -- Show dialog to add a new rule
@@ -300,7 +324,7 @@ function MilaUI:ShowAddRuleDialog(unitName, auraType, filterConfig)
     frame:SetWidth(500)
     frame:SetHeight(400)
     frame:SetLayout("Flow")
-    frame:SetCallback("OnClose", function(widget) widget:Release() end)
+    frame:SetCallback("OnClose", function(widget) GUI:Release(widget) end)
     
     -- Rule type dropdown
     local typeLabel = GUI:Create("Label")
@@ -367,7 +391,13 @@ function MilaUI:ShowAddRuleDialog(unitName, auraType, filterConfig)
         if value then
             nameInput:SetText(ruleTypes[value].name or value)
             MilaUI:DrawRuleParameters(paramsGroup, value, {})
-            -- Layout handled automatically
+            -- Force complete layout update after changing parameters
+            -- Need to update from innermost to outermost
+            paramsGroup:DoLayout()
+            -- Small delay to ensure widgets are properly initialized
+            C_Timer.After(0.01, function()
+                frame:DoLayout()
+            end)
         end
     end)
     
@@ -398,8 +428,9 @@ function MilaUI:ShowAddRuleDialog(unitName, auraType, filterConfig)
         }
         
         -- Get parameters from the form
-        if paramsGroup.paramGetters then
-            for paramName, getter in pairs(paramsGroup.paramGetters) do
+        local paramGetters = paramsGroup:GetUserData("paramGetters")
+        if paramGetters then
+            for paramName, getter in pairs(paramGetters) do
                 if paramName == "size" then
                     newRule.size = getter()
                 else
@@ -441,6 +472,9 @@ function MilaUI:ShowAddRuleDialog(unitName, auraType, filterConfig)
         frame:Release()
     end)
     buttonGroup:AddChild(cancelButton)
+    
+    -- Force initial layout
+    frame:DoLayout()
 end
 
 -- Show dialog to edit an existing rule
@@ -454,7 +488,7 @@ function MilaUI:ShowEditRuleDialog(unitName, auraType, filterConfig, ruleIndex, 
     frame:SetWidth(500)
     frame:SetHeight(450)
     frame:SetLayout("Flow")
-    frame:SetCallback("OnClose", function(widget) widget:Release() end)
+    frame:SetCallback("OnClose", function(widget) GUI:Release(widget) end)
     
     local ruleTypes = MilaUI.DB.profile.AuraFilters.RuleTypes
     local typeInfo = ruleTypes[rule.type] or {name = rule.type}
@@ -507,7 +541,8 @@ function MilaUI:ShowEditRuleDialog(unitName, auraType, filterConfig, ruleIndex, 
     paramsWithSize.size = rule.size
     MilaUI:DrawRuleParameters(paramsGroup, rule.type, paramsWithSize)
     
-    -- Layout handled automatically
+    -- Force layout update for parameters
+    paramsGroup:DoLayout()
     
     -- Buttons
     local buttonGroup = GUI:Create("SimpleGroup")
@@ -524,8 +559,9 @@ function MilaUI:ShowEditRuleDialog(unitName, auraType, filterConfig, ruleIndex, 
         rule.action = actionDropdown:GetValue()
         
         -- Get parameters from the form
-        if paramsGroup.paramGetters then
-            for paramName, getter in pairs(paramsGroup.paramGetters) do
+        local paramGetters = paramsGroup:GetUserData("paramGetters")
+        if paramGetters then
+            for paramName, getter in pairs(paramGetters) do
                 if paramName == "size" then
                     rule.size = getter()
                 else
@@ -554,6 +590,9 @@ function MilaUI:ShowEditRuleDialog(unitName, auraType, filterConfig, ruleIndex, 
         frame:Release()
     end)
     buttonGroup:AddChild(cancelButton)
+    
+    -- Force initial layout
+    frame:DoLayout()
 end
 
 -- Draw parameter controls for a specific rule type
@@ -572,9 +611,11 @@ function MilaUI:DrawRuleParameters(container, ruleType, currentParams)
         return
     end
     
-    -- Store getter functions for parameters (cleared on widget release)
-    if not container.paramGetters then
-        container.paramGetters = {}
+    -- Store getter functions for parameters using UserData
+    local paramGetters = container:GetUserData("paramGetters")
+    if not paramGetters then
+        paramGetters = {}
+        container:SetUserData("paramGetters", paramGetters)
     end
     
     -- Draw controls based on rule type
@@ -610,9 +651,9 @@ function MilaUI:DrawRuleParameters(container, ruleType, currentParams)
         permCheck:SetFullWidth(true)
         container:AddChild(permCheck)
         
-        container.paramGetters.minDuration = function() return minSlider:GetValue() end
-        container.paramGetters.maxDuration = function() return maxSlider:GetValue() end
-        container.paramGetters.includePermanent = function() return permCheck:GetValue() end
+        paramGetters.minDuration = function() return minSlider:GetValue() end
+        paramGetters.maxDuration = function() return maxSlider:GetValue() end
+        paramGetters.includePermanent = function() return permCheck:GetValue() end
         
     elseif ruleType == "spellList" then
         -- Spell ID management
@@ -635,7 +676,7 @@ function MilaUI:DrawRuleParameters(container, ruleType, currentParams)
         spellInput:SetText(spellText)
         container:AddChild(spellInput)
         
-        container.paramGetters.spellIds = function()
+        paramGetters.spellIds = function()
             local ids = {}
             for line in spellInput:GetText():gmatch("[^\r\n]+") do
                 local id = tonumber(line:match("%d+"))
@@ -678,11 +719,11 @@ function MilaUI:DrawRuleParameters(container, ruleType, currentParams)
         othersCheck:SetRelativeWidth(0.25)
         container:AddChild(othersCheck)
         
-        container.paramGetters.player = function() return playerCheck:GetValue() end
-        container.paramGetters.pet = function() return petCheck:GetValue() end
-        container.paramGetters.vehicle = function() return vehicleCheck:GetValue() end
-        container.paramGetters.boss = function() return bossCheck:GetValue() end
-        container.paramGetters.others = function() return othersCheck:GetValue() end
+        paramGetters.player = function() return playerCheck:GetValue() end
+        paramGetters.pet = function() return petCheck:GetValue() end
+        paramGetters.vehicle = function() return vehicleCheck:GetValue() end
+        paramGetters.boss = function() return bossCheck:GetValue() end
+        paramGetters.others = function() return othersCheck:GetValue() end
         
     elseif ruleType == "dispellable" then
         -- Dispel type checkboxes
@@ -716,11 +757,11 @@ function MilaUI:DrawRuleParameters(container, ruleType, currentParams)
         onlyIfCanCheck:SetFullWidth(true)
         container:AddChild(onlyIfCanCheck)
         
-        container.paramGetters.magic = function() return magicCheck:GetValue() end
-        container.paramGetters.disease = function() return diseaseCheck:GetValue() end
-        container.paramGetters.poison = function() return poisonCheck:GetValue() end
-        container.paramGetters.curse = function() return curseCheck:GetValue() end
-        container.paramGetters.onlyIfCanDispel = function() return onlyIfCanCheck:GetValue() end
+        paramGetters.magic = function() return magicCheck:GetValue() end
+        paramGetters.disease = function() return diseaseCheck:GetValue() end
+        paramGetters.poison = function() return poisonCheck:GetValue() end
+        paramGetters.curse = function() return curseCheck:GetValue() end
+        paramGetters.onlyIfCanDispel = function() return onlyIfCanCheck:GetValue() end
         
     elseif ruleType == "stealable" then
         -- Stealable options
@@ -730,7 +771,7 @@ function MilaUI:DrawRuleParameters(container, ruleType, currentParams)
         onlyIfCanCheck:SetFullWidth(true)
         container:AddChild(onlyIfCanCheck)
         
-        container.paramGetters.onlyIfCanSteal = function() return onlyIfCanCheck:GetValue() end
+        paramGetters.onlyIfCanSteal = function() return onlyIfCanCheck:GetValue() end
         
     elseif ruleType == "any" then
         -- Any/Catch-all rule explanation
@@ -764,9 +805,6 @@ function MilaUI:DrawRuleParameters(container, ruleType, currentParams)
     sizeSlider:SetFullWidth(true)
     container:AddChild(sizeSlider)
     
-    -- Store getter for size parameter
-    if not container.paramGetters then
-        container.paramGetters = {}
-    end
-    container.paramGetters.size = function() return sizeSlider:GetValue() end
+    -- Store getter for size parameter using UserData
+    paramGetters.size = function() return sizeSlider:GetValue() end
 end
