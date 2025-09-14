@@ -41,9 +41,13 @@ function MilaUI:DrawAuraFiltersTab(container, unitName)
     -- Main enable checkbox
     local mainEnable = GUI:Create("CheckBox")
     mainEnable:SetLabel(pink .. "Enable Aura Filtering for " .. unitName)
-    mainEnable:SetValue(unitFilters.Buffs.enabled or unitFilters.Debuffs.enabled)
+    local buffsTbl = unitFilters.Buffs or {}
+    local debuffsTbl = unitFilters.Debuffs or {}
+    mainEnable:SetValue((buffsTbl.enabled == true) or (debuffsTbl.enabled == true))
     mainEnable:SetFullWidth(true)
     mainEnable:SetCallback("OnValueChanged", function(widget, event, value)
+        unitFilters.Buffs = unitFilters.Buffs or { enabled = false, rules = {} }
+        unitFilters.Debuffs = unitFilters.Debuffs or { enabled = false, rules = {} }
         unitFilters.Buffs.enabled = value
         unitFilters.Debuffs.enabled = value
         MilaUI:UpdateFrames()
@@ -58,7 +62,7 @@ function MilaUI:DrawAuraFiltersTab(container, unitName)
     
     -- Create tab group for Buffs and Debuffs
     local tabGroup = GUI:Create("TabGroup")
-    tabGroup:SetLayout("Fill")  -- Changed to Fill for ScrollFrame compatibility
+    tabGroup:SetLayout("Flow")  -- Use Flow to avoid re-entrant sizing
     tabGroup:SetFullWidth(true)
     tabGroup:SetFullHeight(true)
     tabGroup:SetTabs({
@@ -70,27 +74,19 @@ function MilaUI:DrawAuraFiltersTab(container, unitName)
         widget:ReleaseChildren()
         
         local auraType = group == "buffs" and "Buffs" or "Debuffs"
-        local filterConfig = unitFilters[auraType]
-        
-        -- Create container for ScrollFrame (required by AceGUI docs)
-        local scrollContainer = GUI:Create("SimpleGroup")
-        scrollContainer:SetFullWidth(true)
-        scrollContainer:SetFullHeight(true)
-        scrollContainer:SetLayout("Fill")  -- MUST be Fill for ScrollFrame
-        widget:AddChild(scrollContainer)
+        local filterConfig = unitFilters[auraType] or { enabled = false, rules = {} }
         
         -- Create scrollable container for the content
         local scrollFrame = GUI:Create("ScrollFrame")
         scrollFrame:SetLayout("Flow")
         scrollFrame:SetFullWidth(true)
         scrollFrame:SetFullHeight(true)
-        scrollContainer:AddChild(scrollFrame)
+        widget:AddChild(scrollFrame)
         
         -- Draw the filter configuration for this aura type
         MilaUI:DrawFilterConfig(scrollFrame, unitName, auraType, filterConfig)
         
-        -- Force layout update for tab content - only call on outermost container
-        widget:DoLayout()
+        -- Do not force layout here; outer code schedules layout updates
     end)
     
     container:AddChild(tabGroup)
@@ -137,12 +133,7 @@ function MilaUI:DrawFilterConfig(container, unitName, auraType, filterConfig)
     end)
     container:AddChild(addRuleButton)
     
-    -- Force layout update only if not called from within a resize
-    if not container:GetUserData("isLayouting") then
-        container:SetUserData("isLayouting", true)
-        container:DoLayout()
-        container:SetUserData("isLayouting", false)
-    end
+    -- Avoid explicit DoLayout here; outer containers handle layout
 end
 
 -- Draw the list of rules
@@ -305,12 +296,7 @@ function MilaUI:DrawRulesList(container, unitName, auraType, filterConfig)
         end -- End of if not rule.deleted
     end
     
-    -- Force layout update after drawing all rules only if not already layouting
-    if not container:GetUserData("isLayouting") then
-        container:SetUserData("isLayouting", true)
-        container:DoLayout()
-        container:SetUserData("isLayouting", false)
-    end
+    -- Avoid explicit DoLayout here; outer containers handle layout
 end
 
 -- Show dialog to add a new rule
@@ -391,13 +377,7 @@ function MilaUI:ShowAddRuleDialog(unitName, auraType, filterConfig)
         if value then
             nameInput:SetText(ruleTypes[value].name or value)
             MilaUI:DrawRuleParameters(paramsGroup, value, {})
-            -- Force complete layout update after changing parameters
-            -- Need to update from innermost to outermost
-            paramsGroup:DoLayout()
-            -- Small delay to ensure widgets are properly initialized
-            C_Timer.After(0.01, function()
-                frame:DoLayout()
-            end)
+            -- Let AceGUI manage layout without manual calls
         end
     end)
     
@@ -461,7 +441,7 @@ function MilaUI:ShowAddRuleDialog(unitName, auraType, filterConfig)
             MilaUI.FilterEngine:InvalidateCache(unitName, auraType)
         end
         MilaUI:UpdateFrames()
-        frame:Release()
+        frame:Hide() -- OnClose will release via GUI:Release
     end)
     buttonGroup:AddChild(createButton)
     
@@ -469,12 +449,11 @@ function MilaUI:ShowAddRuleDialog(unitName, auraType, filterConfig)
     cancelButton:SetText("Cancel")
     cancelButton:SetRelativeWidth(0.5)
     cancelButton:SetCallback("OnClick", function()
-        frame:Release()
+        frame:Hide() -- OnClose will release via GUI:Release
     end)
     buttonGroup:AddChild(cancelButton)
     
-    -- Force initial layout
-    frame:DoLayout()
+    -- No manual layout; AceGUI handles it
 end
 
 -- Show dialog to edit an existing rule
@@ -541,8 +520,7 @@ function MilaUI:ShowEditRuleDialog(unitName, auraType, filterConfig, ruleIndex, 
     paramsWithSize.size = rule.size
     MilaUI:DrawRuleParameters(paramsGroup, rule.type, paramsWithSize)
     
-    -- Force layout update for parameters
-    paramsGroup:DoLayout()
+    -- No manual layout; AceGUI handles it
     
     -- Buttons
     local buttonGroup = GUI:Create("SimpleGroup")
@@ -579,7 +557,7 @@ function MilaUI:ShowEditRuleDialog(unitName, auraType, filterConfig, ruleIndex, 
             MilaUI.FilterEngine:InvalidateCache(unitName, auraType)
         end
         MilaUI:UpdateFrames()
-        frame:Release()
+        frame:Hide() -- OnClose will release via GUI:Release
     end)
     buttonGroup:AddChild(saveButton)
     
@@ -587,12 +565,11 @@ function MilaUI:ShowEditRuleDialog(unitName, auraType, filterConfig, ruleIndex, 
     cancelButton:SetText("Cancel")
     cancelButton:SetRelativeWidth(0.5)
     cancelButton:SetCallback("OnClick", function()
-        frame:Release()
+        frame:Hide() -- OnClose will release via GUI:Release
     end)
     buttonGroup:AddChild(cancelButton)
     
-    -- Force initial layout
-    frame:DoLayout()
+    -- No manual layout; AceGUI handles it
 end
 
 -- Draw parameter controls for a specific rule type
